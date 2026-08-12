@@ -365,7 +365,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                     <Sparkles className="h-4 w-4 text-amber-400 shrink-0" />
                     <div>
                       <span className="text-xs font-bold text-white block">Autofill Starter Data</span>
-                      <span className="text-[10px] text-slate-400">Generate sample divisions, teams, venues, and round-robin schedule</span>
+                      <span className="text-[10px] text-slate-400">Generate sample divisions, teams, venues, and rosters (Schedule via Advanced Scheduler)</span>
                     </div>
                   </div>
                   <input

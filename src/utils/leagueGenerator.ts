@@ -324,23 +324,7 @@ export function createSampleLeague(
         ],
       };
       divTeams.push(newTeam);
-      teams.push(newTeam);
     }
-
-    // Auto-generate round-robin schedule for this division with all divTeams
-    const scheduleResult = generateVolleyballSchedule({
-      divisionId: division.id,
-      teams: divTeams,
-      courts: allSubLocs,
-      startDate,
-      startTime: '18:30',
-      matchDurationMinutes: 60,
-      timeSlotsPerNight: Math.max(2, Math.ceil(divTeams.length / 2)),
-      weeksCount: Math.max(4, divTeams.length - 1),
-      assignWorkTeams: division.workTeamRequired,
-    });
-
-    matches.push(...scheduleResult.matches);
   });
 
   return {
