@@ -195,7 +195,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 {/* Match Teams Banner */}
                 <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 py-2 px-3 bg-slate-900/60 rounded-xl border border-slate-800">
                   {/* Home Team */}
-                  <div className="flex items-center space-x-2 truncate">
+                  <div className="flex items-center space-x-2 min-w-0">
                     <span
                       className="h-3 w-3 rounded-full shrink-0"
                       style={{ backgroundColor: home?.badgeColor || '#94a3b8' }}
@@ -206,13 +206,14 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                           ? 'text-emerald-400 font-extrabold'
                           : 'text-white'
                       }`}
+                      title={home?.name || 'TBD'}
                     >
                       {home?.name || 'TBD'}
                     </span>
                   </div>
 
                   {/* Score / VS Badge */}
-                  <div className="px-2.5 py-1 bg-slate-950 rounded-lg border border-slate-800 text-center">
+                  <div className="px-2.5 py-1 bg-slate-950 rounded-lg border border-slate-800 text-center shrink-0">
                     {match.status === 'Completed' && match.scores.length > 0 ? (
                       <div className="font-mono font-extrabold text-xs text-amber-400">
                         {match.scores.map((s) => `${s.homeScore}-${s.awayScore}`).join(' | ')}
@@ -225,13 +226,14 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                   </div>
 
                   {/* Away Team */}
-                  <div className="flex items-center justify-end space-x-2 truncate">
+                  <div className="flex items-center justify-end space-x-2 min-w-0">
                     <span
                       className={`text-xs font-bold truncate ${
                         match.winnerId === match.awayTeamId
                           ? 'text-emerald-400 font-extrabold'
                           : 'text-white'
                       }`}
+                      title={away?.name || 'TBD'}
                     >
                       {away?.name || 'TBD'}
                     </span>

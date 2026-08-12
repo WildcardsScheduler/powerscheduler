@@ -93,13 +93,16 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, divis
                     )}
                   </td>
 
-                  <td className="py-3.5 px-3">
-                    <div className="flex items-center space-x-2.5">
+                  <td className="py-3.5 px-3 max-w-[130px] sm:max-w-none">
+                    <div className="flex items-center space-x-2.5 min-w-0">
                       <div
                         className="h-3.5 w-3.5 rounded-full shrink-0 shadow-sm"
                         style={{ backgroundColor: team.badgeColor }}
                       />
-                      <span className="font-semibold text-white group-hover:text-amber-400 transition-colors">
+                      <span
+                        className="font-semibold text-white group-hover:text-amber-400 transition-colors truncate"
+                        title={team.teamName}
+                      >
                         {team.teamName}
                       </span>
                     </div>
