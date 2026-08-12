@@ -1,4 +1,4 @@
-import { LeagueSeason, Division, Location, Team, Match, SportType } from '@/types/league';
+import { LeagueSeason, Division, Location, Team, Match, SportType, MatchRules, DEFAULT_MATCH_RULES } from '@/types/league';
 import { generateVolleyballSchedule } from './schedulerEngine';
 
 export function createBlankLeague(
@@ -7,10 +7,12 @@ export function createBlankLeague(
   startDate: string,
   endDate: string,
   maxTeams: number = 12,
-  hasDivisions: boolean = true
+  hasDivisions: boolean = true,
+  matchRules?: MatchRules
 ): LeagueSeason {
   const leagueId = `league-${Date.now()}`;
   const timestamp = Date.now();
+  const rules = matchRules || DEFAULT_MATCH_RULES;
 
   const defaultDivision: Division = {
     id: `div-${timestamp}-main`,
@@ -18,6 +20,7 @@ export function createBlankLeague(
     genderCategory: 'Co-Ed',
     netHeight: "Co-Ed (2.43m)",
     setFormat: 'Best of 3 (25-25-15)',
+    matchRules: rules,
     capRule: 'Win by 2 (Uncapped)',
     workTeamRequired: true,
     maxTeams: maxTeams,
@@ -41,6 +44,7 @@ export function createBlankLeague(
     endDate,
     maxTeams,
     hasDivisions,
+    matchRules: rules,
     locations: [defaultLocation],
     divisions: [defaultDivision],
     teams: [],
@@ -54,10 +58,12 @@ export function createSampleLeague(
   startDate: string,
   endDate: string,
   maxTeams: number = 12,
-  hasDivisions: boolean = true
+  hasDivisions: boolean = true,
+  matchRules?: MatchRules
 ): LeagueSeason {
   const leagueId = `league-${Date.now()}`;
   const timestamp = Date.now();
+  const rules = matchRules || DEFAULT_MATCH_RULES;
 
   let divisions: Division[] = [];
   let locations: Location[] = [];
@@ -345,6 +351,7 @@ export function createSampleLeague(
     endDate,
     maxTeams,
     hasDivisions,
+    matchRules: rules,
     locations,
     divisions,
     teams,

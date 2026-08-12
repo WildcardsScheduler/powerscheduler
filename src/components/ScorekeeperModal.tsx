@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Match, Team, Division, SetScore } from '@/types/league';
-import { X, CheckCircle, Plus, Minus, Trophy, ShieldAlert, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Match, Team, Division, SetScore, MatchRules, DEFAULT_MATCH_RULES } from '@/types/league';
+import { X, CheckCircle, Plus, Minus, Trophy, ShieldAlert, Info, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatTime } from '@/utils/formatUtils';
 
@@ -12,6 +12,7 @@ interface ScorekeeperModalProps {
   awayTeam?: Team;
   workTeam?: Team;
   division?: Division;
+  leagueRules?: MatchRules;
   isOpen: boolean;
   onClose: () => void;
   onSaveScore: (matchId: string, scores: SetScore[], winnerId: string) => void;
@@ -23,18 +24,48 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
   awayTeam,
   workTeam,
   division,
+  leagueRules,
   isOpen,
   onClose,
   onSaveScore,
 }) => {
+  const activeRules: MatchRules = division?.matchRules || leagueRules || DEFAULT_MATCH_RULES;
+  const totalSets = activeRules.totalSets || 3;
+
   const [sets, setSets] = useState<SetScore[]>(() => {
-    if (match.scores.length > 0) return match.scores;
-    return [
-      { setNumber: 1, homeScore: 25, awayScore: 20 },
-      { setNumber: 2, homeScore: 20, awayScore: 25 },
-      { setNumber: 3, homeScore: 15, awayScore: 12 },
-    ];
+    if (match.scores && match.scores.length > 0) return match.scores;
+    // Generate initial sets matching active rules
+    return Array.from({ length: totalSets }, (_, i) => {
+      const setNum = i + 1;
+      const targetPts = setNum === totalSets && totalSets > 2 ? activeRules.pointsPerDecidingSet : activeRules.pointsPerSet;
+      return {
+        setNumber: setNum,
+        homeScore: setNum === 1 ? targetPts : setNum === 2 ? targetPts - 3 : 0,
+        awayScore: setNum === 1 ? targetPts - 4 : setNum === 2 ? targetPts : 0,
+      };
+    });
   });
+
+  const [includeOptionalSet, setIncludeOptionalSet] = useState<boolean>(true);
+
+  // Sync state if match or totalSets changes
+  useEffect(() => {
+    if (match.scores && match.scores.length > 0) {
+      setSets(match.scores);
+    } else {
+      setSets(
+        Array.from({ length: totalSets }, (_, i) => {
+          const setNum = i + 1;
+          const targetPts = setNum === totalSets && totalSets > 2 ? activeRules.pointsPerDecidingSet : activeRules.pointsPerSet;
+          return {
+            setNumber: setNum,
+            homeScore: setNum === 1 ? targetPts : setNum === 2 ? targetPts - 3 : 0,
+            awayScore: setNum === 1 ? targetPts - 4 : setNum === 2 ? targetPts : 0,
+          };
+        })
+      );
+    }
+  }, [match.id, totalSets]);
 
   if (!isOpen || !homeTeam || !awayTeam) return null;
 
@@ -52,12 +83,34 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
     setSets(updated);
   };
 
-  // Determine winner
+  // Determine sets won up to deciding set
   let homeSetsWon = 0;
   let awaySetsWon = 0;
-  sets.forEach((s) => {
+
+  // Check if Best of 3 / 5 format with play_if_tied condition
+  const isBestOfFormat = activeRules.thirdSetRule === 'play_if_tied' && totalSets > 2;
+  const setsNeededToWin = Math.ceil(totalSets / 2); // e.g. 2 for Best of 3, 3 for Best of 5
+
+  // Calculate sets won for initial sets before deciding set
+  const nonDecidingSetsCount = totalSets - 1;
+  let homeEarlyWins = 0;
+  let awayEarlyWins = 0;
+
+  sets.slice(0, nonDecidingSetsCount).forEach((s) => {
+    if (s.homeScore > s.awayScore) homeEarlyWins += 1;
+    if (s.awayScore > s.awayScore || s.awayScore > s.homeScore) awayEarlyWins += 1;
+  });
+
+  const earlyWinnerReached = isBestOfFormat && (homeEarlyWins >= setsNeededToWin || awayEarlyWins >= setsNeededToWin);
+
+  // Filter sets to save if 3rd set was skipped due to Best of format
+  const activeSetsToEvaluate = (earlyWinnerReached && !includeOptionalSet)
+    ? sets.slice(0, nonDecidingSetsCount)
+    : sets;
+
+  activeSetsToEvaluate.forEach((s) => {
     if (s.homeScore > s.awayScore) homeSetsWon += 1;
-    if (s.awayScore > s.homeScore) awaySetsWon += 1;
+    else if (s.awayScore > s.homeScore) awaySetsWon += 1;
   });
 
   const calculatedWinnerId =
@@ -66,14 +119,13 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
   const handleSave = () => {
     if (!calculatedWinnerId) return;
 
-    // Trigger confetti celebrating match record
     confetti({
       particleCount: 80,
       spread: 70,
       origin: { y: 0.6 },
     });
 
-    onSaveScore(match.id, sets, calculatedWinnerId);
+    onSaveScore(match.id, activeSetsToEvaluate, calculatedWinnerId);
     onClose();
   };
 
@@ -90,7 +142,7 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
             <div>
               <h3 className="text-base font-bold text-white">Court-side Scorekeeper</h3>
               <p className="text-xs text-slate-400">
-                Week {match.weekNumber} • {formatTime(match.startTime)} • Court #{match.courtId}
+                Week {match.weekNumber} • {formatTime(match.startTime)} • {division?.name || 'League Match'}
               </p>
             </div>
           </div>
@@ -103,14 +155,25 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-5">
           
+          {/* Active Rules Info Banner */}
+          <div className="flex items-center justify-between px-3.5 py-2 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-400">
+            <div className="flex items-center space-x-1.5 text-amber-400 font-semibold">
+              <Info className="h-4 w-4 shrink-0" />
+              <span>League Rules:</span>
+            </div>
+            <span className="font-bold text-white">
+              {totalSets} Sets • {activeRules.pointsPerSet}pt reg / {activeRules.pointsPerDecidingSet}pt dec • {activeRules.thirdSetRule === 'play_if_tied' ? 'Best of 3 (Play 3rd if 1-1)' : activeRules.thirdSetRule === 'guaranteed_all' ? '3 Guaranteed Sets' : 'Timed Sets'}
+            </span>
+          </div>
+
           {/* Teams Header Bar */}
           <div className="grid grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-2xl border border-slate-800/80 text-center">
             {/* Home Team */}
             <div className="flex flex-col items-center space-y-1">
               <div className="flex items-center space-x-2">
-                <span className="h-3 w-3 rounded-full" style={{ backgroundColor: homeTeam.badgeColor }} />
+                <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: homeTeam.badgeColor }} />
                 <span className="font-bold text-sm text-white truncate max-w-[130px]">{homeTeam.name}</span>
               </div>
               <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Home</span>
@@ -119,7 +182,7 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
             {/* Away Team */}
             <div className="flex flex-col items-center space-y-1">
               <div className="flex items-center space-x-2">
-                <span className="h-3 w-3 rounded-full" style={{ backgroundColor: awayTeam.badgeColor }} />
+                <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: awayTeam.badgeColor }} />
                 <span className="font-bold text-sm text-white truncate max-w-[130px]">{awayTeam.name}</span>
               </div>
               <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Away</span>
@@ -137,61 +200,104 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
             </div>
           )}
 
-          {/* Sets Score Input Controls */}
-          <div className="space-y-4">
-            {sets.map((set, setIdx) => (
-              <div
-                key={set.setNumber}
-                className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3"
-              >
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
-                  <span>SET #{set.setNumber}</span>
-                  <span className="text-slate-500">
-                    {setIdx === 2 ? 'Tie-break set (to 15)' : 'Set (to 25)'}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Home Score Counter */}
-                  <div className="flex items-center justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
-                    <button
-                      onClick={() => updateSetScore(setIdx, true, -1)}
-                      className="h-10 w-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center font-bold text-lg"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="text-2xl font-extrabold font-mono text-amber-400">
-                      {set.homeScore}
-                    </span>
-                    <button
-                      onClick={() => updateSetScore(setIdx, true, 1)}
-                      className="h-10 w-10 rounded-lg bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-amber-500/20"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  {/* Away Score Counter */}
-                  <div className="flex items-center justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
-                    <button
-                      onClick={() => updateSetScore(setIdx, false, -1)}
-                      className="h-10 w-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center font-bold text-lg"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="text-2xl font-extrabold font-mono text-emerald-400">
-                      {set.awayScore}
-                    </span>
-                    <button
-                      onClick={() => updateSetScore(setIdx, false, 1)}
-                      className="h-10 w-10 rounded-lg bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-emerald-500/20"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+          {/* Best of 3 / 5 Condition Notice Banner */}
+          {earlyWinnerReached && (
+            <div className="p-3 bg-violet-500/10 border border-violet-500/30 rounded-2xl space-y-2 text-xs">
+              <div className="flex items-center space-x-2 text-violet-300 font-bold">
+                <AlertCircle className="h-4 w-4 text-violet-400 shrink-0" />
+                <span>Best of Format Condition Met ({homeEarlyWins}-{awayEarlyWins})</span>
               </div>
-            ))}
+              <p className="text-[11px] text-slate-300">
+                {homeEarlyWins >= setsNeededToWin ? homeTeam.name : awayTeam.name} won the first {setsNeededToWin} sets. Under standard Best of 3 rules, set #{totalSets} is optional.
+              </p>
+              <label className="flex items-center space-x-2 text-amber-400 font-semibold cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={includeOptionalSet}
+                  onChange={(e) => setIncludeOptionalSet(e.target.checked)}
+                  className="rounded accent-amber-500"
+                />
+                <span>Include Set #{totalSets} score in match record</span>
+              </label>
+            </div>
+          )}
+
+          {/* Sets Score Input Controls */}
+          <div className="space-y-3">
+            {sets.map((set, setIdx) => {
+              const isDecidingSet = set.setNumber === totalSets && totalSets > 2;
+              const targetPoints = isDecidingSet ? activeRules.pointsPerDecidingSet : activeRules.pointsPerSet;
+              const isOptionalSkipped = earlyWinnerReached && !includeOptionalSet && isDecidingSet;
+
+              return (
+                <div
+                  key={set.setNumber}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isOptionalSkipped
+                      ? 'bg-slate-950/40 border-slate-800/40 opacity-50'
+                      : 'bg-slate-950 border-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
+                    <span className="font-bold text-white flex items-center gap-1.5">
+                      SET #{set.setNumber}
+                      {isDecidingSet && (
+                        <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-md border border-amber-500/30">
+                          Tie-breaker
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-slate-400 font-mono text-[11px]">
+                      Target: {targetPoints} pts {activeRules.winByTwo ? '(Win by 2)' : ''}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Home Score Counter */}
+                    <div className="flex items-center justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
+                      <button
+                        onClick={() => updateSetScore(setIdx, true, -1)}
+                        disabled={isOptionalSkipped}
+                        className="h-10 w-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center font-bold text-lg disabled:opacity-50"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="text-2xl font-extrabold font-mono text-amber-400">
+                        {set.homeScore}
+                      </span>
+                      <button
+                        onClick={() => updateSetScore(setIdx, true, 1)}
+                        disabled={isOptionalSkipped}
+                        className="h-10 w-10 rounded-lg bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-amber-500/20 disabled:opacity-50"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Away Score Counter */}
+                    <div className="flex items-center justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
+                      <button
+                        onClick={() => updateSetScore(setIdx, false, -1)}
+                        disabled={isOptionalSkipped}
+                        className="h-10 w-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center font-bold text-lg disabled:opacity-50"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="text-2xl font-extrabold font-mono text-emerald-400">
+                        {set.awayScore}
+                      </span>
+                      <button
+                        onClick={() => updateSetScore(setIdx, false, 1)}
+                        disabled={isOptionalSkipped}
+                        className="h-10 w-10 rounded-lg bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-emerald-500/20 disabled:opacity-50"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Match Outcome Summary */}

@@ -7,12 +7,33 @@ export type SetFormat =
   | '3 Guaranteed Sets (25-25-25)'
   | '2 Sets Timed (21-21)';
 
+export type ThirdSetRule = 'guaranteed_all' | 'play_if_tied' | 'timed_sets';
+
+export interface MatchRules {
+  totalSets: number; // e.g. 3, 5, 2
+  pointsPerSet: number; // e.g. 25, 21, 15
+  pointsPerDecidingSet: number; // e.g. 15, 25, 21
+  thirdSetRule: ThirdSetRule;
+  winByTwo: boolean;
+  capRule: 'Win by 2 (Uncapped)' | 'Cap at +2 (e.g. 27/17)' | 'Hard Cap at Target (25/15)';
+}
+
+export const DEFAULT_MATCH_RULES: MatchRules = {
+  totalSets: 3,
+  pointsPerSet: 25,
+  pointsPerDecidingSet: 15,
+  thirdSetRule: 'guaranteed_all',
+  winByTwo: true,
+  capRule: 'Win by 2 (Uncapped)',
+};
+
 export interface Division {
   id: string;
   name: string; // e.g. "Co-Ed 6s Competitive A", "Men's Open", "Women's B"
   genderCategory: 'Men' | 'Women' | 'Co-Ed' | 'Reverse Co-Ed';
   netHeight: NetHeight;
   setFormat: SetFormat;
+  matchRules?: MatchRules;
   minFemalesOnCourt?: number;
   capRule: 'Win by 2 (Uncapped)' | 'Cap at 27/17' | 'Cap at 25/15';
   workTeamRequired: boolean;
@@ -132,6 +153,7 @@ export interface LeagueSeason {
   endDate: string;
   maxTeams?: number;
   hasDivisions?: boolean; // Single Division vs Multi-Division
+  matchRules?: MatchRules;
   scheduleOptions?: AdvancedScheduleOptions;
   locations: Location[];
   facilities?: Location[]; // Alias

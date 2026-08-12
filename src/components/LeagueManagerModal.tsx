@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { LeagueSeason, SportType } from '@/types/league';
-import { X, Trophy, Plus, Calendar, Users, Building2, Layers, Edit3, Trash2, CheckCircle2, Sparkles, Check } from 'lucide-react';
+import { LeagueSeason, SportType, MatchRules, ThirdSetRule, DEFAULT_MATCH_RULES } from '@/types/league';
+import { X, Trophy, Plus, Calendar, Users, Building2, Layers, Edit3, Trash2, CheckCircle2, Sparkles, Check, Settings2 } from 'lucide-react';
 
 interface LeagueManagerModalProps {
   leagues: LeagueSeason[];
@@ -17,9 +17,18 @@ interface LeagueManagerModalProps {
     endDate: string,
     maxTeams: number,
     hasDivisions: boolean,
-    autofill: boolean
+    autofill: boolean,
+    matchRules: MatchRules
   ) => void;
-  onUpdateLeague: (id: string, name: string, sport: SportType, startDate: string, endDate: string, maxTeams: number) => void;
+  onUpdateLeague: (
+    id: string,
+    name: string,
+    sport: SportType,
+    startDate: string,
+    endDate: string,
+    maxTeams: number,
+    matchRules: MatchRules
+  ) => void;
   onDeleteLeague: (id: string) => void;
 }
 
@@ -45,6 +54,13 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [hasDivisions, setHasDivisions] = useState<boolean>(true);
   const [autofill, setAutofill] = useState<boolean>(true);
 
+  // Match Rules State (New League)
+  const [totalSets, setTotalSets] = useState<number>(3);
+  const [pointsPerSet, setPointsPerSet] = useState<number>(25);
+  const [pointsPerDecidingSet, setPointsPerDecidingSet] = useState<number>(15);
+  const [thirdSetRule, setThirdSetRule] = useState<ThirdSetRule>('guaranteed_all');
+  const [capRule, setCapRule] = useState<MatchRules['capRule']>('Win by 2 (Uncapped)');
+
   // Edit League Form State
   const [editName, setEditName] = useState('');
   const [editSport, setEditSport] = useState<SportType>('Volleyball');
@@ -52,29 +68,61 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [editEndDate, setEditEndDate] = useState('');
   const [editMaxTeams, setEditMaxTeams] = useState<number>(12);
 
+  // Edit Match Rules State
+  const [editTotalSets, setEditTotalSets] = useState<number>(3);
+  const [editPointsPerSet, setEditPointsPerSet] = useState<number>(25);
+  const [editPointsPerDecidingSet, setEditPointsPerDecidingSet] = useState<number>(15);
+  const [editThirdSetRule, setEditThirdSetRule] = useState<ThirdSetRule>('guaranteed_all');
+  const [editCapRule, setEditCapRule] = useState<MatchRules['capRule']>('Win by 2 (Uncapped)');
+
   if (!isOpen) return null;
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    onCreateLeague(name.trim(), sport, startDate, endDate, maxTeams, hasDivisions, autofill);
+    const matchRules: MatchRules = {
+      totalSets,
+      pointsPerSet,
+      pointsPerDecidingSet,
+      thirdSetRule,
+      winByTwo: true,
+      capRule,
+    };
+
+    onCreateLeague(name.trim(), sport, startDate, endDate, maxTeams, hasDivisions, autofill, matchRules);
     setName('');
     setShowCreateForm(false);
   };
 
   const startEditLeague = (league: LeagueSeason) => {
+    const rules = league.matchRules || DEFAULT_MATCH_RULES;
     setEditingLeagueId(league.id);
     setEditName(league.name);
     setEditSport(league.sport);
     setEditStartDate(league.startDate);
     setEditEndDate(league.endDate);
     setEditMaxTeams(league.maxTeams || 12);
+
+    setEditTotalSets(rules.totalSets);
+    setEditPointsPerSet(rules.pointsPerSet);
+    setEditPointsPerDecidingSet(rules.pointsPerDecidingSet);
+    setEditThirdSetRule(rules.thirdSetRule);
+    setEditCapRule(rules.capRule);
   };
 
   const handleSaveEdit = (leagueId: string) => {
     if (!editName.trim()) return;
-    onUpdateLeague(leagueId, editName.trim(), editSport, editStartDate, editEndDate, editMaxTeams);
+    const updatedRules: MatchRules = {
+      totalSets: editTotalSets,
+      pointsPerSet: editPointsPerSet,
+      pointsPerDecidingSet: editPointsPerDecidingSet,
+      thirdSetRule: editThirdSetRule,
+      winByTwo: true,
+      capRule: editCapRule,
+    };
+
+    onUpdateLeague(leagueId, editName.trim(), editSport, editStartDate, editEndDate, editMaxTeams, updatedRules);
     setEditingLeagueId(null);
   };
 
@@ -212,6 +260,84 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                   </div>
                 </div>
 
+                {/* League Match Rules & Scoring Setup */}
+                <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
+                  <div className="flex items-center space-x-1.5 text-xs font-bold text-amber-400">
+                    <Settings2 className="h-4 w-4 text-amber-400" />
+                    <span>Match Rules & Scoring Configuration</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Sets per Match</label>
+                      <select
+                        value={totalSets}
+                        onChange={(e) => setTotalSets(Number(e.target.value))}
+                        className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-2.5 py-1.5 text-xs"
+                      >
+                        <option value={3}>3 Sets (Standard)</option>
+                        <option value={5}>5 Sets (Best of 5)</option>
+                        <option value={2}>2 Sets (Timed)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Points per Set</label>
+                      <select
+                        value={pointsPerSet}
+                        onChange={(e) => setPointsPerSet(Number(e.target.value))}
+                        className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-2.5 py-1.5 text-xs"
+                      >
+                        <option value={25}>25 Points</option>
+                        <option value={21}>21 Points</option>
+                        <option value={15}>15 Points</option>
+                        <option value={30}>30 Points</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Deciding Set Points</label>
+                      <select
+                        value={pointsPerDecidingSet}
+                        onChange={(e) => setPointsPerDecidingSet(Number(e.target.value))}
+                        className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-2.5 py-1.5 text-xs"
+                      >
+                        <option value={15}>15 Points (Set 3/5)</option>
+                        <option value={25}>25 Points (Full Set)</option>
+                        <option value={21}>21 Points</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Deciding / 3rd Set Requirement</label>
+                      <select
+                        value={thirdSetRule}
+                        onChange={(e) => setThirdSetRule(e.target.value as ThirdSetRule)}
+                        className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-2.5 py-1.5 text-xs"
+                      >
+                        <option value="guaranteed_all">3 Guaranteed Sets (Play set 3 even if 2-0)</option>
+                        <option value="play_if_tied">Best of 3 (Play set 3 ONLY if tied 1-1)</option>
+                        <option value="timed_sets">Timed Sets (Stop at match time limit)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Cap & Win-by Rule</label>
+                      <select
+                        value={capRule}
+                        onChange={(e) => setCapRule(e.target.value as MatchRules['capRule'])}
+                        className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-2.5 py-1.5 text-xs"
+                      >
+                        <option value="Win by 2 (Uncapped)">Win by 2 (Uncapped)</option>
+                        <option value="Cap at +2 (e.g. 27/17)">Cap at +2 (e.g. 27/17)</option>
+                        <option value="Hard Cap at Target (25/15)">Hard Cap at Target Points</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-[11px] font-semibold text-slate-400 block mb-1">Start Date</label>
@@ -326,6 +452,77 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                         />
                       </div>
 
+                      {/* Edit Match Rules */}
+                      <div className="p-2.5 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+                        <span className="text-[11px] font-bold text-amber-400 block">Edit Match & Scoring Rules</span>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <label className="text-[10px] text-slate-400 block">Total Sets</label>
+                            <select
+                              value={editTotalSets}
+                              onChange={(e) => setEditTotalSets(Number(e.target.value))}
+                              className="w-full bg-slate-950 text-white text-[11px] rounded px-2 py-1 border border-slate-800"
+                            >
+                              <option value={3}>3 Sets</option>
+                              <option value={5}>5 Sets</option>
+                              <option value={2}>2 Sets</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-slate-400 block">Reg Set Pts</label>
+                            <select
+                              value={editPointsPerSet}
+                              onChange={(e) => setEditPointsPerSet(Number(e.target.value))}
+                              className="w-full bg-slate-950 text-white text-[11px] rounded px-2 py-1 border border-slate-800"
+                            >
+                              <option value={25}>25 Pts</option>
+                              <option value={21}>21 Pts</option>
+                              <option value={15}>15 Pts</option>
+                              <option value={30}>30 Pts</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-slate-400 block">Deciding Pts</label>
+                            <select
+                              value={editPointsPerDecidingSet}
+                              onChange={(e) => setEditPointsPerDecidingSet(Number(e.target.value))}
+                              className="w-full bg-slate-950 text-white text-[11px] rounded px-2 py-1 border border-slate-800"
+                            >
+                              <option value={15}>15 Pts</option>
+                              <option value={25}>25 Pts</option>
+                              <option value={21}>21 Pts</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <div>
+                            <label className="text-[10px] text-slate-400 block">3rd Set Condition</label>
+                            <select
+                              value={editThirdSetRule}
+                              onChange={(e) => setEditThirdSetRule(e.target.value as ThirdSetRule)}
+                              className="w-full bg-slate-950 text-white text-[11px] rounded px-2 py-1 border border-slate-800"
+                            >
+                              <option value="guaranteed_all">3 Guaranteed Sets</option>
+                              <option value="play_if_tied">Best of 3 (If Tied 1-1)</option>
+                              <option value="timed_sets">Timed Sets</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-slate-400 block">Cap Rule</label>
+                            <select
+                              value={editCapRule}
+                              onChange={(e) => setEditCapRule(e.target.value as MatchRules['capRule'])}
+                              className="w-full bg-slate-950 text-white text-[11px] rounded px-2 py-1 border border-slate-800"
+                            >
+                              <option value="Win by 2 (Uncapped)">Win by 2 (Uncapped)</option>
+                              <option value="Cap at +2 (e.g. 27/17)">Cap at +2 (27/17)</option>
+                              <option value="Hard Cap at Target (25/15)">Hard Cap (25/15)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="flex items-center space-x-2 pt-1">
                         <button
                           onClick={() => handleSaveEdit(league.id)}
@@ -373,6 +570,10 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                           <span className="flex items-center gap-1">
                             <Building2 className="h-3.5 w-3.5 text-blue-400" />
                             {league.locations.length} Venues
+                          </span>
+                          <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 text-[11px] font-semibold">
+                            <Settings2 className="h-3 w-3" />
+                            {league.matchRules ? `${league.matchRules.totalSets} Sets (${league.matchRules.pointsPerSet}/${league.matchRules.pointsPerSet}/${league.matchRules.pointsPerDecidingSet} pts)` : '3 Sets (25-25-15)'}
                           </span>
                         </div>
                       </div>

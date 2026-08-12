@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ===================================================
-echo   PowerSchedule - One-Click Git & Vercel Deployer
+echo   PowerSchedule - One-Click Git and Vercel Deployer
 echo ===================================================
 echo.
 

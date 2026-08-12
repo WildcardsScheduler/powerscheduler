@@ -1,4 +1,4 @@
-import { LeagueSeason, TeamStanding, Match, Team } from '@/types/league';
+import { LeagueSeason, TeamStanding, Match, Team, DEFAULT_MATCH_RULES } from '@/types/league';
 
 export const initialLeagueData: LeagueSeason = {
   id: 'league-fall-2026',
@@ -7,6 +7,14 @@ export const initialLeagueData: LeagueSeason = {
   startDate: '2026-09-08',
   endDate: '2026-11-24',
   maxTeams: 12,
+  matchRules: {
+    totalSets: 3,
+    pointsPerSet: 25,
+    pointsPerDecidingSet: 15,
+    thirdSetRule: 'guaranteed_all',
+    winByTwo: true,
+    capRule: 'Win by 2 (Uncapped)',
+  },
   locations: [
     {
       id: 'loc-pioneer',

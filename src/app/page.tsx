@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { initialLeaguesList, calculateStandings } from '@/data/mockLeagueData';
-import { LeagueSeason, Match, SetScore, TeamStanding, Location, SubLocation, SportType, Division, NetHeight, SetFormat, Team, Player } from '@/types/league';
+import { LeagueSeason, Match, SetScore, TeamStanding, Location, SubLocation, SportType, Division, NetHeight, SetFormat, Team, Player, MatchRules } from '@/types/league';
 import { Navbar, UserRole } from '@/components/Navbar';
 import { SchedulerDashboard } from '@/components/SchedulerDashboard';
 import { TeamRepDashboard } from '@/components/TeamRepDashboard';
@@ -135,11 +135,12 @@ export default function Home() {
     endDate: string,
     maxTeams: number,
     hasDivisions: boolean,
-    autofill: boolean
+    autofill: boolean,
+    matchRules: MatchRules
   ) => {
     const newLeague = autofill
-      ? createSampleLeague(name, sport, startDate, endDate, maxTeams, hasDivisions)
-      : createBlankLeague(name, sport, startDate, endDate, maxTeams, hasDivisions);
+      ? createSampleLeague(name, sport, startDate, endDate, maxTeams, hasDivisions, matchRules)
+      : createBlankLeague(name, sport, startDate, endDate, maxTeams, hasDivisions, matchRules);
 
     setLeagues((prev) => [...prev, newLeague]);
     handleSelectLeague(newLeague.id, newLeague);
@@ -151,7 +152,8 @@ export default function Home() {
     sport: SportType,
     startDate: string,
     endDate: string,
-    maxTeams: number
+    maxTeams: number,
+    matchRules: MatchRules
   ) => {
     setLeagues((prev) =>
       prev.map((l) => {
@@ -163,6 +165,7 @@ export default function Home() {
             startDate,
             endDate,
             maxTeams,
+            matchRules,
           };
         }
         return l;
@@ -674,6 +677,7 @@ export default function Home() {
           awayTeam={activeAwayTeam}
           workTeam={activeWorkTeam}
           division={activeDivision}
+          leagueRules={league.matchRules}
           isOpen={isScorekeeperOpen}
           onClose={() => {
             setIsScorekeeperOpen(false);
