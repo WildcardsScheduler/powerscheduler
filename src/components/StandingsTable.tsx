@@ -51,15 +51,15 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, divis
         <table className="w-full text-left text-xs sm:text-sm text-slate-300">
           <thead className="bg-slate-950/80 uppercase text-[11px] text-slate-400 font-semibold border-b border-slate-800">
             <tr>
-              <th className="py-3 px-3 w-10 text-center">#</th>
-              <th className="py-3 px-3">Team</th>
-              <th className="py-3 px-2 text-center">MP</th>
-              <th className="py-3 px-2 text-center">W</th>
-              <th className="py-3 px-2 text-center">L</th>
+              <th className="py-3 px-2 w-8 text-center">#</th>
+              <th className="py-3 px-2">Team</th>
+              <th className="py-3 px-1.5 text-center">MP</th>
+              <th className="py-3 px-1.5 text-center">W</th>
+              <th className="py-3 px-1.5 text-center">L</th>
               <th className="py-3 px-2 text-center">Sets (W-L)</th>
-              <th className="py-3 px-2 text-center">Set Ratio</th>
+              <th className="py-3 px-2 text-center hidden sm:table-cell">Set Ratio</th>
               <th className="py-3 px-2 text-center hidden md:table-cell">Pt Diff</th>
-              <th className="py-3 px-3 text-right font-bold text-amber-400">PTS</th>
+              <th className="py-3 px-2 text-right font-bold text-amber-400">PTS</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60 font-medium">
@@ -75,17 +75,17 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, divis
                   key={team.teamId}
                   className="hover:bg-slate-800/50 transition-colors group"
                 >
-                  <td className="py-3.5 px-3 text-center">
+                  <td className="py-3 px-2 text-center">
                     {team.rank === 1 ? (
-                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xs border border-amber-500/30">
+                      <span className="inline-flex items-center justify-center h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xs border border-amber-500/30">
                         1
                       </span>
                     ) : team.rank === 2 ? (
-                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-300/20 text-slate-200 font-bold text-xs border border-slate-300/30">
+                      <span className="inline-flex items-center justify-center h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-slate-300/20 text-slate-200 font-bold text-xs border border-slate-300/30">
                         2
                       </span>
                     ) : team.rank === 3 ? (
-                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-700/20 text-amber-500 font-bold text-xs border border-amber-700/30">
+                      <span className="inline-flex items-center justify-center h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-amber-700/20 text-amber-500 font-bold text-xs border border-amber-700/30">
                         3
                       </span>
                     ) : (
@@ -93,14 +93,14 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, divis
                     )}
                   </td>
 
-                  <td className="py-3.5 px-3 max-w-[130px] sm:max-w-none">
-                    <div className="flex items-center space-x-2.5 min-w-0">
+                  <td className="py-3 px-2">
+                    <div className="flex items-center space-x-2 min-w-0 max-w-[100px] sm:max-w-none">
                       <div
                         className="h-3.5 w-3.5 rounded-full shrink-0 shadow-sm"
                         style={{ backgroundColor: team.badgeColor }}
                       />
                       <span
-                        className="font-semibold text-white group-hover:text-amber-400 transition-colors truncate"
+                        className="font-semibold text-white group-hover:text-amber-400 transition-colors truncate text-xs sm:text-sm"
                         title={team.teamName}
                       >
                         {team.teamName}
@@ -108,26 +108,26 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, divis
                     </div>
                   </td>
 
-                  <td className="py-3.5 px-2 text-center text-slate-300">{team.played}</td>
-                  <td className="py-3.5 px-2 text-center font-bold text-emerald-400">{team.wins}</td>
-                  <td className="py-3.5 px-2 text-center text-rose-400">{team.losses}</td>
+                  <td className="py-3 px-1.5 text-center text-slate-300">{team.played}</td>
+                  <td className="py-3 px-1.5 text-center font-bold text-emerald-400">{team.wins}</td>
+                  <td className="py-3 px-1.5 text-center text-rose-400">{team.losses}</td>
 
-                  <td className="py-3.5 px-2 text-center font-mono text-xs">
+                  <td className="py-3 px-2 text-center font-mono text-xs whitespace-nowrap">
                     {team.setsWon}-{team.setsLost}
                   </td>
 
-                  <td className="py-3.5 px-2 text-center font-mono text-xs text-slate-400">
+                  <td className="py-3 px-2 text-center font-mono text-xs text-slate-400 hidden sm:table-cell">
                     {team.setRatio.toFixed(3)}
                   </td>
 
-                  <td className="py-3.5 px-2 text-center font-mono text-xs hidden md:table-cell">
+                  <td className="py-3 px-2 text-center font-mono text-xs hidden md:table-cell">
                     <span className={team.pointDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
                       {team.pointDiff > 0 ? `+${team.pointDiff}` : team.pointDiff}
                     </span>
                   </td>
 
-                  <td className="py-3.5 px-3 text-right">
-                    <span className="text-base font-extrabold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20">
+                  <td className="py-3 px-2 text-right">
+                    <span className="text-sm sm:text-base font-extrabold text-amber-400 bg-amber-400/10 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-amber-400/20">
                       {team.points}
                     </span>
                   </td>
