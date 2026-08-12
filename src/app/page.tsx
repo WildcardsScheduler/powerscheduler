@@ -15,6 +15,7 @@ import { LeagueManagerModal } from '@/components/LeagueManagerModal';
 import { DivisionManagerModal } from '@/components/DivisionManagerModal';
 import { TeamManagerModal } from '@/components/TeamManagerModal';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
+import { formatMatchRulesDescription } from '@/utils/formatRules';
 import { Globe, Trophy, Users, Calendar, MapPin } from 'lucide-react';
 
 export default function Home() {
@@ -221,6 +222,7 @@ export default function Home() {
     maxTeams: number,
     matchRules: MatchRules
   ) => {
+    const formattedDesc = formatMatchRulesDescription(matchRules);
     setLeagues((prev) =>
       prev.map((l) => {
         if (l.id === id) {
@@ -232,6 +234,11 @@ export default function Home() {
             endDate,
             maxTeams,
             matchRules,
+            divisions: l.divisions.map((d) => ({
+              ...d,
+              setFormat: formattedDesc as any,
+              matchRules: matchRules,
+            })),
           };
         }
         return l;
@@ -736,7 +743,13 @@ export default function Home() {
         ) : null}
 
         {/* Dynamic Standings Table */}
-        {activeDivision && <StandingsTable standings={standings} division={activeDivision} />}
+        {activeDivision && (
+          <StandingsTable
+            standings={standings}
+            division={activeDivision}
+            matchRules={league.matchRules}
+          />
+        )}
 
         {/* Schedule & Fixtures Grid */}
         <ScheduleGrid

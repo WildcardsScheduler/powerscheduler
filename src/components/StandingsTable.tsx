@@ -1,15 +1,19 @@
 'use client';
 
 import React from 'react';
-import { TeamStanding, Division } from '@/types/league';
+import { TeamStanding, Division, MatchRules } from '@/types/league';
 import { Trophy, Info, Users, ShieldAlert, Award } from 'lucide-react';
+import { formatMatchRulesDescription } from '@/utils/formatRules';
 
 interface StandingsTableProps {
   standings: TeamStanding[];
   division: Division;
+  matchRules?: MatchRules;
 }
 
-export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, division }) => {
+export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, division, matchRules }) => {
+  const setFormatText = formatMatchRulesDescription(division.matchRules || matchRules, division.setFormat);
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
       {/* Header Info */}
@@ -20,7 +24,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, divis
             <h3 className="text-lg font-bold text-white tracking-tight">{division.name} Standings</h3>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Format: <span className="text-slate-200">{division.setFormat}</span>
+            Format: <span className="text-slate-200">{setFormatText}</span>
           </p>
         </div>
 

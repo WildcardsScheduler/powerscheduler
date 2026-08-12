@@ -1,5 +1,6 @@
 import { LeagueSeason, Division, Location, Team, Match, SportType, MatchRules, DEFAULT_MATCH_RULES } from '@/types/league';
 import { generateVolleyballSchedule } from './schedulerEngine';
+import { formatMatchRulesDescription } from './formatRules';
 
 export function createBlankLeague(
   name: string,
@@ -13,12 +14,13 @@ export function createBlankLeague(
   const leagueId = `league-${Date.now()}`;
   const timestamp = Date.now();
   const rules = matchRules || DEFAULT_MATCH_RULES;
+  const initialFormat = formatMatchRulesDescription(rules);
 
   const defaultDivision: Division = {
     id: `div-${timestamp}-main`,
     name: hasDivisions ? 'Division A' : 'Main Division',
     genderCategory: 'Co-Ed',
-    setFormat: 'Best of 3 (25-25-15)',
+    setFormat: initialFormat as any,
     matchRules: rules,
     capRule: 'Win by 2 (Uncapped)',
     workTeamRequired: true,
