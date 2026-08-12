@@ -23,56 +23,122 @@ export default function Home() {
   const [currentRole, setCurrentRole] = useState<UserRole>('public');
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load state from localStorage on mount so data survives page refreshes
+  const [isCloudSynced, setIsCloudSynced] = useState(false);
+
+  // Helper to repair potential orphaned divisionIds
+  const repairLeaguesData = (data: LeagueSeason[]) => {
+    return data.map((l) => {
+      if (!l.divisions || l.divisions.length === 0) return l;
+      const validDivisionIds = new Set(l.divisions.map((d) => d.id));
+      const fallbackDivId = l.divisions[0].id;
+      const anyOrphaned = l.teams.some((t) => !validDivisionIds.has(t.divisionId));
+      if (!anyOrphaned) return l;
+      return {
+        ...l,
+        teams: l.teams.map((t) =>
+          validDivisionIds.has(t.divisionId) ? t : { ...t, divisionId: fallbackDivId }
+        ),
+      };
+    });
+  };
+
+  // Load state from online cloud API on mount (fallback to localStorage if offline)
   useEffect(() => {
-    try {
-      const savedLeagues = localStorage.getItem('powerschedule_leagues');
-      const savedActiveId = localStorage.getItem('powerschedule_active_league_id');
-      if (savedLeagues) {
-        const parsed: LeagueSeason[] = JSON.parse(savedLeagues);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-
-          // Data repair: reassign teams with orphaned divisionIds to the league's first division.
-          // This fixes leagues corrupted by a stale-state bug where teams were saved with
-          // a divisionId from a previously-viewed league.
-          const repaired = parsed.map((l) => {
-            if (!l.divisions || l.divisions.length === 0) return l;
-            const validDivisionIds = new Set(l.divisions.map((d) => d.id));
-            const fallbackDivId = l.divisions[0].id;
-            const anyOrphaned = l.teams.some((t) => !validDivisionIds.has(t.divisionId));
-            if (!anyOrphaned) return l;
-            return {
-              ...l,
-              teams: l.teams.map((t) =>
-                validDivisionIds.has(t.divisionId) ? t : { ...t, divisionId: fallbackDivId }
-              ),
-            };
-          });
-
-          setLeagues(repaired);
-          if (savedActiveId && repaired.some((l: LeagueSeason) => l.id === savedActiveId)) {
-            setActiveLeagueId(savedActiveId);
-          } else {
-            setActiveLeagueId(repaired[0].id);
+    let isMounted = true;
+    const fetchCloudData = async () => {
+      try {
+        const res = await fetch('/api/leagues', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.leagues && Array.isArray(data.leagues) && data.leagues.length > 0) {
+            const repaired = repairLeaguesData(data.leagues);
+            if (isMounted) {
+              setLeagues(repaired);
+              if (data.activeId && repaired.some((l: LeagueSeason) => l.id === data.activeId)) {
+                setActiveLeagueId(data.activeId);
+              } else {
+                setActiveLeagueId(repaired[0].id);
+              }
+              setIsCloudSynced(true);
+            }
+            return;
           }
         }
+      } catch (err) {
+        console.warn('Could not fetch online cloud data, falling back to local storage', err);
       }
-    } catch (err) {
-      console.error('Failed to load local storage state', err);
-    } finally {
-      setIsLoaded(true);
-    }
+
+      // Offline / Local Storage Fallback
+      try {
+        const savedLeagues = localStorage.getItem('powerschedule_leagues');
+        const savedActiveId = localStorage.getItem('powerschedule_active_league_id');
+        if (savedLeagues) {
+          const parsed: LeagueSeason[] = JSON.parse(savedLeagues);
+          if (Array.isArray(parsed) && parsed.length > 0 && isMounted) {
+            const repaired = repairLeaguesData(parsed);
+            setLeagues(repaired);
+            if (savedActiveId && repaired.some((l: LeagueSeason) => l.id === savedActiveId)) {
+              setActiveLeagueId(savedActiveId);
+            } else {
+              setActiveLeagueId(repaired[0].id);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load local storage state', err);
+      } finally {
+        if (isMounted) setIsLoaded(true);
+      }
+    };
+
+    fetchCloudData().finally(() => {
+      if (isMounted) setIsLoaded(true);
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
+  // Periodic polling interval to keep all devices (phone, desktop, public viewers) in sync
+  useEffect(() => {
+    if (!isLoaded) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/leagues', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.leagues && Array.isArray(data.leagues) && data.leagues.length > 0) {
+            const repaired = repairLeaguesData(data.leagues);
+            setLeagues(repaired);
+            setIsCloudSynced(true);
+          }
+        }
+      } catch {
+        // silent fail on network pulse
+      }
+    }, 6000);
 
-  // Persist state to localStorage whenever leagues or active league changes
+    return () => clearInterval(interval);
+  }, [isLoaded]);
+
+  // Persist state to online cloud API and local storage whenever leagues or active league changes
   useEffect(() => {
     if (!isLoaded) return;
     try {
       localStorage.setItem('powerschedule_leagues', JSON.stringify(leagues));
       localStorage.setItem('powerschedule_active_league_id', activeLeagueId);
+
+      // Post updates to online cloud store
+      fetch('/api/leagues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leagues, activeId: activeLeagueId }),
+      }).then(() => setIsCloudSynced(true)).catch((err) => {
+        console.warn('Cloud sync post warning:', err);
+      });
     } catch (err) {
-      console.error('Failed to save to local storage', err);
+      console.error('Failed to save state', err);
     }
   }, [leagues, activeLeagueId, isLoaded]);
 

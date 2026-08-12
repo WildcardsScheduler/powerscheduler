@@ -45,6 +45,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="bg-amber-500/10 text-amber-400 text-xs px-2 py-0.5 rounded-full font-medium border border-amber-500/20">
                 {activeLeague?.sport || 'Volleyball'}
               </span>
+              <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/20">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                Live Cloud
+              </span>
             </div>
 
             {/* League Dropdown Selector */}
