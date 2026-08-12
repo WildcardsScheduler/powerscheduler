@@ -325,15 +325,20 @@ export default function Home() {
     matchRules: MatchRules,
     adminPasscode?: string
   ) => {
+    const existingPasscode = leagues.find((l) => l.adminPasscode)?.adminPasscode;
+    const universalPasscode = adminPasscode || existingPasscode || 'admin123';
+
     const newLeague = autofill
       ? createSampleLeague(name, sport, startDate, endDate, maxTeams, hasDivisions, matchRules)
       : createBlankLeague(name, sport, startDate, endDate, maxTeams, hasDivisions, matchRules);
 
-    if (adminPasscode) {
-      newLeague.adminPasscode = adminPasscode;
-    }
+    newLeague.adminPasscode = universalPasscode;
 
-    setLeagues((prev) => [...prev, newLeague]);
+    // Ensure all leagues keep the universal passcode synchronized
+    setLeagues((prev) => [
+      ...prev.map((l) => ({ ...l, adminPasscode: universalPasscode })),
+      { ...newLeague, adminPasscode: universalPasscode },
+    ]);
     handleSelectLeague(newLeague.id, newLeague);
   };
 
@@ -348,26 +353,29 @@ export default function Home() {
     adminPasscode?: string
   ) => {
     const formattedDesc = formatMatchRulesDescription(matchRules);
+    const updatedPasscode = adminPasscode?.trim() || leagues.find((l) => l.adminPasscode)?.adminPasscode || 'admin123';
+
+    // Universal update across all leagues in the platform
     setLeagues((prev) =>
       prev.map((l) => {
-        if (l.id === id) {
-          return {
-            ...l,
-            name,
-            sport,
-            startDate,
-            endDate,
-            maxTeams,
-            matchRules,
-            adminPasscode: adminPasscode || l.adminPasscode || 'admin123',
-            divisions: l.divisions.map((d) => ({
-              ...d,
-              setFormat: formattedDesc as any,
-              matchRules: matchRules,
-            })),
-          };
-        }
-        return l;
+        const isTarget = l.id === id;
+        return {
+          ...l,
+          adminPasscode: updatedPasscode, // Universal Passcode
+          name: isTarget ? name : l.name,
+          sport: isTarget ? sport : l.sport,
+          startDate: isTarget ? startDate : l.startDate,
+          endDate: isTarget ? endDate : l.endDate,
+          maxTeams: isTarget ? maxTeams : l.maxTeams,
+          matchRules: isTarget ? matchRules : l.matchRules,
+          divisions: isTarget
+            ? l.divisions.map((d) => ({
+                ...d,
+                setFormat: formattedDesc as any,
+                matchRules: matchRules,
+              }))
+            : l.divisions,
+        };
       })
     );
   };
@@ -379,6 +387,13 @@ export default function Home() {
     if (activeLeagueId === id) {
       handleSelectLeague(nextLeagues[0].id);
     }
+  };
+
+  // Universal Admin Passcode — applies to all leagues
+  const handleUpdateUniversalPasscode = (passcode: string) => {
+    setLeagues((prev) =>
+      prev.map((l) => ({ ...l, adminPasscode: passcode }))
+    );
   };
 
   // Division CRUD Handlers
@@ -952,6 +967,7 @@ export default function Home() {
         onCreateLeague={handleCreateLeague}
         onUpdateLeague={handleUpdateLeague}
         onDeleteLeague={handleDeleteLeague}
+        onUpdateUniversalPasscode={handleUpdateUniversalPasscode}
       />
 
       {/* Division Structure & Team Assignment Manager Modal */}

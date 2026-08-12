@@ -32,6 +32,7 @@ interface LeagueManagerModalProps {
     adminPasscode?: string
   ) => void;
   onDeleteLeague: (id: string) => void;
+  onUpdateUniversalPasscode: (passcode: string) => void;
 }
 
 export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
@@ -43,9 +44,15 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   onCreateLeague,
   onUpdateLeague,
   onDeleteLeague,
+  onUpdateUniversalPasscode,
 }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingLeagueId, setEditingLeagueId] = useState<string | null>(null);
+
+  // Universal Admin Passcode state (shared across all leagues)
+  const currentPasscode = leagues.find((l) => l.adminPasscode)?.adminPasscode || 'admin123';
+  const [universalPasscode, setUniversalPasscode] = useState(currentPasscode);
+  const [passcodeSaved, setPasscodeSaved] = useState(false);
 
   // New League Form State
   const [name, setName] = useState('');
@@ -69,7 +76,6 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [editStartDate, setEditStartDate] = useState('');
   const [editEndDate, setEditEndDate] = useState('');
   const [editMaxTeams, setEditMaxTeams] = useState<number>(12);
-  const [editAdminPasscode, setEditAdminPasscode] = useState('admin123');
 
   // Edit Match Rules State
   const [editTotalSets, setEditTotalSets] = useState<number>(3);
@@ -108,7 +114,6 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
     setEditStartDate(league.startDate);
     setEditEndDate(league.endDate);
     setEditMaxTeams(league.maxTeams || 12);
-    setEditAdminPasscode(league.adminPasscode || 'admin123');
 
     setEditTotalSets(rules.totalSets);
     setEditPointsPerSet(rules.pointsPerSet);
@@ -137,8 +142,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
       editStartDate,
       editEndDate,
       editMaxTeams,
-      updatedRules,
-      editAdminPasscode.trim() || 'admin123'
+      updatedRules
     );
     setEditingLeagueId(null);
   };
@@ -168,6 +172,40 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
 
         {/* Content Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
+
+          {/* Universal Master Admin Passcode */}
+          <div className="p-4 bg-slate-950 border border-rose-500/30 rounded-2xl space-y-2">
+            <label className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
+              <KeyRound className="h-4 w-4" /> Universal Master Admin Passcode
+            </label>
+            <p className="text-[10px] text-slate-400 leading-relaxed">
+              This is the single master password for all administrative access across every league season. Changing it here applies everywhere.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={universalPasscode}
+                onChange={(e) => { setUniversalPasscode(e.target.value); setPasscodeSaved(false); }}
+                placeholder="Master Admin Passcode"
+                className="flex-1 bg-slate-900 border border-slate-800 text-rose-300 font-mono font-bold text-xs rounded-xl px-3 py-2 focus:ring-1 focus:ring-rose-500 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  onUpdateUniversalPasscode(universalPasscode.trim() || 'admin123');
+                  setPasscodeSaved(true);
+                  setTimeout(() => setPasscodeSaved(false), 2000);
+                }}
+                className={`px-4 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-1 ${
+                  passcodeSaved
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500/30'
+                }`}
+              >
+                {passcodeSaved ? <><Check className="h-3.5 w-3.5" /> Saved</> : 'Save'}
+              </button>
+            </div>
+          </div>
           
           {/* Top Bar with Add League Button */}
           <div className="flex items-center justify-between">
@@ -467,20 +505,6 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                         />
                       </div>
 
-                      {/* Admin Passcode Config */}
-                      <div className="p-2.5 bg-slate-900 border border-rose-500/30 rounded-xl space-y-1">
-                        <label className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
-                          <KeyRound className="h-3.5 w-3.5" /> Master Admin Passcode
-                        </label>
-                        <input
-                          type="text"
-                          value={editAdminPasscode}
-                          onChange={(e) => setEditAdminPasscode(e.target.value)}
-                          placeholder="Master Admin Passcode"
-                          className="w-full bg-slate-950 border border-slate-800 text-rose-300 font-mono font-bold text-xs rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-rose-500 focus:outline-none"
-                        />
-                        <p className="text-[10px] text-slate-400">Master password required for administrative access to this league season.</p>
-                      </div>
 
                       {/* Edit Match Rules */}
                       <div className="p-2.5 bg-slate-900 border border-slate-800 rounded-xl space-y-2">

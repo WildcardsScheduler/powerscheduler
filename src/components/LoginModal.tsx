@@ -79,9 +79,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setAdminError('');
     setAdminSuccess('');
 
-    const validPasscode = targetLeague?.adminPasscode || 'admin123';
+    // Check universal master admin passcode across all leagues
+    const universalPasscode =
+      leagues.find((l) => l.adminPasscode)?.adminPasscode || targetLeague?.adminPasscode || 'admin123';
 
-    if (adminPasscode.trim() === validPasscode) {
+    if (adminPasscode.trim() === universalPasscode) {
       setAdminSuccess('Administrator Authorized. Access Granted.');
       onSelectLeague(targetLeague.id);
       setTimeout(() => {
@@ -246,28 +248,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </form>
           ) : (
             <form onSubmit={handleAdminLogin} className="space-y-4">
-              {/* League Selector (if multiple leagues exist) */}
-              {leagues.length > 1 && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300 block">Target League Season</label>
-                  <select
-                    value={selectedLeagueId}
-                    onChange={(e) => {
-                      const newId = e.target.value;
-                      setSelectedLeagueId(newId);
-                      onSelectLeague(newId);
-                    }}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-violet-500"
-                  >
-                    {leagues.map((l) => (
-                      <option key={l.id} value={l.id} className="bg-slate-900 text-white">
-                        {l.name} ({l.sport})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-300 block">
                   Master Administrator Passcode
