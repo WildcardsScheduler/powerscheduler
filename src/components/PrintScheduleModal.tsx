@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Match, Team, Location, Division } from '@/types/league';
 import { Printer, X, Calendar, User, FileText, Check, Layers, MapPin } from 'lucide-react';
 import { formatTime, formatTimeRange } from '@/utils/formatUtils';
@@ -28,8 +29,13 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
 }) => {
   const [printMode, setPrintMode] = useState<'master' | 'team' | 'all_teams'>('master');
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const divisionTeams = teams.filter((t) => t.divisionId === selectedDivisionId);
   const divisionMatches = matches.filter((m) => m.divisionId === selectedDivisionId);
@@ -68,7 +74,7 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
     window.print();
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm animate-in fade-in duration-200 print-modal-container">
       {/* CSS Print Overrides */}
       <style jsx global>{`
@@ -411,7 +417,8 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
