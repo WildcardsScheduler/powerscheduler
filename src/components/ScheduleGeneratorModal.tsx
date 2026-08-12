@@ -77,11 +77,6 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   // Courts / Playing Surfaces confirmation state
   const [selectedCourtIds, setSelectedCourtIds] = useState<string[]>(() => courts.map((c) => c.id));
 
-  // Sync selected court IDs whenever courts prop changes
-  useEffect(() => {
-    setSelectedCourtIds(courts.map((c) => c.id));
-  }, [courts]);
-
   const activeCourts = useMemo(() => {
     return courts.filter((c) => selectedCourtIds.includes(c.id));
   }, [courts, selectedCourtIds]);
@@ -107,21 +102,24 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
     return Math.max(1, Math.round(diffDays / 7));
   }, [startDate, endDate]);
 
-  // Reset state when switching leagues or reopening modal for a different context
+  // Reset state ONLY when reopening the modal or switching division context
   const firstDivisionId = divisions[0]?.id || '';
-  const teamIdsStr = teams.map((t) => t.id).join(',');
-  const courtIdsStr = courts.map((c) => c.id).join(',');
 
   useEffect(() => {
-    setSelectedDivisionId(firstDivisionId);
-    setSelectedCourtIds(courts.map((c) => c.id));
-    setStartDate(defaultStartDate);
-    setEndDate(defaultEndDate);
-    setGeneratedMatches(null);
-    setGeneratedReport(null);
-    setWarnings([]);
-    setViewMode('config');
-  }, [firstDivisionId, defaultStartDate, defaultEndDate, teamIdsStr, courtIdsStr]);
+    if (isOpen) {
+      setSelectedDivisionId(firstDivisionId);
+      setSelectedCourtIds((prev) => {
+        const valid = prev.filter((id) => courts.some((c) => c.id === id));
+        return valid.length > 0 ? valid : courts.map((c) => c.id);
+      });
+      setStartDate(defaultStartDate);
+      setEndDate(defaultEndDate);
+      setGeneratedMatches(null);
+      setGeneratedReport(null);
+      setWarnings([]);
+      setViewMode('config');
+    }
+  }, [isOpen, firstDivisionId]);
 
   // Days of Week Selection
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>(['Tuesday']);
