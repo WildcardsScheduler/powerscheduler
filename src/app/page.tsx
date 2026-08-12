@@ -152,12 +152,14 @@ export default function Home() {
     };
   }, []);
 
-  // Hydrate auth role and check direct Captain URL query parameters
+  // Hydrate auth role and check direct Captain URL query parameters once when loaded
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       const savedRole = localStorage.getItem('powerschedule_auth_role') as UserRole;
       const savedTeamId = localStorage.getItem('powerschedule_auth_team_id');
-      if (savedRole) {
+      
+      if (savedRole === 'scheduler' || savedRole === 'team_rep' || savedRole === 'public') {
         setCurrentRole(savedRole);
       }
       if (savedTeamId) {
@@ -168,9 +170,10 @@ export default function Home() {
       const params = new URLSearchParams(window.location.search);
       const teamParam = params.get('team');
       const pinParam = params.get('pin');
-      if (teamParam && pinParam) {
-        const activeLeague = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
-        const matchedTeam = activeLeague?.teams.find((t) => t.id === teamParam);
+      
+      if (teamParam && pinParam && leagues.length > 0) {
+        const targetLeague = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
+        const matchedTeam = targetLeague?.teams.find((t) => t.id === teamParam);
         if (matchedTeam && (matchedTeam.accessPin || '1234') === pinParam) {
           setSelectedTeamId(matchedTeam.id);
           setCurrentRole('team_rep');
@@ -181,7 +184,7 @@ export default function Home() {
     } catch (err) {
       console.warn('Failed to read auth params', err);
     }
-  }, [leagues, activeLeagueId]);
+  }, [isLoaded]);
 
   const handleLoginSuccess = (role: 'scheduler' | 'team_rep', teamId?: string) => {
     setCurrentRole(role);

@@ -28,20 +28,30 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
 }) => {
   const activeTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
 
-  const activeDivision = divisions.find((d) => d.id === activeTeam?.divisionId);
+  if (!activeTeam) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center text-slate-400 space-y-3">
+        <Users className="h-10 w-10 text-slate-600 mx-auto" />
+        <h3 className="text-lg font-bold text-white">No Teams Registered Yet</h3>
+        <p className="text-xs">Select a team or register new teams in the administrative dashboard.</p>
+      </div>
+    );
+  }
+
+  const activeDivision = divisions.find((d) => d.id === activeTeam.divisionId);
 
   // Find next upcoming match for this team (as home, away, OR work team!)
   const teamMatches = matches.filter(
-    (m) => m.homeTeamId === activeTeam?.id || m.awayTeamId === activeTeam?.id || m.workTeamId === activeTeam?.id
+    (m) => m.homeTeamId === activeTeam.id || m.awayTeamId === activeTeam.id || m.workTeamId === activeTeam.id
   );
 
   const nextMatch = teamMatches.find((m) => m.status === 'Scheduled') || teamMatches[0];
 
-  const isPlayingNext = nextMatch && (nextMatch.homeTeamId === activeTeam?.id || nextMatch.awayTeamId === activeTeam?.id);
-  const isRefDutyNext = nextMatch && nextMatch.workTeamId === activeTeam?.id;
+  const isPlayingNext = nextMatch && (nextMatch.homeTeamId === activeTeam.id || nextMatch.awayTeamId === activeTeam.id);
+  const isRefDutyNext = nextMatch && nextMatch.workTeamId === activeTeam.id;
 
   const opponentId = isPlayingNext
-    ? nextMatch.homeTeamId === activeTeam?.id
+    ? nextMatch.homeTeamId === activeTeam.id
       ? nextMatch.awayTeamId
       : nextMatch.homeTeamId
     : undefined;
