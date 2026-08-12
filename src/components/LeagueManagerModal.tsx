@@ -52,7 +52,6 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [endDate, setEndDate] = useState('2026-11-24');
   const [maxTeams, setMaxTeams] = useState<number>(12);
   const [hasDivisions, setHasDivisions] = useState<boolean>(true);
-  const [autofill, setAutofill] = useState<boolean>(true);
 
   // Match Rules State (New League)
   const [totalSets, setTotalSets] = useState<number>(3);
@@ -93,7 +92,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
       excludeThirdSetPointsFromDiff,
     };
 
-    onCreateLeague(name.trim(), sport, startDate, endDate, maxTeams, hasDivisions, autofill, matchRules);
+    onCreateLeague(name.trim(), sport, startDate, endDate, maxTeams, hasDivisions, false, matchRules);
     setName('');
     setShowCreateForm(false);
   };
@@ -377,23 +376,6 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                       className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs"
                     />
                   </div>
-                </div>
-
-                {/* Autofill Toggle Option */}
-                <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Sparkles className="h-4 w-4 text-amber-400 shrink-0" />
-                    <div>
-                      <span className="text-xs font-bold text-white block">Autofill Starter Data</span>
-                      <span className="text-[10px] text-slate-400">Generate sample divisions, teams, venues, and rosters (Schedule via Advanced Scheduler)</span>
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={autofill}
-                    onChange={(e) => setAutofill(e.target.checked)}
-                    className="h-4 w-4 rounded accent-amber-500 cursor-pointer"
-                  />
                 </div>
 
               </div>
