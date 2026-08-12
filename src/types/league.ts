@@ -80,6 +80,7 @@ export interface Team {
   captainEmail: string;
   captainPhone: string;
   badgeColor: string; // Hex color for jersey/badge representation
+  accessPin?: string; // 4-digit Captain login PIN (e.g. "4821")
   roster: Player[];
   substitutes?: Player[];
 }
@@ -151,6 +152,7 @@ export interface LeagueSeason {
   sport: SportType;
   startDate: string;
   endDate: string;
+  adminPasscode?: string; // Master Admin Passcode (defaults to "admin123")
   maxTeams?: number;
   hasDivisions?: boolean; // Single Division vs Multi-Division
   matchRules?: MatchRules;

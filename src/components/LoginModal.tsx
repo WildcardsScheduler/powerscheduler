@@ -1,0 +1,250 @@
+'use client';
+
+import React, { useState } from 'react';
+import { LeagueSeason, Team } from '@/types/league';
+import { KeyRound, ShieldCheck, UserCheck, X, AlertCircle, Sparkles, CheckCircle2, Lock } from 'lucide-react';
+
+interface LoginModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  league: LeagueSeason;
+  onLoginSuccess: (role: 'scheduler' | 'team_rep', teamId?: string) => void;
+}
+
+export const LoginModal: React.FC<LoginModalProps> = ({
+  isOpen,
+  onClose,
+  league,
+  onLoginSuccess,
+}) => {
+  const [activeTab, setActiveTab] = useState<'team' | 'admin'>('team');
+  
+  // Team Captain Form State
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(league.teams[0]?.id || '');
+  const [captainPin, setCaptainPin] = useState<string>('');
+  const [teamError, setTeamError] = useState<string>('');
+  const [teamSuccess, setTeamSuccess] = useState<string>('');
+
+  // Admin Form State
+  const [adminPasscode, setAdminPasscode] = useState<string>('');
+  const [adminError, setAdminError] = useState<string>('');
+  const [adminSuccess, setAdminSuccess] = useState<string>('');
+
+  if (!isOpen) return null;
+
+  const handleCaptainLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setTeamError('');
+    setTeamSuccess('');
+
+    const targetTeam = league.teams.find((t) => t.id === selectedTeamId);
+    if (!targetTeam) {
+      setTeamError('Please select a valid team.');
+      return;
+    }
+
+    // Default PIN fallback if not explicitly defined on team is "1234"
+    const validPin = targetTeam.accessPin || '1234';
+
+    if (captainPin.trim() === validPin) {
+      setTeamSuccess(`Welcome back, ${targetTeam.name}! Access Granted.`);
+      setTimeout(() => {
+        onLoginSuccess('team_rep', targetTeam.id);
+        onClose();
+      }, 500);
+    } else {
+      setTeamError(`Incorrect 4-digit PIN for ${targetTeam.name}. (Default: 1234)`);
+    }
+  };
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminError('');
+    setAdminSuccess('');
+
+    const validPasscode = league.adminPasscode || 'admin123';
+
+    if (adminPasscode.trim() === validPasscode) {
+      setAdminSuccess('Administrator Authorized. Access Granted.');
+      setTimeout(() => {
+        onLoginSuccess('scheduler');
+        onClose();
+      }, 500);
+    } else {
+      setAdminError('Invalid Admin Passcode. Please try again.');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        
+        {/* Header */}
+        <div className="p-6 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <KeyRound className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-white tracking-tight">Access Portal</h3>
+              <p className="text-xs text-slate-400">Sign in for Scorekeeping & Management</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Role Selector Tabs */}
+        <div className="p-4 bg-slate-950/50 border-b border-slate-800 flex">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('team');
+              setTeamError('');
+              setAdminError('');
+            }}
+            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 transition-all ${
+              activeTab === 'team'
+                ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <UserCheck className="h-4 w-4" />
+            <span>Team Captain PIN</span>
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('admin');
+              setTeamError('');
+              setAdminError('');
+            }}
+            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 transition-all ${
+              activeTab === 'admin'
+                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <ShieldCheck className="h-4 w-4" />
+            <span>League Admin</span>
+          </button>
+        </div>
+
+        {/* Tab Body */}
+        <div className="p-6 space-y-5">
+          {activeTab === 'team' ? (
+            <form onSubmit={handleCaptainLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 block">Select Your Team</label>
+                <select
+                  value={selectedTeamId}
+                  onChange={(e) => setSelectedTeamId(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-amber-500"
+                >
+                  {league.teams.map((t) => (
+                    <option key={t.id} value={t.id} className="bg-slate-900 text-white">
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 block">
+                  4-Digit Captain PIN
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    maxLength={6}
+                    placeholder="Enter 4-digit PIN (e.g. 1234)"
+                    value={captainPin}
+                    onChange={(e) => setCaptainPin(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-mono tracking-widest text-amber-400 placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                    required
+                  />
+                  <Lock className="absolute right-3.5 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
+                </div>
+                <p className="text-[11px] text-slate-500 italic">
+                  Default PIN for teams is <strong className="text-slate-400">1234</strong> (or set in Team Manager).
+                </p>
+              </div>
+
+              {teamError && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center space-x-2 text-xs text-rose-400 font-semibold">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{teamError}</span>
+                </div>
+              )}
+
+              {teamSuccess && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2 text-xs text-emerald-400 font-semibold">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>{teamSuccess}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center space-x-2"
+              >
+                <UserCheck className="h-4 w-4" />
+                <span>Log In as Team Captain</span>
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 block">
+                  Master Administrator Passcode
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    placeholder="Enter admin passcode (Default: admin123)"
+                    value={adminPasscode}
+                    onChange={(e) => setAdminPasscode(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-mono text-violet-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500"
+                    required
+                  />
+                  <Lock className="absolute right-3.5 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
+                </div>
+                <p className="text-[11px] text-slate-500 italic">
+                  Default passcode is <strong className="text-slate-400">admin123</strong> (configurable in settings).
+                </p>
+              </div>
+
+              {adminError && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center space-x-2 text-xs text-rose-400 font-semibold">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{adminError}</span>
+                </div>
+              )}
+
+              {adminSuccess && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2 text-xs text-emerald-400 font-semibold">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>{adminSuccess}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-sm shadow-lg shadow-violet-600/20 transition-all flex items-center justify-center space-x-2"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                <span>Log In as Administrator</span>
+              </button>
+            </form>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+};

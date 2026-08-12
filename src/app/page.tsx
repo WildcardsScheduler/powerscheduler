@@ -14,6 +14,7 @@ import { LocationManagerModal } from '@/components/LocationManagerModal';
 import { LeagueManagerModal } from '@/components/LeagueManagerModal';
 import { DivisionManagerModal } from '@/components/DivisionManagerModal';
 import { TeamManagerModal } from '@/components/TeamManagerModal';
+import { LoginModal } from '@/components/LoginModal';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
 import { formatMatchRulesDescription } from '@/utils/formatRules';
 import { Globe, Trophy, Users, Calendar, MapPin } from 'lucide-react';
@@ -23,6 +24,7 @@ export default function Home() {
   const [activeLeagueId, setActiveLeagueId] = useState<string>(initialLeaguesList[0].id);
   const [currentRole, setCurrentRole] = useState<UserRole>('public');
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const [isCloudSynced, setIsCloudSynced] = useState(false);
 
@@ -149,6 +151,52 @@ export default function Home() {
       isMounted = false;
     };
   }, []);
+
+  // Hydrate auth role and check direct Captain URL query parameters
+  useEffect(() => {
+    try {
+      const savedRole = localStorage.getItem('powerschedule_auth_role') as UserRole;
+      const savedTeamId = localStorage.getItem('powerschedule_auth_team_id');
+      if (savedRole) {
+        setCurrentRole(savedRole);
+      }
+      if (savedTeamId) {
+        setSelectedTeamId(savedTeamId);
+      }
+
+      // Check URL parameters for direct Captain PIN share links
+      const params = new URLSearchParams(window.location.search);
+      const teamParam = params.get('team');
+      const pinParam = params.get('pin');
+      if (teamParam && pinParam) {
+        const activeLeague = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
+        const matchedTeam = activeLeague?.teams.find((t) => t.id === teamParam);
+        if (matchedTeam && (matchedTeam.accessPin || '1234') === pinParam) {
+          setSelectedTeamId(matchedTeam.id);
+          setCurrentRole('team_rep');
+          localStorage.setItem('powerschedule_auth_role', 'team_rep');
+          localStorage.setItem('powerschedule_auth_team_id', matchedTeam.id);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to read auth params', err);
+    }
+  }, [leagues, activeLeagueId]);
+
+  const handleLoginSuccess = (role: 'scheduler' | 'team_rep', teamId?: string) => {
+    setCurrentRole(role);
+    localStorage.setItem('powerschedule_auth_role', role);
+    if (teamId) {
+      setSelectedTeamId(teamId);
+      localStorage.setItem('powerschedule_auth_team_id', teamId);
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentRole('public');
+    localStorage.removeItem('powerschedule_auth_role');
+    localStorage.removeItem('powerschedule_auth_team_id');
+  };
 
   // Periodic polling interval to keep all devices (phone, desktop, public viewers) in sync
   useEffect(() => {
@@ -711,9 +759,12 @@ export default function Home() {
         leagues={leagues}
         activeLeagueId={activeLeagueId}
         currentRole={currentRole}
+        activeTeamName={activeTeam?.name}
         onRoleChange={setCurrentRole}
         onSelectLeague={handleSelectLeague}
         onOpenLeagueManager={() => setIsLeagueManagerOpen(true)}
+        onOpenLoginModal={() => setIsLoginModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Container */}
@@ -919,6 +970,14 @@ export default function Home() {
         onAddPlayer={handleAddPlayer}
         onUpdatePlayer={handleUpdatePlayer}
         onDeletePlayer={handleDeletePlayer}
+      />
+
+      {/* Login & Access Portal Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        league={league}
+        onLoginSuccess={handleLoginSuccess}
       />
 
     </div>

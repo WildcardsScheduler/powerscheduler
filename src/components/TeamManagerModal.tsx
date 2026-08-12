@@ -16,6 +16,8 @@ import {
   Palette,
   Check,
   Search,
+  KeyRound,
+  Link,
 } from 'lucide-react';
 
 interface TeamManagerModalProps {
@@ -29,7 +31,8 @@ interface TeamManagerModalProps {
     captainName: string,
     captainEmail: string,
     captainPhone: string,
-    badgeColor: string
+    badgeColor: string,
+    accessPin?: string
   ) => void;
   onQuickGenerateTeams?: (count: number, divisionId?: string) => void;
   onUpdateTeam: (
@@ -39,7 +42,8 @@ interface TeamManagerModalProps {
     captainName: string,
     captainEmail: string,
     captainPhone: string,
-    badgeColor: string
+    badgeColor: string,
+    accessPin?: string
   ) => void;
   onDeleteTeam: (teamId: string) => void;
   onAddPlayer: (teamId: string, player: Omit<Player, 'id'>) => void;
@@ -111,7 +115,8 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
   const [editCaptainName, setEditCaptainName] = useState('');
   const [editCaptainEmail, setEditCaptainEmail] = useState('');
   const [editCaptainPhone, setEditCaptainPhone] = useState('');
-  const [editBadgeColor, setEditBadgeColor] = useState('');
+  const [editBadgeColor, setEditBadgeColor] = useState('#3b82f6');
+  const [editAccessPin, setEditAccessPin] = useState('1234');
 
   // Add Player Form State
   const [showAddPlayer, setShowAddPlayer] = useState(false);
@@ -138,6 +143,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
       setEditCaptainEmail(selectedTeam.captainEmail);
       setEditCaptainPhone(selectedTeam.captainPhone);
       setEditBadgeColor(selectedTeam.badgeColor || '#3b82f6');
+      setEditAccessPin(selectedTeam.accessPin || '1234');
       setEditingPlayerId(null);
     }
   }, [selectedTeamId, teams]);
@@ -160,7 +166,8 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
       newCaptainName.trim() || 'Unassigned Captain',
       newCaptainEmail.trim() || 'captain@example.com',
       newCaptainPhone.trim() || '(555) 000-0000',
-      newBadgeColor
+      newBadgeColor,
+      '1234'
     );
 
     setNewTeamName('');
@@ -190,7 +197,8 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
       editCaptainName.trim(),
       editCaptainEmail.trim(),
       editCaptainPhone.trim(),
-      editBadgeColor
+      editBadgeColor,
+      editAccessPin.trim() || '1234'
     );
   };
 
@@ -615,6 +623,38 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                         onChange={(e) => setEditCaptainPhone(e.target.value)}
                         className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-2.5 py-1 text-xs"
                       />
+                    </div>
+                  </div>
+
+                  {/* Captain Access PIN & Direct Login Share Link */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-800">
+                    <div>
+                      <label className="text-[10px] font-bold text-amber-400 block mb-1 flex items-center gap-1">
+                        <KeyRound className="h-3 w-3" /> Captain 4-Digit Login PIN
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={editAccessPin}
+                        onChange={(e) => setEditAccessPin(e.target.value)}
+                        className="w-full bg-slate-900 border border-amber-500/30 text-amber-400 font-mono font-bold rounded-xl px-2.5 py-1 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="flex items-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const pin = editAccessPin || selectedTeam.accessPin || '1234';
+                          const url = `${window.location.origin}/?team=${selectedTeam.id}&pin=${pin}`;
+                          navigator.clipboard.writeText(url);
+                          alert(`Direct Captain Access Link copied to clipboard!\n\n${url}`);
+                        }}
+                        className="w-full py-1 px-3 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/30 font-semibold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all"
+                      >
+                        <Link className="h-3.5 w-3.5" />
+                        <span>Copy Direct Captain Link</span>
+                      </button>
                     </div>
                   </div>
 
