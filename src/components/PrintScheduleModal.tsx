@@ -69,14 +69,18 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm animate-in fade-in duration-200">
-      
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm animate-in fade-in duration-200 print-modal-container">
       {/* CSS Print Overrides */}
       <style jsx global>{`
         @media print {
           @page {
-            margin: 12mm 10mm 12mm 10mm;
+            margin: 10mm 10mm 10mm 10mm;
             size: portrait;
+          }
+
+          /* Hide all main site content outside print modal from layout flow to eliminate blank pages */
+          body > *:not(.print-modal-container) {
+            display: none !important;
           }
 
           html, body {
@@ -84,35 +88,18 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
             overflow: visible !important;
             background: #ffffff !important;
             color: #000000 !important;
-          }
-
-          body * {
-            visibility: hidden !important;
-          }
-
-          /* Reset all screen-only modal containers so they don't clip height or restrict absolute positioning */
-          .fixed, .inset-0, .overflow-y-auto, .max-h-\[92vh\], .bg-slate-900, .bg-slate-950 {
-            position: static !important;
-            overflow: visible !important;
-            max-height: none !important;
-            height: auto !important;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
             padding: 0 !important;
             margin: 0 !important;
           }
 
-          #printable-schedule-area, #printable-schedule-area * {
-            visibility: visible !important;
-          }
-
-          #printable-schedule-area {
-            position: relative !important;
-            left: 0 !important;
-            top: 0 !important;
+          .print-modal-container {
+            position: static !important;
+            display: block !important;
             width: 100% !important;
-            color: #0f172a !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
             background: #ffffff !important;
             padding: 0 !important;
             margin: 0 !important;
@@ -120,8 +107,35 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
             border: none !important;
           }
 
+          .print-modal-content {
+            position: static !important;
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            background: #ffffff !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+
           .no-print {
             display: none !important;
+          }
+
+          #printable-schedule-area {
+            position: static !important;
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
           }
 
           /* Prevent table rows, headers, and week blocks from breaking/overlapping inside page breaks */
@@ -145,7 +159,7 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
         }
       `}</style>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] print-modal-content">
         
         {/* Header Controls (Screen only) */}
         <div className="p-4 sm:p-5 bg-slate-950 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 no-print">
