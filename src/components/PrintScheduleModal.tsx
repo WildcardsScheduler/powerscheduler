@@ -144,8 +144,8 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
             box-shadow: none !important;
           }
 
-          /* Prevent table rows, headers, and week blocks from breaking/overlapping inside page breaks */
-          .print-block, tr, table, .print-week-block {
+          /* Prevent individual table rows and week headers from splitting in half across page margins */
+          tr, .print-week-block {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
@@ -457,7 +457,7 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
   const totalRefDuties = teamMatches.filter((m) => m.workTeamId === teamId).length;
 
   return (
-    <div className="space-y-6 bg-slate-950 print:bg-white p-4 rounded-xl border border-slate-800 print:border-none">
+    <div className="space-y-6 print:space-y-3 bg-slate-950 print:bg-white p-4 print:p-0 rounded-xl border border-slate-800 print:border-none">
       
       {/* Team Header Banner */}
       <div className="border-b-2 border-amber-500 pb-4 flex items-center justify-between">
