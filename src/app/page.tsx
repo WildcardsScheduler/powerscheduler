@@ -189,10 +189,10 @@ export default function Home() {
         // Switching to Single Division Mode
         const mainDivId = prev.divisions[0]?.id || `div-${Date.now()}-main`;
         const singleDiv: Division = prev.divisions[0]
-          ? { ...prev.divisions[0], name: 'Main Division (Unified)' }
+          ? { ...prev.divisions[0], name: 'Main Division' }
           : {
               id: mainDivId,
-              name: 'Main Division (Unified)',
+              name: 'Main Division',
               genderCategory: 'Co-Ed',
               netHeight: "Co-Ed (2.43m)",
               setFormat: 'Best of 3 (25-25-15)',
@@ -567,9 +567,6 @@ export default function Home() {
                 <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                   {league.name}
                 </h1>
-                <p className="text-sm text-slate-300 max-w-2xl">
-                  Welcome players, fans, and spectators! Select any league or division to view real-time standings, weekly schedules, match locations, and official set scores.
-                </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -634,21 +631,16 @@ export default function Home() {
               </button>
             ))}
           </div>
-        ) : (
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-              {activeDivision?.name || 'Single Unified Division'}
-            </span>
-            {currentRole === 'scheduler' && (
-              <button
-                onClick={() => setIsDivisionManagerOpen(true)}
-                className="text-xs text-violet-400 hover:underline font-semibold"
-              >
-                + Edit Division Setup
-              </button>
-            )}
+        ) : currentRole === 'scheduler' ? (
+          <div className="flex items-center justify-end border-b border-slate-800 pb-3">
+            <button
+              onClick={() => setIsDivisionManagerOpen(true)}
+              className="text-xs text-violet-400 hover:underline font-semibold"
+            >
+              + Edit Division Setup
+            </button>
           </div>
-        )}
+        ) : null}
 
         {/* Dynamic Standings Table */}
         {activeDivision && <StandingsTable standings={standings} division={activeDivision} />}

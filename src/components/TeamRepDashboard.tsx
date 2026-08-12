@@ -93,9 +93,6 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             <span className="bg-slate-950 text-slate-300 px-3 py-1 rounded-xl border border-slate-800">
               Division: <strong className="text-amber-400">{activeDivision.name}</strong>
             </span>
-            <span className="bg-slate-950 text-slate-300 px-3 py-1 rounded-xl border border-slate-800">
-              Net: <strong className="text-white">{activeDivision.netHeight}</strong>
-            </span>
           </div>
         )}
       </div>

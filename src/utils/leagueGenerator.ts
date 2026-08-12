@@ -73,7 +73,7 @@ export function createSampleLeague(
     divisions = [
       {
         id: `div-${timestamp}-single`,
-        name: 'Main Division (Unified)',
+        name: 'Main Division',
         genderCategory: 'Co-Ed',
         netHeight: "Co-Ed (2.43m)",
         setFormat: 'Best of 3 (25-25-15)',

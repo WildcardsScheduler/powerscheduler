@@ -128,11 +128,11 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs">Single Division (Unified League)</span>
+                  <span className="font-bold text-xs">Single Division</span>
                   {!hasDivisions && <Check className="h-4 w-4 text-amber-400" />}
                 </div>
                 <p className="text-[11px] opacity-80 mt-1">
-                  All teams play in 1 single standings table and unified schedule.
+                  All teams play in 1 single standings table and schedule.
                 </p>
               </button>
 
@@ -219,19 +219,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Net Height</label>
-                      <select
-                        value={newNetHeight}
-                        onChange={(e) => setNewNetHeight(e.target.value as NetHeight)}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs"
-                      >
-                        <option value="Co-Ed (2.43m)">Co-Ed (2.43m)</option>
-                        <option value="Men's (2.43m)">Men's (2.43m)</option>
-                        <option value="Women's (2.24m)">Women's (2.24m)</option>
-                        <option value="Reverse Co-Ed (2.24m)">Reverse Co-Ed (2.24m)</option>
-                      </select>
-                    </div>
+
 
                     <div>
                       <label className="text-[11px] font-semibold text-slate-400 block mb-1">Max Teams</label>
@@ -322,7 +310,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                             <div>
                               <h5 className="font-extrabold text-white text-sm">{div.name}</h5>
                               <span className="text-[11px] text-slate-400">
-                                {div.genderCategory} • {div.netHeight}
+                                {div.genderCategory}
                               </span>
                             </div>
                             <div className="flex items-center space-x-1">

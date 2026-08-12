@@ -20,7 +20,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, divis
             <h3 className="text-lg font-bold text-white tracking-tight">{division.name} Standings</h3>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Format: <span className="text-slate-200">{division.setFormat}</span> • Net Height: <span className="text-slate-200">{division.netHeight}</span>
+            Format: <span className="text-slate-200">{division.setFormat}</span>
           </p>
         </div>
 

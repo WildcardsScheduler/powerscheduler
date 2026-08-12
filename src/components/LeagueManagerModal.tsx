@@ -242,7 +242,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                           : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
                       }`}
                     >
-                      <span>Single Division (Unified)</span>
+                      <span>Single Division</span>
                       {!hasDivisions && <Check className="h-3.5 w-3.5 text-amber-400" />}
                     </button>
                     <button
