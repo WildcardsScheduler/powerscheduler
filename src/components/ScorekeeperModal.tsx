@@ -75,30 +75,44 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
     setSets(updated);
   };
 
+  const handleDirectScoreInput = (setIndex: number, isHome: boolean, valueStr: string) => {
+    const score = valueStr === '' ? 0 : Math.max(0, Math.min(99, parseInt(valueStr, 10) || 0));
+    const updated = [...sets];
+    const targetSet = { ...updated[setIndex] };
+
+    if (isHome) {
+      targetSet.homeScore = score;
+    } else {
+      targetSet.awayScore = score;
+    }
+
+    updated[setIndex] = targetSet;
+    setSets(updated);
+  };
+
   // Determine sets won up to deciding set
   let homeSetsWon = 0;
   let awaySetsWon = 0;
 
-  // Check if Best of 3 / 5 format with play_if_tied condition
-  const isBestOfFormat = activeRules.thirdSetRule === 'play_if_tied' && totalSets > 2;
-  const setsNeededToWin = Math.ceil(totalSets / 2); // e.g. 2 for Best of 3, 3 for Best of 5
+  // Check if Best of format (only play 3rd set if tied 1-1)
+  const isPlayIfTiedFormat = activeRules.thirdSetRule === 'play_if_tied' || activeRules.thirdSetRule === 'timed_sets' || totalSets === 2;
+  const setsNeededToWin = Math.ceil(totalSets / 2); // e.g. 2 for Best of 3
 
   // Calculate sets won for initial sets before deciding set
-  const nonDecidingSetsCount = totalSets - 1;
+  const nonDecidingSetsCount = totalSets > 2 ? 2 : totalSets;
   let homeEarlyWins = 0;
   let awayEarlyWins = 0;
 
   sets.slice(0, nonDecidingSetsCount).forEach((s) => {
     if (s.homeScore > s.awayScore) homeEarlyWins += 1;
-    if (s.awayScore > s.awayScore || s.awayScore > s.homeScore) awayEarlyWins += 1;
+    else if (s.awayScore > s.homeScore) awayEarlyWins += 1;
   });
 
-  const earlyWinnerReached = isBestOfFormat && (homeEarlyWins >= setsNeededToWin || awayEarlyWins >= setsNeededToWin);
+  // If a team won 2-0 in a play_if_tied format, Set #3 is NOT played or offered
+  const earlyWinnerReached = isPlayIfTiedFormat && (homeEarlyWins >= setsNeededToWin || awayEarlyWins >= setsNeededToWin);
 
-  // Filter sets to save if 3rd set was skipped due to Best of format
-  const activeSetsToEvaluate = (earlyWinnerReached && !includeOptionalSet)
-    ? sets.slice(0, nonDecidingSetsCount)
-    : sets;
+  // Active sets: If early winner reached in a play_if_tied format, hide and exclude set #3!
+  const activeSetsToEvaluate = earlyWinnerReached ? sets.slice(0, nonDecidingSetsCount) : sets;
 
   activeSetsToEvaluate.forEach((s) => {
     if (s.homeScore > s.awayScore) homeSetsWon += 1;
@@ -192,43 +206,16 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
             </div>
           )}
 
-          {/* Best of 3 / 5 Condition Notice Banner */}
-          {earlyWinnerReached && (
-            <div className="p-3 bg-violet-500/10 border border-violet-500/30 rounded-2xl space-y-2 text-xs">
-              <div className="flex items-center space-x-2 text-violet-300 font-bold">
-                <AlertCircle className="h-4 w-4 text-violet-400 shrink-0" />
-                <span>Best of Format Condition Met ({homeEarlyWins}-{awayEarlyWins})</span>
-              </div>
-              <p className="text-[11px] text-slate-300">
-                {homeEarlyWins >= setsNeededToWin ? homeTeam.name : awayTeam.name} won the first {setsNeededToWin} sets. Under standard Best of 3 rules, set #{totalSets} is optional.
-              </p>
-              <label className="flex items-center space-x-2 text-amber-400 font-semibold cursor-pointer pt-1">
-                <input
-                  type="checkbox"
-                  checked={includeOptionalSet}
-                  onChange={(e) => setIncludeOptionalSet(e.target.checked)}
-                  className="rounded accent-amber-500"
-                />
-                <span>Include Set #{totalSets} score in match record</span>
-              </label>
-            </div>
-          )}
-
           {/* Sets Score Input Controls */}
           <div className="space-y-3">
-            {sets.map((set, setIdx) => {
+            {activeSetsToEvaluate.map((set, setIdx) => {
               const isDecidingSet = set.setNumber === totalSets && totalSets > 2;
               const targetPoints = isDecidingSet ? activeRules.pointsPerDecidingSet : activeRules.pointsPerSet;
-              const isOptionalSkipped = earlyWinnerReached && !includeOptionalSet && isDecidingSet;
 
               return (
                 <div
                   key={set.setNumber}
-                  className={`p-4 rounded-2xl border transition-all ${
-                    isOptionalSkipped
-                      ? 'bg-slate-950/40 border-slate-800/40 opacity-50'
-                      : 'bg-slate-950 border-slate-800'
-                  }`}
+                  className="p-4 rounded-2xl border transition-all bg-slate-950 border-slate-800"
                 >
                   <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
                     <span className="font-bold text-white flex items-center gap-1.5">
@@ -248,18 +235,24 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
                     {/* Home Score Counter */}
                     <div className="flex items-center justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
                       <button
+                        type="button"
                         onClick={() => updateSetScore(setIdx, true, -1)}
-                        disabled={isOptionalSkipped}
                         className="h-10 w-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center font-bold text-lg disabled:opacity-50"
                       >
                         <Minus className="h-4 w-4" />
                       </button>
-                      <span className="text-2xl font-extrabold font-mono text-amber-400">
-                        {set.homeScore}
-                      </span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={99}
+                        value={set.homeScore}
+                        onChange={(e) => handleDirectScoreInput(setIdx, true, e.target.value)}
+                        onFocus={(e) => e.target.select()}
+                        className="w-16 text-center text-2xl font-extrabold font-mono text-amber-400 bg-slate-950 border border-slate-800 rounded-lg focus:border-amber-400 focus:outline-none py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
                       <button
+                        type="button"
                         onClick={() => updateSetScore(setIdx, true, 1)}
-                        disabled={isOptionalSkipped}
                         className="h-10 w-10 rounded-lg bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-amber-500/20 disabled:opacity-50"
                       >
                         <Plus className="h-4 w-4" />
@@ -269,18 +262,24 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
                     {/* Away Score Counter */}
                     <div className="flex items-center justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
                       <button
+                        type="button"
                         onClick={() => updateSetScore(setIdx, false, -1)}
-                        disabled={isOptionalSkipped}
                         className="h-10 w-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center font-bold text-lg disabled:opacity-50"
                       >
                         <Minus className="h-4 w-4" />
                       </button>
-                      <span className="text-2xl font-extrabold font-mono text-emerald-400">
-                        {set.awayScore}
-                      </span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={99}
+                        value={set.awayScore}
+                        onChange={(e) => handleDirectScoreInput(setIdx, false, e.target.value)}
+                        onFocus={(e) => e.target.select()}
+                        className="w-16 text-center text-2xl font-extrabold font-mono text-emerald-400 bg-slate-950 border border-slate-800 rounded-lg focus:border-emerald-400 focus:outline-none py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
                       <button
+                        type="button"
                         onClick={() => updateSetScore(setIdx, false, 1)}
-                        disabled={isOptionalSkipped}
                         className="h-10 w-10 rounded-lg bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-emerald-500/20 disabled:opacity-50"
                       >
                         <Plus className="h-4 w-4" />
