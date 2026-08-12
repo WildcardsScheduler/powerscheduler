@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Division, Team, NetHeight, SetFormat } from '@/types/league';
+import { Division, Team, SetFormat } from '@/types/league';
 import { X, Layers, Plus, Edit3, Trash2, Users, ArrowRightLeft, ShieldCheck, Check } from 'lucide-react';
 
 interface DivisionManagerModalProps {
@@ -14,7 +14,6 @@ interface DivisionManagerModalProps {
   onAddDivision: (
     name: string,
     genderCategory: Division['genderCategory'],
-    netHeight: NetHeight,
     setFormat: SetFormat,
     maxTeams: number
   ) => void;
@@ -22,7 +21,6 @@ interface DivisionManagerModalProps {
     id: string,
     name: string,
     genderCategory: Division['genderCategory'],
-    netHeight: NetHeight,
     setFormat: SetFormat,
     maxTeams: number
   ) => void;
@@ -48,14 +46,12 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
   // Add Form State
   const [newName, setNewName] = useState('');
   const [newGender, setNewGender] = useState<Division['genderCategory']>('Co-Ed');
-  const [newNetHeight, setNewNetHeight] = useState<NetHeight>("Co-Ed (2.43m)");
   const [newSetFormat, setNewSetFormat] = useState<SetFormat>('Best of 3 (25-25-15)');
   const [newMaxTeams, setNewMaxTeams] = useState<number>(8);
 
   // Edit Form State
   const [editName, setEditName] = useState('');
   const [editGender, setEditGender] = useState<Division['genderCategory']>('Co-Ed');
-  const [editNetHeight, setEditNetHeight] = useState<NetHeight>("Co-Ed (2.43m)");
   const [editSetFormat, setEditSetFormat] = useState<SetFormat>('Best of 3 (25-25-15)');
   const [editMaxTeams, setEditMaxTeams] = useState<number>(8);
 
@@ -65,7 +61,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
     e.preventDefault();
     if (!newName.trim()) return;
 
-    onAddDivision(newName.trim(), newGender, newNetHeight, newSetFormat, newMaxTeams);
+    onAddDivision(newName.trim(), newGender, newSetFormat, newMaxTeams);
     setNewName('');
     setShowAddForm(false);
   };
@@ -74,14 +70,13 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
     setEditingDivisionId(div.id);
     setEditName(div.name);
     setEditGender(div.genderCategory);
-    setEditNetHeight(div.netHeight);
     setEditSetFormat(div.setFormat);
     setEditMaxTeams(div.maxTeams || 8);
   };
 
   const handleSaveEdit = (divId: string) => {
     if (!editName.trim()) return;
-    onUpdateDivision(divId, editName.trim(), editGender, editNetHeight, editSetFormat, editMaxTeams);
+    onUpdateDivision(divId, editName.trim(), editGender, editSetFormat, editMaxTeams);
     setEditingDivisionId(null);
   };
 

@@ -1,76 +1,81 @@
 import { NextResponse } from 'next/server';
 import { LeagueSeason } from '@/types/league';
 import { initialLeaguesList } from '@/data/mockLeagueData';
+import fs from 'fs';
+import path from 'path';
 
-const CLOUD_OBJECT_ID = 'ff8081819ff5b110019ff669921a4';
-const CLOUD_API_URL = `https://api.restful-api.dev/objects/${CLOUD_OBJECT_ID}`;
+// Global memory cache in Next.js server instance
+declare global {
+  var __POWER_SCHEDULE_STORE__: { leagues: LeagueSeason[]; activeId: string } | undefined;
+}
 
-// In-memory cache for fast local responses
-let memoryStore: { leagues: LeagueSeason[]; activeId: string } | null = null;
+const TEMP_FILE_PATH = path.join(process.cwd(), '.powerschedule_cloud_data.json');
 
-export async function GET() {
+function getStoreData(): { leagues: LeagueSeason[]; activeId: string } {
+  if (globalThis.__POWER_SCHEDULE_STORE__) {
+    return globalThis.__POWER_SCHEDULE_STORE__;
+  }
+
   try {
-    const res = await fetch(CLOUD_API_URL, {
-      cache: 'no-store',
-      headers: { 'Cache-Control': 'no-cache' },
-    });
-
-    if (res.ok) {
-      const result = await res.json();
-      if (result?.data?.leagues && Array.isArray(result.data.leagues) && result.data.leagues.length > 0) {
-        memoryStore = {
-          leagues: result.data.leagues,
-          activeId: result.data.activeId || result.data.leagues[0].id,
-        };
-        return NextResponse.json(memoryStore);
+    if (fs.existsSync(TEMP_FILE_PATH)) {
+      const content = fs.readFileSync(TEMP_FILE_PATH, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (parsed?.leagues && Array.isArray(parsed.leagues) && parsed.leagues.length > 0) {
+        globalThis.__POWER_SCHEDULE_STORE__ = parsed;
+        return parsed;
       }
     }
   } catch (err) {
-    console.error('Failed to fetch from cloud storage API', err);
+    console.error('Error reading cloud store file:', err);
   }
 
-  // Fallback to memoryStore or initialLeaguesList
-  if (!memoryStore) {
-    memoryStore = {
-      leagues: initialLeaguesList,
-      activeId: initialLeaguesList[0].id,
-    };
-  }
+  const defaultStore = {
+    leagues: initialLeaguesList,
+    activeId: initialLeaguesList[0].id,
+  };
+  globalThis.__POWER_SCHEDULE_STORE__ = defaultStore;
+  return defaultStore;
+}
 
-  return NextResponse.json(memoryStore);
+function setStoreData(data: { leagues: LeagueSeason[]; activeId: string }) {
+  globalThis.__POWER_SCHEDULE_STORE__ = data;
+  try {
+    fs.writeFileSync(TEMP_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing cloud store file:', err);
+  }
+}
+
+export async function GET() {
+  const store = getStoreData();
+  return NextResponse.json(store);
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { leagues, activeId } = body;
+    const { leagues, activeId, action } = body;
+
+    // Reset action to clear all test/mock data
+    if (action === 'RESET_TO_CLEAN') {
+      const cleanStore = {
+        leagues: initialLeaguesList,
+        activeId: initialLeaguesList[0].id,
+      };
+      setStoreData(cleanStore);
+      return NextResponse.json({ success: true, message: 'Reset to clean initial state', store: cleanStore });
+    }
 
     if (!Array.isArray(leagues) || leagues.length === 0) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
 
-    // Update local memory cache immediately
-    memoryStore = { leagues, activeId: activeId || leagues[0].id };
-
-    // Persist to cloud API in background / sync
-    const res = await fetch(CLOUD_API_URL, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: 'PowerSchedule_Master_Store_v1',
-        data: memoryStore,
-      }),
-    });
-
-    if (!res.ok) {
-      console.warn('Cloud API PUT warning:', res.statusText);
-    }
+    const updatedStore = { leagues, activeId: activeId || leagues[0].id };
+    setStoreData(updatedStore);
 
     return NextResponse.json({ success: true, leaguesCount: leagues.length });
   } catch (err) {
-    console.error('Failed to persist to cloud storage API', err);
+    console.error('Failed to update cloud storage API', err);
     return NextResponse.json({ error: 'Failed to update cloud storage' }, { status: 500 });
   }
 }

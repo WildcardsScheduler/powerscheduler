@@ -1,6 +1,5 @@
 export type SportType = 'Volleyball' | 'Beach Volleyball' | 'Basketball' | 'Soccer';
 
-export type NetHeight = "Men's (2.43m)" | "Women's (2.24m)" | "Co-Ed (2.43m)" | "Reverse Co-Ed (2.24m)";
 
 export type SetFormat = 
   | 'Best of 3 (25-25-15)'
@@ -31,7 +30,6 @@ export interface Division {
   id: string;
   name: string; // e.g. "Co-Ed 6s Competitive A", "Men's Open", "Women's B"
   genderCategory: 'Men' | 'Women' | 'Co-Ed' | 'Reverse Co-Ed';
-  netHeight: NetHeight;
   setFormat: SetFormat;
   matchRules?: MatchRules;
   minFemalesOnCourt?: number;

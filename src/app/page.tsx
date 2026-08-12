@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { initialLeaguesList, calculateStandings } from '@/data/mockLeagueData';
-import { LeagueSeason, Match, SetScore, TeamStanding, Location, SubLocation, SportType, Division, NetHeight, SetFormat, Team, Player, MatchRules } from '@/types/league';
+import { LeagueSeason, Match, SetScore, TeamStanding, Location, SubLocation, SportType, Division, SetFormat, Team, Player, MatchRules } from '@/types/league';
 import { Navbar, UserRole } from '@/components/Navbar';
 import { SchedulerDashboard } from '@/components/SchedulerDashboard';
 import { TeamRepDashboard } from '@/components/TeamRepDashboard';
@@ -260,7 +260,6 @@ export default function Home() {
               id: mainDivId,
               name: 'Main Division',
               genderCategory: 'Co-Ed',
-              netHeight: "Co-Ed (2.43m)",
               setFormat: 'Best of 3 (25-25-15)',
               capRule: 'Win by 2 (Uncapped)',
               workTeamRequired: true,
@@ -288,7 +287,6 @@ export default function Home() {
   const handleAddDivision = (
     name: string,
     genderCategory: Division['genderCategory'],
-    netHeight: NetHeight,
     setFormat: SetFormat,
     maxTeams: number
   ) => {
@@ -297,7 +295,6 @@ export default function Home() {
       id: newDivId,
       name,
       genderCategory,
-      netHeight,
       setFormat,
       capRule: 'Win by 2 (Uncapped)',
       workTeamRequired: true,
@@ -316,14 +313,13 @@ export default function Home() {
     id: string,
     name: string,
     genderCategory: Division['genderCategory'],
-    netHeight: NetHeight,
     setFormat: SetFormat,
     maxTeams: number
   ) => {
     updateActiveLeague((prev) => ({
       ...prev,
       divisions: prev.divisions.map((d) =>
-        d.id === id ? { ...d, name, genderCategory, netHeight, setFormat, maxTeams } : d
+        d.id === id ? { ...d, name, genderCategory, setFormat, maxTeams } : d
       ),
     }));
   };

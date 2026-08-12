@@ -1,0 +1,57 @@
+{
+  "leagues": [
+    {
+      "id": "league-fall-2026",
+      "name": "Premier Volleyball League - Fall 2026",
+      "sport": "Volleyball",
+      "startDate": "2026-09-08",
+      "endDate": "2026-11-24",
+      "maxTeams": 12,
+      "matchRules": {
+        "totalSets": 3,
+        "pointsPerSet": 25,
+        "pointsPerDecidingSet": 15,
+        "thirdSetRule": "guaranteed_all",
+        "winByTwo": true,
+        "capRule": "Win by 2 (Uncapped)"
+      },
+      "locations": [
+        {
+          "id": "loc-pioneer",
+          "name": "Pioneer Gym",
+          "address": "750 Schoolhouse Road",
+          "parkingInfo": "Park in Main Gymnasium lot",
+          "subLocations": [
+            {
+              "id": "sub-pioneer-c1",
+              "locationId": "loc-pioneer",
+              "name": "Court 1",
+              "surface": "Hardwood"
+            },
+            {
+              "id": "sub-pioneer-c2",
+              "locationId": "loc-pioneer",
+              "name": "Court 2",
+              "surface": "Hardwood"
+            }
+          ]
+        }
+      ],
+      "divisions": [
+        {
+          "id": "div-main",
+          "name": "Main Division",
+          "genderCategory": "Co-Ed",
+          "setFormat": "Best of 3 (25-25-15)",
+          "minFemalesOnCourt": 2,
+          "capRule": "Win by 2 (Uncapped)",
+          "workTeamRequired": true,
+          "maxTeams": 12
+        }
+      ],
+      "teams": [],
+      "matches": []
+    }
+  ],
+  "activeId": "league-fall-2026"
+}
