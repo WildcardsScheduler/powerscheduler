@@ -74,27 +74,72 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
       {/* CSS Print Overrides */}
       <style jsx global>{`
         @media print {
+          @page {
+            margin: 12mm 10mm 12mm 10mm;
+            size: portrait;
+          }
+
+          html, body {
+            height: auto !important;
+            overflow: visible !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+          }
+
           body * {
             visibility: hidden !important;
           }
+
+          /* Reset all screen-only modal containers so they don't clip height or restrict absolute positioning */
+          .fixed, .inset-0, .overflow-y-auto, .max-h-\[92vh\], .bg-slate-900, .bg-slate-950 {
+            position: static !important;
+            overflow: visible !important;
+            max-height: none !important;
+            height: auto !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+
           #printable-schedule-area, #printable-schedule-area * {
             visibility: visible !important;
           }
+
           #printable-schedule-area {
-            position: absolute !important;
+            position: relative !important;
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
             color: #0f172a !important;
             background: #ffffff !important;
-            padding: 20px !important;
+            padding: 0 !important;
+            margin: 0 !important;
             box-shadow: none !important;
             border: none !important;
           }
+
           .no-print {
             display: none !important;
           }
+
+          /* Prevent table rows, headers, and week blocks from breaking/overlapping inside page breaks */
+          .print-block, tr, table, .print-week-block {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          thead {
+            display: table-header-group !important;
+          }
+
+          tbody {
+            display: table-row-group !important;
+          }
+
           .page-break-after {
+            break-after: page !important;
             page-break-after: always !important;
           }
         }
@@ -233,7 +278,7 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
                     const weekDate = weekMatches[0]?.date || '';
 
                     return (
-                      <div key={weekNum} className="space-y-2">
+                      <div key={weekNum} className="space-y-2 print-week-block print:mb-4">
                         <div className="bg-slate-900 print:bg-slate-200 p-2.5 rounded-xl border border-slate-800 print:border-slate-400 flex items-center justify-between">
                           <span className="font-extrabold text-xs text-amber-400 print:text-slate-900 uppercase tracking-wider">
                             Week {weekNum} • {weekDate}
