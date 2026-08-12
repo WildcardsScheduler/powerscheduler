@@ -275,11 +275,50 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                   </div>
 
                   <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800">
-                    {m.status === 'Completed' && m.scores.length > 0 ? (
-                      <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                        {m.scores.map((s) => `${s.homeScore}-${s.awayScore}`).join(' | ')}
-                      </span>
-                    ) : (
+                    {m.status === 'Completed' && m.scores.length > 0 ? (() => {
+                      let homeSetsWon = 0;
+                      let awaySetsWon = 0;
+                      m.scores.forEach((s) => {
+                        if (s.homeScore > s.awayScore) homeSetsWon++;
+                        else if (s.awayScore > s.homeScore) awaySetsWon++;
+                      });
+                      const derivedWinnerId =
+                        homeSetsWon > awaySetsWon
+                          ? m.homeTeamId
+                          : awaySetsWon > homeSetsWon
+                          ? m.awayTeamId
+                          : null;
+                      const effectiveWinnerId = m.winnerId || derivedWinnerId;
+                      const isWin = isPlaying && effectiveWinnerId === activeTeam.id;
+                      const isLoss = isPlaying && Boolean(effectiveWinnerId && effectiveWinnerId !== activeTeam.id);
+
+                      return (
+                        <span
+                          className={`font-mono text-xs font-bold px-2.5 py-1 rounded-lg border flex items-center space-x-1.5 shadow-sm ${
+                            isWin
+                              ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+                              : isLoss
+                              ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
+                              : 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+                          }`}
+                        >
+                          {isPlaying && (
+                            <span
+                              className={`text-[10px] uppercase font-black px-1.5 py-0.2 rounded ${
+                                isWin
+                                  ? 'bg-emerald-500/20 text-emerald-300'
+                                  : isLoss
+                                  ? 'bg-rose-500/20 text-rose-300'
+                                  : 'bg-amber-500/20 text-amber-300'
+                              }`}
+                            >
+                              {isWin ? 'W' : isLoss ? 'L' : 'T'}
+                            </span>
+                          )}
+                          <span>{m.scores.map((s) => `${s.homeScore}-${s.awayScore}`).join(' | ')}</span>
+                        </span>
+                      );
+                    })() : (
                       <span className="text-xs text-slate-500 italic">Scheduled</span>
                     )}
 
