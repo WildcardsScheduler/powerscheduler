@@ -52,16 +52,22 @@ interface TeamManagerModalProps {
 }
 
 const PRESET_COLORS = [
-  '#ec4899', // Pink
-  '#3b82f6', // Blue
-  '#10b981', // Emerald
-  '#f59e0b', // Amber
-  '#8b5cf6', // Purple
-  '#06b6d4', // Cyan
+  '#ec4899', // Hot Pink
   '#ef4444', // Red
-  '#14b8a6', // Teal
-  '#6366f1', // Indigo
   '#f97316', // Orange
+  '#f59e0b', // Amber
+  '#eab308', // Yellow
+  '#84cc16', // Lime
+  '#10b981', // Emerald
+  '#14b8a6', // Teal
+  '#06b6d4', // Cyan
+  '#3b82f6', // Blue
+  '#6366f1', // Indigo
+  '#8b5cf6', // Violet
+  '#a855f7', // Purple
+  '#d946ef', // Fuchsia
+  '#f43f5e', // Rose
+  '#64748b', // Slate
 ];
 
 const POSITIONS = [
@@ -528,12 +534,24 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                         type="button"
                         key={color}
                         onClick={() => setNewBadgeColor(color)}
-                        className={`h-7 w-7 rounded-full transition-transform ${
+                        className={`h-7 w-7 rounded-full transition-transform hover:scale-110 ${
                           newBadgeColor === color ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''
                         }`}
                         style={{ backgroundColor: color }}
                       />
                     ))}
+                    <label
+                      className="relative h-7 w-7 rounded-full overflow-hidden border border-slate-700 cursor-pointer hover:border-white transition-colors flex items-center justify-center bg-slate-800 text-[10px] font-bold text-slate-400 shrink-0"
+                      title="Custom Color Picker"
+                    >
+                      🎨
+                      <input
+                        type="color"
+                        value={newBadgeColor}
+                        onChange={(e) => setNewBadgeColor(e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                    </label>
                   </div>
                 </div>
 
@@ -659,25 +677,43 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                   </div>
 
                   {/* Color Badge Swatches */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                    <span className="text-[11px] text-slate-400 font-semibold">Badge Color:</span>
-                    <div className="flex items-center space-x-1.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-800">
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="text-[11px] text-slate-400 font-semibold">Badge Color:</span>
+                      <span
+                        className="h-4 w-4 rounded-full border border-slate-700 shadow-sm"
+                        style={{ backgroundColor: editBadgeColor }}
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 flex-1">
                       {PRESET_COLORS.map((color) => (
                         <button
                           type="button"
                           key={color}
                           onClick={() => setEditBadgeColor(color)}
-                          className={`h-5 w-5 rounded-full ${
-                            editBadgeColor === color ? 'ring-2 ring-white ring-offset-1 ring-offset-slate-900' : ''
+                          className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${
+                            editBadgeColor === color ? 'ring-2 ring-white ring-offset-1 ring-offset-slate-900 scale-110' : ''
                           }`}
                           style={{ backgroundColor: color }}
                         />
                       ))}
+                      <label
+                        className="relative h-5 w-5 rounded-full overflow-hidden border border-slate-700 cursor-pointer hover:border-white transition-colors flex items-center justify-center bg-slate-800 text-[9px] font-bold text-slate-400 shrink-0"
+                        title="Custom Color Picker"
+                      >
+                        🎨
+                        <input
+                          type="color"
+                          value={editBadgeColor}
+                          onChange={(e) => setEditBadgeColor(e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        />
+                      </label>
                     </div>
                     <button
                       type="button"
                       onClick={handleSaveTeamEdit}
-                      className="px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-xs rounded-lg hover:bg-emerald-400"
+                      className="px-4 py-1.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 shrink-0 shadow-md transition-all"
                     >
                       Save Team Info
                     </button>

@@ -554,8 +554,9 @@ export default function Home() {
     const startIndex = currentDivTeams.length + 1;
 
     const colors = [
-      '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6',
-      '#06b6d4', '#ef4444', '#14b8a6', '#6366f1', '#f97316'
+      '#ec4899', '#ef4444', '#f97316', '#f59e0b', '#eab308',
+      '#84cc16', '#10b981', '#14b8a6', '#06b6d4', '#3b82f6',
+      '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#f43f5e', '#64748b'
     ];
 
     const newTeams: Team[] = [];
