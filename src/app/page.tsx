@@ -565,7 +565,7 @@ export default function Home() {
 
   // Calculate live standings for selected division
   const standings: TeamStanding[] = activeDivision
-    ? calculateStandings(league.teams, league.matches, activeDivision.id)
+    ? calculateStandings(league.teams, league.matches, activeDivision.id, activeDivision.matchRules || league.matchRules)
     : [];
 
   // Location Handlers

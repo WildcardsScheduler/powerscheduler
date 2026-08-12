@@ -15,6 +15,7 @@ export interface MatchRules {
   thirdSetRule: ThirdSetRule;
   winByTwo: boolean;
   capRule: 'Win by 2 (Uncapped)' | 'Cap at +2 (e.g. 27/17)' | 'Hard Cap at Target (25/15)';
+  excludeThirdSetPointsFromDiff?: boolean; // If true, +/- point differential only counts first 2 sets
 }
 
 export const DEFAULT_MATCH_RULES: MatchRules = {
@@ -24,6 +25,7 @@ export const DEFAULT_MATCH_RULES: MatchRules = {
   thirdSetRule: 'guaranteed_all',
   winByTwo: true,
   capRule: 'Win by 2 (Uncapped)',
+  excludeThirdSetPointsFromDiff: true,
 };
 
 export interface Division {

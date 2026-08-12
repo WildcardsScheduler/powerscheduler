@@ -136,11 +136,18 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, divis
       </div>
 
       {/* Tie-breaker Rule Footer Note */}
-      <div className="flex items-center space-x-1.5 text-[11px] text-slate-500 pt-2 border-t border-slate-800/60">
-        <Info className="h-3.5 w-3.5 shrink-0" />
-        <span>
-          Tie-breaker order: <strong className="text-slate-400">Points → Match Wins → Set Ratio → Point Differential → Points For</strong>
-        </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-800/60 gap-1">
+        <div className="flex items-center space-x-1.5">
+          <Info className="h-3.5 w-3.5 shrink-0" />
+          <span>
+            Tie-breaker order: <strong className="text-slate-400">Points → Match Wins → Set Ratio → Point Differential → Points For</strong>
+          </span>
+        </div>
+        {(division.matchRules?.excludeThirdSetPointsFromDiff ?? matchRules?.excludeThirdSetPointsFromDiff ?? true) && (
+          <span className="text-amber-400/80 italic font-medium">
+            * Point Differential (+/-) counts regulation sets (1 & 2) only
+          </span>
+        )}
       </div>
     </div>
   );

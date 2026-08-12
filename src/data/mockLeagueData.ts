@@ -1,4 +1,4 @@
-import { LeagueSeason, TeamStanding, Match, Team, DEFAULT_MATCH_RULES } from '@/types/league';
+import { LeagueSeason, TeamStanding, Match, Team, DEFAULT_MATCH_RULES, MatchRules } from '@/types/league';
 
 export const initialLeagueData: LeagueSeason = {
   id: 'league-fall-2026',
@@ -47,11 +47,18 @@ export const initialLeaguesList: LeagueSeason[] = [
   initialLeagueData,
 ];
 
-export function calculateStandings(teams: Team[], matches: Match[], divisionId: string): TeamStanding[] {
+export function calculateStandings(
+  teams: Team[],
+  matches: Match[],
+  divisionId: string,
+  matchRules?: MatchRules
+): TeamStanding[] {
   const divTeams = teams.filter((t) => t.divisionId === divisionId);
   const divMatches = matches.filter(
     (m) => m.divisionId === divisionId && m.status === 'Completed' && !m.isExhibition
   );
+
+  const excludeThirdSet = matchRules?.excludeThirdSetPointsFromDiff ?? true;
 
   const statsMap = new Map<string, Omit<TeamStanding, 'rank' | 'setRatio' | 'pointDiff'>>();
 
@@ -84,13 +91,18 @@ export function calculateStandings(teams: Team[], matches: Match[], divisionId: 
     let awaySets = 0;
 
     m.scores.forEach((s) => {
-      home.pointsFor += s.homeScore;
-      home.pointsAgainst += s.awayScore;
-      away.pointsFor += s.awayScore;
-      away.pointsAgainst += s.homeScore;
-
+      // Set wins count for all sets
       if (s.homeScore > s.awayScore) homeSets += 1;
       else if (s.awayScore > s.homeScore) awaySets += 1;
+
+      // Exclude 3rd set scores from +/- point totals if option enabled
+      const isThirdSet = s.setNumber === 3;
+      if (!excludeThirdSet || !isThirdSet) {
+        home.pointsFor += s.homeScore;
+        home.pointsAgainst += s.awayScore;
+        away.pointsFor += s.awayScore;
+        away.pointsAgainst += s.homeScore;
+      }
     });
 
     home.setsWon += homeSets;

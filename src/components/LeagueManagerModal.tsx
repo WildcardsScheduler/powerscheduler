@@ -60,6 +60,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [pointsPerDecidingSet, setPointsPerDecidingSet] = useState<number>(15);
   const [thirdSetRule, setThirdSetRule] = useState<ThirdSetRule>('guaranteed_all');
   const [capRule, setCapRule] = useState<MatchRules['capRule']>('Win by 2 (Uncapped)');
+  const [excludeThirdSetPointsFromDiff, setExcludeThirdSetPointsFromDiff] = useState<boolean>(true);
 
   // Edit League Form State
   const [editName, setEditName] = useState('');
@@ -74,6 +75,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [editPointsPerDecidingSet, setEditPointsPerDecidingSet] = useState<number>(15);
   const [editThirdSetRule, setEditThirdSetRule] = useState<ThirdSetRule>('guaranteed_all');
   const [editCapRule, setEditCapRule] = useState<MatchRules['capRule']>('Win by 2 (Uncapped)');
+  const [editExcludeThirdSetPointsFromDiff, setEditExcludeThirdSetPointsFromDiff] = useState<boolean>(true);
 
   if (!isOpen) return null;
 
@@ -88,6 +90,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
       thirdSetRule,
       winByTwo: true,
       capRule,
+      excludeThirdSetPointsFromDiff,
     };
 
     onCreateLeague(name.trim(), sport, startDate, endDate, maxTeams, hasDivisions, autofill, matchRules);
@@ -109,6 +112,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
     setEditPointsPerDecidingSet(rules.pointsPerDecidingSet);
     setEditThirdSetRule(rules.thirdSetRule);
     setEditCapRule(rules.capRule);
+    setEditExcludeThirdSetPointsFromDiff(rules.excludeThirdSetPointsFromDiff ?? true);
   };
 
   const handleSaveEdit = (leagueId: string) => {
@@ -120,6 +124,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
       thirdSetRule: editThirdSetRule,
       winByTwo: true,
       capRule: editCapRule,
+      excludeThirdSetPointsFromDiff: editExcludeThirdSetPointsFromDiff,
     };
 
     onUpdateLeague(leagueId, editName.trim(), editSport, editStartDate, editEndDate, editMaxTeams, updatedRules);
@@ -336,6 +341,21 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                       </select>
                     </div>
                   </div>
+
+                  <div className="mt-2 pt-2 border-t border-slate-800/60">
+                    <label className="flex items-center space-x-2 text-xs text-slate-300 font-semibold cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={excludeThirdSetPointsFromDiff}
+                        onChange={(e) => setExcludeThirdSetPointsFromDiff(e.target.checked)}
+                        className="rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-amber-500 h-4 w-4"
+                      />
+                      <span>Exclude Set #3 (Tie-breaker) scores from +/- Point Differential calculation</span>
+                    </label>
+                    <p className="text-[10px] text-slate-500 ml-6">
+                      When enabled, standings +/- point totals only count scores from regulation sets 1 & 2.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -520,6 +540,18 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                               <option value="Hard Cap at Target (25/15)">Hard Cap (25/15)</option>
                             </select>
                           </div>
+                        </div>
+
+                        <div className="pt-1">
+                          <label className="flex items-center space-x-2 text-[11px] text-slate-300 font-semibold cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editExcludeThirdSetPointsFromDiff}
+                              onChange={(e) => setEditExcludeThirdSetPointsFromDiff(e.target.checked)}
+                              className="rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-amber-500 h-3.5 w-3.5"
+                            />
+                            <span>Exclude Set #3 scores from +/- Point Differential</span>
+                          </label>
                         </div>
                       </div>
 
