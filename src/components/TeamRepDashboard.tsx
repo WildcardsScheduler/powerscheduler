@@ -153,20 +153,20 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             </div>
 
             {/* Right: Opponent Card */}
-            <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
-              <div>
+            <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 flex items-center justify-between gap-3 min-w-0">
+              <div className="min-w-0">
                 <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-500 block">
                   Opponent
                 </span>
                 {opponentTeam ? (
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="h-4 w-4 rounded-full" style={{ backgroundColor: opponentTeam.badgeColor }} />
-                    <span className="font-extrabold text-white text-lg">{opponentTeam.name}</span>
+                  <div className="flex items-center space-x-2 mt-1 min-w-0">
+                    <span className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: opponentTeam.badgeColor }} />
+                    <span className="font-extrabold text-white text-lg truncate" title={opponentTeam.name}>{opponentTeam.name}</span>
                   </div>
                 ) : (
                   <span className="font-semibold text-slate-400">Officiating Duty</span>
                 )}
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-400 mt-1 truncate">
                   Captain: {opponentTeam?.captainName || 'N/A'}
                 </p>
               </div>

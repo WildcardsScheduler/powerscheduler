@@ -171,16 +171,28 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 space-y-3 hover:border-slate-700 transition-all group relative overflow-hidden"
               >
                 {/* Status & Location Bar Top */}
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <div className="flex items-center space-x-1.5">
+                {/* Status & Location Bar Top */}
+                <div className="flex items-center justify-between gap-2 text-xs text-slate-400">
+                  <div className="flex items-center space-x-1.5 shrink-0">
                     <Clock className="h-3.5 w-3.5 text-amber-400" />
                     <span>{formatTimeRange(match.startTime, match.endTime)}</span>
                   </div>
 
                   {/* Primary Location + Sub-location Name */}
-                  <div className="flex items-center space-x-1 text-slate-400 bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-800">
-                    <Building2 className="h-3.5 w-3.5 text-rose-400" />
-                    <span className="font-bold text-slate-200">
+                  <div className="flex items-center space-x-1 text-slate-400 bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-800 min-w-0 max-w-[55%]">
+                    <Building2 className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                    <span
+                      className="font-bold text-slate-200 truncate"
+                      title={
+                        primaryLoc && subLoc
+                          ? `${primaryLoc.name} — ${subLoc.name}`
+                          : primaryLoc
+                          ? primaryLoc.name
+                          : subLoc
+                          ? subLoc.name
+                          : `Court ${match.subLocationId || match.courtId}`
+                      }
+                    >
                       {primaryLoc && subLoc
                         ? `${primaryLoc.name} — ${subLoc.name}`
                         : primaryLoc
@@ -193,7 +205,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 </div>
 
                 {/* Match Teams Banner */}
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 py-2 px-3 bg-slate-900/60 rounded-xl border border-slate-800">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 py-2 px-3 bg-slate-900/60 rounded-xl border border-slate-800">
                   {/* Home Team */}
                   <div className="flex items-center space-x-2 min-w-0">
                     <span
@@ -245,14 +257,17 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 </div>
 
                 {/* Bottom Row: Work Team Ref & Scorekeeper Button */}
-                <div className="flex items-center justify-between text-xs pt-1">
+                <div className="flex items-center justify-between gap-2 text-xs pt-1">
                   {work ? (
-                    <div className="flex items-center space-x-1.5 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20 text-[11px]">
-                      <ShieldAlert className="h-3.5 w-3.5" />
-                      <span>Ref Duty: <strong className="text-white">{work.name}</strong></span>
+                    <div
+                      className="flex items-center space-x-1.5 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20 text-[11px] min-w-0 max-w-[65%]"
+                      title={`Ref Duty: ${work.name}`}
+                    >
+                      <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">Ref Duty: <strong className="text-white">{work.name}</strong></span>
                     </div>
                   ) : (
-                    <span className="text-slate-500 text-[11px]">No Ref Assigned</span>
+                    <span className="text-slate-500 text-[11px] shrink-0">No Ref Assigned</span>
                   )}
 
                   {!readOnly ? (
