@@ -7,20 +7,27 @@ import { KeyRound, ShieldCheck, UserCheck, X, AlertCircle, Sparkles, CheckCircle
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  league: LeagueSeason;
+  leagues: LeagueSeason[];
+  activeLeagueId: string;
+  onSelectLeague: (id: string) => void;
   onLoginSuccess: (role: 'scheduler' | 'team_rep', teamId?: string) => void;
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({
   isOpen,
   onClose,
-  league,
+  leagues,
+  activeLeagueId,
+  onSelectLeague,
   onLoginSuccess,
 }) => {
   const [activeTab, setActiveTab] = useState<'team' | 'admin'>('team');
+  const [selectedLeagueId, setSelectedLeagueId] = useState<string>(activeLeagueId);
   
+  const targetLeague = leagues.find((l) => l.id === selectedLeagueId) || leagues[0];
+
   // Team Captain Form State
-  const [selectedTeamId, setSelectedTeamId] = useState<string>(league.teams[0]?.id || '');
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(targetLeague?.teams[0]?.id || '');
   const [captainPin, setCaptainPin] = useState<string>('');
   const [teamError, setTeamError] = useState<string>('');
   const [teamSuccess, setTeamSuccess] = useState<string>('');
@@ -30,6 +37,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [adminError, setAdminError] = useState<string>('');
   const [adminSuccess, setAdminSuccess] = useState<string>('');
 
+  // Update team selection if active league changes or modal opens
+  React.useEffect(() => {
+    setSelectedLeagueId(activeLeagueId);
+    const currL = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
+    if (currL && currL.teams.length > 0) {
+      setSelectedTeamId(currL.teams[0].id);
+    }
+  }, [activeLeagueId, isOpen, leagues]);
+
   if (!isOpen) return null;
 
   const handleCaptainLogin = (e: React.FormEvent) => {
@@ -37,7 +53,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setTeamError('');
     setTeamSuccess('');
 
-    const targetTeam = league.teams.find((t) => t.id === selectedTeamId);
+    const targetTeam = targetLeague?.teams.find((t) => t.id === selectedTeamId);
     if (!targetTeam) {
       setTeamError('Please select a valid team.');
       return;
@@ -48,6 +64,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
     if (captainPin.trim() === validPin) {
       setTeamSuccess(`Welcome back, ${targetTeam.name}! Access Granted.`);
+      onSelectLeague(targetLeague.id);
       setTimeout(() => {
         onLoginSuccess('team_rep', targetTeam.id);
         onClose();
@@ -62,10 +79,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setAdminError('');
     setAdminSuccess('');
 
-    const validPasscode = league.adminPasscode || 'admin123';
+    const validPasscode = targetLeague?.adminPasscode || 'admin123';
 
     if (adminPasscode.trim() === validPasscode) {
       setAdminSuccess('Administrator Authorized. Access Granted.');
+      onSelectLeague(targetLeague.id);
       setTimeout(() => {
         onLoginSuccess('scheduler');
         onClose();
@@ -139,6 +157,35 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         <div className="p-6 space-y-5">
           {activeTab === 'team' ? (
             <form onSubmit={handleCaptainLogin} className="space-y-4">
+              {/* League Selector (if multiple leagues exist) */}
+              {leagues.length > 1 && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
+                    <span>Select League Season</span>
+                    <span className="text-[10px] text-amber-400 font-mono font-normal">({leagues.length} Available)</span>
+                  </label>
+                  <select
+                    value={selectedLeagueId}
+                    onChange={(e) => {
+                      const newId = e.target.value;
+                      setSelectedLeagueId(newId);
+                      onSelectLeague(newId);
+                      const targetL = leagues.find((l) => l.id === newId);
+                      if (targetL && targetL.teams.length > 0) {
+                        setSelectedTeamId(targetL.teams[0].id);
+                      }
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-amber-500"
+                  >
+                    {leagues.map((l) => (
+                      <option key={l.id} value={l.id} className="bg-slate-900 text-white">
+                        {l.name} ({l.sport})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-300 block">Select Your Team</label>
                 <select
@@ -146,7 +193,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   onChange={(e) => setSelectedTeamId(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-amber-500"
                 >
-                  {league.teams.map((t) => (
+                  {targetLeague?.teams.map((t) => (
                     <option key={t.id} value={t.id} className="bg-slate-900 text-white">
                       {t.name}
                     </option>
@@ -199,6 +246,28 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </form>
           ) : (
             <form onSubmit={handleAdminLogin} className="space-y-4">
+              {/* League Selector (if multiple leagues exist) */}
+              {leagues.length > 1 && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300 block">Target League Season</label>
+                  <select
+                    value={selectedLeagueId}
+                    onChange={(e) => {
+                      const newId = e.target.value;
+                      setSelectedLeagueId(newId);
+                      onSelectLeague(newId);
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-violet-500"
+                  >
+                    {leagues.map((l) => (
+                      <option key={l.id} value={l.id} className="bg-slate-900 text-white">
+                        {l.name} ({l.sport})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-300 block">
                   Master Administrator Passcode

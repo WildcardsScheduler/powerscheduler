@@ -987,7 +987,9 @@ export default function Home() {
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
-        league={league}
+        leagues={leagues}
+        activeLeagueId={activeLeagueId}
+        onSelectLeague={handleSelectLeague}
         onLoginSuccess={handleLoginSuccess}
       />
 
