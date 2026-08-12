@@ -32,32 +32,28 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
   const activeRules: MatchRules = division?.matchRules || leagueRules || DEFAULT_MATCH_RULES;
   const totalSets = activeRules.totalSets || 3;
 
-  const [sets, setSets] = useState<SetScore[]>(() => {
-    if (match.scores && match.scores.length > 0) return match.scores;
-    // Default all sets to 0-0
-    return Array.from({ length: totalSets }, (_, i) => ({
-      setNumber: i + 1,
-      homeScore: 0,
-      awayScore: 0,
-    }));
-  });
+  const ensureThreeSets = (existingScores?: SetScore[], totalSetsCount: number = 3): SetScore[] => {
+    const maxCount = Math.max(3, totalSetsCount);
+    const result: SetScore[] = [];
+    for (let i = 1; i <= maxCount; i++) {
+      const existing = existingScores?.find((s) => s.setNumber === i);
+      if (existing) {
+        result.push({ ...existing });
+      } else {
+        result.push({ setNumber: i, homeScore: 0, awayScore: 0 });
+      }
+    }
+    return result;
+  };
 
-  const [includeOptionalSet, setIncludeOptionalSet] = useState<boolean>(true);
+  const [sets, setSets] = useState<SetScore[]>(() => {
+    return ensureThreeSets(match.scores, totalSets);
+  });
 
   // Sync state if match or totalSets changes
   useEffect(() => {
-    if (match.scores && match.scores.length > 0) {
-      setSets(match.scores);
-    } else {
-      setSets(
-        Array.from({ length: totalSets }, (_, i) => ({
-          setNumber: i + 1,
-          homeScore: 0,
-          awayScore: 0,
-        }))
-      );
-    }
-  }, [match.id, totalSets]);
+    setSets(ensureThreeSets(match.scores, totalSets));
+  }, [match.id, match.scores, totalSets]);
 
   if (!isOpen || !homeTeam || !awayTeam) return null;
 
