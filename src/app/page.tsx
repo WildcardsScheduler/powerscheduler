@@ -42,16 +42,66 @@ export default function Home() {
       };
     });
   };
+  const isDefaultInitialData = (data: LeagueSeason[]) => {
+    if (!data || data.length !== initialLeaguesList.length) return false;
+    return data.every((l, idx) => {
+      const init = initialLeaguesList[idx];
+      return (
+        init &&
+        l.id === init.id &&
+        l.teams.length === init.teams.length &&
+        l.matches.length === init.matches.length
+      );
+    });
+  };
 
-  // Load state from online cloud API on mount (fallback to localStorage if offline)
+  // Load state from online cloud API on mount (re-hydrate from localStorage if server reset after deployment)
   useEffect(() => {
     let isMounted = true;
+
     const fetchCloudData = async () => {
+      let savedLeagues: LeagueSeason[] | null = null;
+      let savedActiveId: string | null = null;
+
+      try {
+        const rawSaved = localStorage.getItem('powerschedule_leagues');
+        savedActiveId = localStorage.getItem('powerschedule_active_league_id');
+        if (rawSaved) {
+          savedLeagues = JSON.parse(rawSaved);
+        }
+      } catch (err) {
+        console.warn('Failed to read local storage backup', err);
+      }
+
       try {
         const res = await fetch('/api/leagues', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (data?.leagues && Array.isArray(data.leagues) && data.leagues.length > 0) {
+            const serverIsDefault = isDefaultInitialData(data.leagues);
+            const clientHasCustom = savedLeagues && savedLeagues.length > 0 && !isDefaultInitialData(savedLeagues);
+
+            // If server reset to default on deployment, but client has custom data, re-hydrate server!
+            if (serverIsDefault && clientHasCustom && savedLeagues) {
+              const repaired = repairLeaguesData(savedLeagues);
+              if (isMounted) {
+                setLeagues(repaired);
+                if (savedActiveId && repaired.some((l) => l.id === savedActiveId)) {
+                  setActiveLeagueId(savedActiveId);
+                } else {
+                  setActiveLeagueId(repaired[0].id);
+                }
+                setIsCloudSynced(true);
+              }
+              // Immediately sync client's custom data back to server
+              fetch('/api/leagues', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leagues: repaired, activeId: savedActiveId || repaired[0].id }),
+              }).catch(() => {});
+              return;
+            }
+
             const repaired = repairLeaguesData(data.leagues);
             if (isMounted) {
               setLeagues(repaired);
@@ -70,25 +120,14 @@ export default function Home() {
       }
 
       // Offline / Local Storage Fallback
-      try {
-        const savedLeagues = localStorage.getItem('powerschedule_leagues');
-        const savedActiveId = localStorage.getItem('powerschedule_active_league_id');
-        if (savedLeagues) {
-          const parsed: LeagueSeason[] = JSON.parse(savedLeagues);
-          if (Array.isArray(parsed) && parsed.length > 0 && isMounted) {
-            const repaired = repairLeaguesData(parsed);
-            setLeagues(repaired);
-            if (savedActiveId && repaired.some((l: LeagueSeason) => l.id === savedActiveId)) {
-              setActiveLeagueId(savedActiveId);
-            } else {
-              setActiveLeagueId(repaired[0].id);
-            }
-          }
+      if (savedLeagues && savedLeagues.length > 0 && isMounted) {
+        const repaired = repairLeaguesData(savedLeagues);
+        setLeagues(repaired);
+        if (savedActiveId && repaired.some((l: LeagueSeason) => l.id === savedActiveId)) {
+          setActiveLeagueId(savedActiveId);
+        } else {
+          setActiveLeagueId(repaired[0].id);
         }
-      } catch (err) {
-        console.error('Failed to load local storage state', err);
-      } finally {
-        if (isMounted) setIsLoaded(true);
       }
     };
 

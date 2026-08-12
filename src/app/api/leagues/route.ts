@@ -3,13 +3,14 @@ import { LeagueSeason } from '@/types/league';
 import { initialLeaguesList } from '@/data/mockLeagueData';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 // Global memory cache in Next.js server instance
 declare global {
   var __POWER_SCHEDULE_STORE__: { leagues: LeagueSeason[]; activeId: string } | undefined;
 }
 
-const TEMP_FILE_PATH = path.join(process.cwd(), '.powerschedule_cloud_data.json');
+const TEMP_FILE_PATH = path.join(os.tmpdir(), '.powerschedule_cloud_data.json');
 
 function getStoreData(): { leagues: LeagueSeason[]; activeId: string } {
   if (globalThis.__POWER_SCHEDULE_STORE__) {
