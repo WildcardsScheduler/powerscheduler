@@ -285,9 +285,21 @@ export default function Home() {
     league.divisions.find((d) => d.id === selectedDivisionId) || league.divisions[0];
   const effectiveDivisionId = activeDivision?.id || '';
 
+  const savedAuthTeamId = typeof window !== 'undefined' ? localStorage.getItem('powerschedule_auth_team_id') : null;
   const activeTeam =
-    league.teams.find((t) => t.id === selectedTeamId) || league.teams[0];
+    currentRole === 'team_rep' && savedAuthTeamId
+      ? league.teams.find((t) => t.id === savedAuthTeamId) || league.teams.find((t) => t.id === selectedTeamId) || league.teams[0]
+      : league.teams.find((t) => t.id === selectedTeamId) || league.teams[0];
   const effectiveTeamId = activeTeam?.id || '';
+
+  const handleSelectTeam = (teamId: string) => {
+    if (currentRole === 'team_rep') {
+      if (savedAuthTeamId && teamId !== savedAuthTeamId) {
+        return; // Prevent team captain from changing active team
+      }
+    }
+    setSelectedTeamId(teamId);
+  };
 
   const handleSelectLeague = (id: string, targetLeagueOverride?: LeagueSeason) => {
     setActiveLeagueId(id);
@@ -298,7 +310,9 @@ export default function Home() {
       } else {
         setSelectedDivisionId('');
       }
-      if (targetLeague.teams.length > 0) {
+      if (currentRole === 'team_rep' && savedAuthTeamId && targetLeague.teams.some((t) => t.id === savedAuthTeamId)) {
+        setSelectedTeamId(savedAuthTeamId);
+      } else if (targetLeague.teams.length > 0) {
         setSelectedTeamId(targetLeague.teams[0].id);
       } else {
         setSelectedTeamId('');
@@ -847,12 +861,13 @@ export default function Home() {
             locations={league.locations}
             divisions={league.divisions}
             selectedTeamId={effectiveTeamId}
-            onSelectTeam={setSelectedTeamId}
+            onSelectTeam={handleSelectTeam}
             onUpdateRsvp={handleUpdateRsvp}
             onOpenScorekeeper={(match) => {
               setActiveScoreMatch(match);
               setIsScorekeeperOpen(true);
             }}
+            currentRole={currentRole}
           />
         )}
 
@@ -904,6 +919,8 @@ export default function Home() {
           divisions={league.divisions}
           selectedDivisionId={effectiveDivisionId}
           readOnly={currentRole === 'public'}
+          currentRole={currentRole}
+          userTeamId={effectiveTeamId}
           onOpenScorekeeper={(match) => {
             setActiveScoreMatch(match);
             setIsScorekeeperOpen(true);
@@ -922,6 +939,8 @@ export default function Home() {
           division={activeDivision}
           leagueRules={league.matchRules}
           isOpen={isScorekeeperOpen}
+          currentRole={currentRole}
+          userTeamId={effectiveTeamId}
           onClose={() => {
             setIsScorekeeperOpen(false);
             setActiveScoreMatch(null);

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Match, Team, Location, Division, SubLocation } from '@/types/league';
-import { Calendar, Clock, MapPin, ShieldAlert, Edit3, CheckCircle2, Building2, Filter, Printer } from 'lucide-react';
+import { Calendar, Clock, MapPin, ShieldAlert, Edit3, CheckCircle2, Building2, Filter, Printer, Lock } from 'lucide-react';
 import { PrintScheduleModal } from './PrintScheduleModal';
 import { formatTimeRange } from '@/utils/formatUtils';
 
@@ -14,6 +14,8 @@ interface ScheduleGridProps {
   selectedDivisionId: string;
   onOpenScorekeeper: (match: Match) => void;
   readOnly?: boolean;
+  currentRole?: 'public' | 'team_rep' | 'scheduler';
+  userTeamId?: string;
 }
 
 export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
@@ -24,6 +26,8 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   selectedDivisionId,
   onOpenScorekeeper,
   readOnly = false,
+  currentRole,
+  userTeamId,
 }) => {
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [selectedLocationFilter, setSelectedLocationFilter] = useState<string>('ALL');
@@ -270,33 +274,59 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     <span className="text-slate-500 text-[11px] shrink-0">No Ref Assigned</span>
                   )}
 
-                  {!readOnly ? (
-                    <button
-                      onClick={() => onOpenScorekeeper(match)}
-                      className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs transition-colors border border-slate-700"
-                    >
-                      {match.status === 'Completed' ? (
-                        <>
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                          <span>Edit Score</span>
-                        </>
+                  {(() => {
+                    const isTeamInvolved = Boolean(
+                      userTeamId &&
+                        (match.homeTeamId === userTeamId ||
+                          match.awayTeamId === userTeamId ||
+                          match.workTeamId === userTeamId)
+                    );
+                    const canReportScore =
+                      currentRole === 'scheduler' ||
+                      (currentRole === 'team_rep' && isTeamInvolved);
+
+                    if (readOnly) {
+                      return match.status === 'Completed' ? (
+                        <span className="flex items-center space-x-1 text-emerald-400 text-[11px] font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span>Official Final</span>
+                        </span>
                       ) : (
-                        <>
-                          <Edit3 className="h-3.5 w-3.5 text-amber-400" />
-                          <span>Record Score</span>
-                        </>
-                      )}
-                    </button>
-                  ) : (
-                    match.status === 'Completed' ? (
-                      <span className="flex items-center space-x-1 text-emerald-400 text-[11px] font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                        <CheckCircle2 className="h-3 w-3" />
-                        <span>Official Final</span>
-                      </span>
-                    ) : (
-                      <span className="text-slate-500 text-[11px] font-medium">Scheduled</span>
-                    )
-                  )}
+                        <span className="text-slate-500 text-[11px] font-medium">Scheduled</span>
+                      );
+                    }
+
+                    if (!canReportScore) {
+                      return (
+                        <span
+                          className="flex items-center space-x-1 text-slate-500 text-[11px] font-medium bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800"
+                          title="Score reporting restricted to team captains playing in or refereeing this match"
+                        >
+                          <Lock className="h-3 w-3 text-slate-500" />
+                          <span>Score Locked</span>
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <button
+                        onClick={() => onOpenScorekeeper(match)}
+                        className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs transition-colors border border-slate-700"
+                      >
+                        {match.status === 'Completed' ? (
+                          <>
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                            <span>Edit Score</span>
+                          </>
+                        ) : (
+                          <>
+                            <Edit3 className="h-3.5 w-3.5 text-amber-400" />
+                            <span>Record Score</span>
+                          </>
+                        )}
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
             );

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Match, Team, Division, SetScore, MatchRules, DEFAULT_MATCH_RULES } from '@/types/league';
-import { X, CheckCircle, Plus, Minus, Trophy, ShieldAlert, Info, AlertCircle } from 'lucide-react';
+import { X, CheckCircle, Plus, Minus, Trophy, ShieldAlert, Info, AlertCircle, Lock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatTime } from '@/utils/formatUtils';
 
@@ -16,6 +16,8 @@ interface ScorekeeperModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveScore: (matchId: string, scores: SetScore[], winnerId: string) => void;
+  currentRole?: 'public' | 'team_rep' | 'scheduler';
+  userTeamId?: string;
 }
 
 export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
@@ -28,9 +30,21 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
   isOpen,
   onClose,
   onSaveScore,
+  currentRole,
+  userTeamId,
 }) => {
   const activeRules: MatchRules = division?.matchRules || leagueRules || DEFAULT_MATCH_RULES;
   const totalSets = activeRules.totalSets || 3;
+
+  const isTeamInvolved = Boolean(
+    userTeamId &&
+      (match.homeTeamId === userTeamId ||
+        match.awayTeamId === userTeamId ||
+        match.workTeamId === userTeamId)
+  );
+  const canEdit =
+    currentRole === 'scheduler' ||
+    (currentRole === 'team_rep' && isTeamInvolved);
 
   const ensureThreeSets = (existingScores?: SetScore[], totalSetsCount: number = 3): SetScore[] => {
     const maxCount = Math.max(3, totalSetsCount);
@@ -158,6 +172,13 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
 
         {/* Content Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-5">
+
+          {!canEdit && (
+            <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center space-x-2.5 text-xs text-rose-400 font-semibold shadow-sm">
+              <Lock className="h-4 w-4 shrink-0 text-rose-400" />
+              <span>Access Restricted: Team Captains can only report scores for matches involving their team (Home, Away, or Ref Duty).</span>
+            </div>
+          )}
           
           {/* Active Rules Info Banner */}
           <div className="flex items-center justify-between px-3.5 py-2 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-400">
@@ -232,8 +253,9 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
                     <div className="flex items-center justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
                       <button
                         type="button"
+                        disabled={!canEdit}
                         onClick={() => updateSetScore(setIdx, true, -1)}
-                        className="h-10 w-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center font-bold text-lg disabled:opacity-50"
+                        className="h-10 w-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <Minus className="h-4 w-4" />
                       </button>
@@ -241,15 +263,17 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
                         type="number"
                         min={0}
                         max={99}
+                        disabled={!canEdit}
                         value={set.homeScore}
                         onChange={(e) => handleDirectScoreInput(setIdx, true, e.target.value)}
                         onFocus={(e) => e.target.select()}
-                        className="w-16 text-center text-2xl font-extrabold font-mono text-amber-400 bg-slate-950 border border-slate-800 rounded-lg focus:border-amber-400 focus:outline-none py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-16 text-center text-2xl font-extrabold font-mono text-amber-400 bg-slate-950 border border-slate-800 rounded-lg focus:border-amber-400 focus:outline-none py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-40"
                       />
                       <button
                         type="button"
+                        disabled={!canEdit}
                         onClick={() => updateSetScore(setIdx, true, 1)}
-                        className="h-10 w-10 rounded-lg bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-amber-500/20 disabled:opacity-50"
+                        className="h-10 w-10 rounded-lg bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-amber-500/20 disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <Plus className="h-4 w-4" />
                       </button>
@@ -259,8 +283,9 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
                     <div className="flex items-center justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
                       <button
                         type="button"
+                        disabled={!canEdit}
                         onClick={() => updateSetScore(setIdx, false, -1)}
-                        className="h-10 w-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center font-bold text-lg disabled:opacity-50"
+                        className="h-10 w-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-white flex items-center justify-center font-bold text-lg disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <Minus className="h-4 w-4" />
                       </button>
@@ -268,15 +293,17 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
                         type="number"
                         min={0}
                         max={99}
+                        disabled={!canEdit}
                         value={set.awayScore}
                         onChange={(e) => handleDirectScoreInput(setIdx, false, e.target.value)}
                         onFocus={(e) => e.target.select()}
-                        className="w-16 text-center text-2xl font-extrabold font-mono text-emerald-400 bg-slate-950 border border-slate-800 rounded-lg focus:border-emerald-400 focus:outline-none py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-16 text-center text-2xl font-extrabold font-mono text-emerald-400 bg-slate-950 border border-slate-800 rounded-lg focus:border-emerald-400 focus:outline-none py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-40"
                       />
                       <button
                         type="button"
+                        disabled={!canEdit}
                         onClick={() => updateSetScore(setIdx, false, 1)}
-                        className="h-10 w-10 rounded-lg bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-emerald-500/20 disabled:opacity-50"
+                        className="h-10 w-10 rounded-lg bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-emerald-500/20 disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <Plus className="h-4 w-4" />
                       </button>
@@ -309,8 +336,8 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
           </button>
           <button
             onClick={handleSave}
-            disabled={!calculatedWinnerId}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs shadow-lg shadow-teal-500/20 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center space-x-1.5 disabled:opacity-50"
+            disabled={!calculatedWinnerId || !canEdit}
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs shadow-lg shadow-teal-500/20 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center space-x-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <CheckCircle className="h-4 w-4" />
             <span>Verify & Save Match Score</span>

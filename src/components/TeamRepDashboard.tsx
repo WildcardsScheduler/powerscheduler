@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Team, Match, Location, Division, Player } from '@/types/league';
-import { Users, Calendar, Clock, MapPin, ShieldAlert, CheckCircle2, XCircle, HelpCircle, Phone, Mail, Building2, Edit3, Trophy } from 'lucide-react';
+import { Users, Calendar, Clock, MapPin, ShieldAlert, CheckCircle2, XCircle, HelpCircle, Phone, Mail, Building2, Edit3, Trophy, Lock } from 'lucide-react';
 import { formatTimeRange } from '@/utils/formatUtils';
 
 interface TeamRepDashboardProps {
@@ -14,6 +14,7 @@ interface TeamRepDashboardProps {
   onSelectTeam: (teamId: string) => void;
   onUpdateRsvp: (teamId: string, playerId: string, status: 'Going' | 'Maybe' | 'Out') => void;
   onOpenScorekeeper: (match: Match) => void;
+  currentRole?: 'public' | 'team_rep' | 'scheduler';
 }
 
 export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
@@ -25,6 +26,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
   onSelectTeam,
   onUpdateRsvp,
   onOpenScorekeeper,
+  currentRole,
 }) => {
   const activeTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
 
@@ -84,17 +86,27 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             <label className="text-[10px] uppercase font-semibold tracking-wider text-slate-500 block">
               Active Team View
             </label>
-            <select
-              value={activeTeam.id}
-              onChange={(e) => onSelectTeam(e.target.value)}
-              className="bg-transparent text-white font-bold text-lg focus:outline-none cursor-pointer"
-            >
-              {teams.map((t) => (
-                <option key={t.id} value={t.id} className="bg-slate-900 text-white">
-                  {t.name} ({divisions.find((d) => d.id === t.divisionId)?.name})
-                </option>
-              ))}
-            </select>
+            {currentRole === 'team_rep' ? (
+              <div className="text-white font-bold text-lg flex items-center space-x-2">
+                <span>{activeTeam.name}</span>
+                <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                  <Lock className="h-3 w-3 text-amber-400" />
+                  <span>My Authenticated Team</span>
+                </span>
+              </div>
+            ) : (
+              <select
+                value={activeTeam.id}
+                onChange={(e) => onSelectTeam(e.target.value)}
+                className="bg-transparent text-white font-bold text-lg focus:outline-none cursor-pointer"
+              >
+                {teams.map((t) => (
+                  <option key={t.id} value={t.id} className="bg-slate-900 text-white">
+                    {t.name} ({divisions.find((d) => d.id === t.divisionId)?.name})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 
