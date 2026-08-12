@@ -31,6 +31,7 @@ interface TeamManagerModalProps {
     captainPhone: string,
     badgeColor: string
   ) => void;
+  onQuickGenerateTeams?: (count: number, divisionId?: string) => void;
   onUpdateTeam: (
     teamId: string,
     name: string,
@@ -75,6 +76,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
   isOpen,
   onClose,
   onAddTeam,
+  onQuickGenerateTeams,
   onUpdateTeam,
   onDeleteTeam,
   onAddPlayer,
@@ -84,6 +86,9 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(teams[0]?.id || null);
   const [showAddTeamForm, setShowAddTeamForm] = useState(false);
+  const [showQuickBatchForm, setShowQuickBatchForm] = useState(false);
+  const [quickBatchCount, setQuickBatchCount] = useState<number>(8);
+  const [quickBatchDivisionId, setQuickBatchDivisionId] = useState<string>(divisions[0]?.id || '');
 
   // New Team Form State
   const [newTeamName, setNewTeamName] = useState('');
@@ -96,6 +101,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
   // Sync the default division picker when the active league's divisions change
   React.useEffect(() => {
     setNewDivisionId(divisions[0]?.id || '');
+    setQuickBatchDivisionId(divisions[0]?.id || '');
   }, [divisions[0]?.id]);
 
   // Edit Team Form State (derived from selected team)
@@ -161,6 +167,16 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
     setNewCaptainName('');
     setNewCaptainEmail('');
     setNewCaptainPhone('');
+    setShowAddTeamForm(false);
+  };
+
+  const handleQuickBatchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (quickBatchCount <= 0) return;
+    if (onQuickGenerateTeams) {
+      onQuickGenerateTeams(quickBatchCount, quickBatchDivisionId || divisions[0]?.id || '');
+    }
+    setShowQuickBatchForm(false);
     setShowAddTeamForm(false);
   };
 
@@ -252,13 +268,28 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
               <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
                 Teams ({teams.length})
               </span>
-              <button
-                onClick={() => setShowAddTeamForm(true)}
-                className="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center space-x-1 transition-all"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>New Team</span>
-              </button>
+              <div className="flex items-center space-x-1.5">
+                <button
+                  onClick={() => {
+                    setShowQuickBatchForm(true);
+                    setShowAddTeamForm(false);
+                  }}
+                  className="px-2 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-[11px] flex items-center space-x-1 transition-all"
+                  title="Quick add numbered teams (Team 1, Team 2, etc.)"
+                >
+                  <span>⚡ Add N Teams</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddTeamForm(true);
+                    setShowQuickBatchForm(false);
+                  }}
+                  className="px-2 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] flex items-center space-x-1 transition-all"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Custom</span>
+                </button>
+              </div>
             </div>
 
             {/* Search Input */}
@@ -318,7 +349,96 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
           {/* Right Editor Panel */}
           <div className="md:col-span-8 p-4 sm:p-6 overflow-y-auto space-y-6">
             
-            {showAddTeamForm ? (
+            {showQuickBatchForm || (teams.length === 0 && !showAddTeamForm) ? (
+              /* Quick Batch Numbered Teams Form */
+              <div className="bg-slate-950 border border-amber-500/40 rounded-2xl p-5 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                  <div>
+                    <h4 className="text-sm font-bold text-amber-400 flex items-center gap-2">
+                      <Users className="h-4 w-4" /> Quick Add Numbered Teams
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      Generate placeholder teams ("Team 1", "Team 2", etc.) so you can perform schedule generation immediately and update names/captains later.
+                    </p>
+                  </div>
+                  {teams.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowQuickBatchForm(false)}
+                      className="text-xs text-slate-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+
+                <form onSubmit={handleQuickBatchSubmit} className="space-y-4">
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">
+                      Select League / Division Capacity Preset:
+                    </label>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
+                      {[4, 6, 8, 10, 12, 16].map((num) => (
+                        <button
+                          type="button"
+                          key={num}
+                          onClick={() => setQuickBatchCount(num)}
+                          className={`py-2 text-xs font-bold rounded-xl border transition-all ${
+                            quickBatchCount === num
+                              ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
+                              : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
+                          }`}
+                        >
+                          {num} Teams
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                        Number of Teams to Add
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="32"
+                        value={quickBatchCount}
+                        onChange={(e) => setQuickBatchCount(parseInt(e.target.value) || 1)}
+                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                        Target Division
+                      </label>
+                      <select
+                        value={quickBatchDivisionId}
+                        onChange={(e) => setQuickBatchDivisionId(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs"
+                      >
+                        {divisions.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Generate {quickBatchCount} Numbered Teams (Team 1 to Team {quickBatchCount})</span>
+                  </button>
+                </form>
+              </div>
+            ) : showAddTeamForm ? (
               /* Create New Team Form */
               <form onSubmit={handleCreateTeamSubmit} className="space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">

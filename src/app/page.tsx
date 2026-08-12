@@ -386,6 +386,37 @@ export default function Home() {
     setSelectedTeamId(newTeamId);
   };
 
+  const handleQuickGenerateTeams = (count: number, divisionId?: string) => {
+    const targetDivId = divisionId || effectiveDivisionId || league.divisions[0]?.id || '';
+    const currentDivTeams = league.teams.filter((t) => t.divisionId === targetDivId);
+    const startIndex = currentDivTeams.length + 1;
+
+    const colors = [
+      '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6',
+      '#06b6d4', '#ef4444', '#14b8a6', '#6366f1', '#f97316'
+    ];
+
+    const newTeams: Team[] = [];
+    for (let i = 0; i < count; i++) {
+      const num = startIndex + i;
+      newTeams.push({
+        id: `team-${Date.now()}-${i}`,
+        divisionId: targetDivId,
+        name: `Team ${num}`,
+        captainName: `Captain ${num}`,
+        captainEmail: `captain${num}@example.com`,
+        captainPhone: `(555) 000-00${num < 10 ? '0' + num : num}`,
+        badgeColor: colors[i % colors.length],
+        roster: [],
+      });
+    }
+
+    updateActiveLeague((prev) => ({
+      ...prev,
+      teams: [...prev.teams, ...newTeams],
+    }));
+  };
+
   const handleUpdateTeam = (
     teamId: string,
     name: string,
@@ -801,6 +832,7 @@ export default function Home() {
         isOpen={isTeamManagerOpen}
         onClose={() => setIsTeamManagerOpen(false)}
         onAddTeam={handleAddTeam}
+        onQuickGenerateTeams={handleQuickGenerateTeams}
         onUpdateTeam={handleUpdateTeam}
         onDeleteTeam={handleDeleteTeam}
         onAddPlayer={handleAddPlayer}
