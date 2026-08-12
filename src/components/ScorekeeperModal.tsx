@@ -34,16 +34,12 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
 
   const [sets, setSets] = useState<SetScore[]>(() => {
     if (match.scores && match.scores.length > 0) return match.scores;
-    // Generate initial sets matching active rules
-    return Array.from({ length: totalSets }, (_, i) => {
-      const setNum = i + 1;
-      const targetPts = setNum === totalSets && totalSets > 2 ? activeRules.pointsPerDecidingSet : activeRules.pointsPerSet;
-      return {
-        setNumber: setNum,
-        homeScore: setNum === 1 ? targetPts : setNum === 2 ? targetPts - 3 : 0,
-        awayScore: setNum === 1 ? targetPts - 4 : setNum === 2 ? targetPts : 0,
-      };
-    });
+    // Default all sets to 0-0
+    return Array.from({ length: totalSets }, (_, i) => ({
+      setNumber: i + 1,
+      homeScore: 0,
+      awayScore: 0,
+    }));
   });
 
   const [includeOptionalSet, setIncludeOptionalSet] = useState<boolean>(true);
@@ -54,15 +50,11 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
       setSets(match.scores);
     } else {
       setSets(
-        Array.from({ length: totalSets }, (_, i) => {
-          const setNum = i + 1;
-          const targetPts = setNum === totalSets && totalSets > 2 ? activeRules.pointsPerDecidingSet : activeRules.pointsPerSet;
-          return {
-            setNumber: setNum,
-            homeScore: setNum === 1 ? targetPts : setNum === 2 ? targetPts - 3 : 0,
-            awayScore: setNum === 1 ? targetPts - 4 : setNum === 2 ? targetPts : 0,
-          };
-        })
+        Array.from({ length: totalSets }, (_, i) => ({
+          setNumber: i + 1,
+          homeScore: 0,
+          awayScore: 0,
+        }))
       );
     }
   }, [match.id, totalSets]);
