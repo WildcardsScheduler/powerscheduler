@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { LeagueSeason, Division, Team, Match, Location } from '@/types/league';
-import { ShieldCheck, Calendar, Sparkles, Building2, Plus, Layers, MapPin, Users } from 'lucide-react';
+import { ShieldCheck, Calendar, Sparkles, Building2, Plus, Layers, MapPin, Users, KeyRound } from 'lucide-react';
 
 interface SchedulerDashboardProps {
   league: LeagueSeason;
@@ -14,6 +14,7 @@ interface SchedulerDashboardProps {
   onOpenLocationManager: () => void;
   onOpenDivisionManager: () => void;
   onOpenTeamManager: () => void;
+  onOpenLeagueManager: () => void;
   selectedDivisionId: string;
   onSelectDivision: (id: string) => void;
 }
@@ -28,6 +29,7 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
   onOpenLocationManager,
   onOpenDivisionManager,
   onOpenTeamManager,
+  onOpenLeagueManager,
   selectedDivisionId,
   onSelectDivision,
 }) => {
@@ -50,6 +52,14 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+          <button
+            onClick={onOpenLeagueManager}
+            className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 border border-rose-500/20 font-bold text-xs shadow-md transition-all flex items-center justify-center space-x-1.5"
+          >
+            <KeyRound className="h-4 w-4" />
+            <span>Passcode & League Settings</span>
+          </button>
+
           <button
             onClick={onOpenTeamManager}
             className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/20 font-bold text-xs shadow-md transition-all flex items-center justify-center space-x-1.5"

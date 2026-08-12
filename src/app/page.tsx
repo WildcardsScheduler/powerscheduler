@@ -322,11 +322,16 @@ export default function Home() {
     maxTeams: number,
     hasDivisions: boolean,
     autofill: boolean,
-    matchRules: MatchRules
+    matchRules: MatchRules,
+    adminPasscode?: string
   ) => {
     const newLeague = autofill
       ? createSampleLeague(name, sport, startDate, endDate, maxTeams, hasDivisions, matchRules)
       : createBlankLeague(name, sport, startDate, endDate, maxTeams, hasDivisions, matchRules);
+
+    if (adminPasscode) {
+      newLeague.adminPasscode = adminPasscode;
+    }
 
     setLeagues((prev) => [...prev, newLeague]);
     handleSelectLeague(newLeague.id, newLeague);
@@ -339,7 +344,8 @@ export default function Home() {
     startDate: string,
     endDate: string,
     maxTeams: number,
-    matchRules: MatchRules
+    matchRules: MatchRules,
+    adminPasscode?: string
   ) => {
     const formattedDesc = formatMatchRulesDescription(matchRules);
     setLeagues((prev) =>
@@ -353,6 +359,7 @@ export default function Home() {
             endDate,
             maxTeams,
             matchRules,
+            adminPasscode: adminPasscode || l.adminPasscode || 'admin123',
             divisions: l.divisions.map((d) => ({
               ...d,
               setFormat: formattedDesc as any,
@@ -814,6 +821,7 @@ export default function Home() {
             onOpenLocationManager={() => setIsLocationManagerOpen(true)}
             onOpenDivisionManager={() => setIsDivisionManagerOpen(true)}
             onOpenTeamManager={() => setIsTeamManagerOpen(true)}
+            onOpenLeagueManager={() => setIsLeagueManagerOpen(true)}
             selectedDivisionId={effectiveDivisionId}
             onSelectDivision={setSelectedDivisionId}
           />

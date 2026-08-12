@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { LeagueSeason, SportType, MatchRules, ThirdSetRule, DEFAULT_MATCH_RULES } from '@/types/league';
-import { X, Trophy, Plus, Calendar, Users, Building2, Layers, Edit3, Trash2, CheckCircle2, Sparkles, Check, Settings2 } from 'lucide-react';
+import { X, Trophy, Plus, Calendar, Users, Building2, Layers, Edit3, Trash2, CheckCircle2, Sparkles, Check, Settings2, KeyRound } from 'lucide-react';
 
 interface LeagueManagerModalProps {
   leagues: LeagueSeason[];
@@ -18,7 +18,8 @@ interface LeagueManagerModalProps {
     maxTeams: number,
     hasDivisions: boolean,
     autofill: boolean,
-    matchRules: MatchRules
+    matchRules: MatchRules,
+    adminPasscode?: string
   ) => void;
   onUpdateLeague: (
     id: string,
@@ -27,7 +28,8 @@ interface LeagueManagerModalProps {
     startDate: string,
     endDate: string,
     maxTeams: number,
-    matchRules: MatchRules
+    matchRules: MatchRules,
+    adminPasscode?: string
   ) => void;
   onDeleteLeague: (id: string) => void;
 }
@@ -67,6 +69,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [editStartDate, setEditStartDate] = useState('');
   const [editEndDate, setEditEndDate] = useState('');
   const [editMaxTeams, setEditMaxTeams] = useState<number>(12);
+  const [editAdminPasscode, setEditAdminPasscode] = useState('admin123');
 
   // Edit Match Rules State
   const [editTotalSets, setEditTotalSets] = useState<number>(3);
@@ -105,6 +108,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
     setEditStartDate(league.startDate);
     setEditEndDate(league.endDate);
     setEditMaxTeams(league.maxTeams || 12);
+    setEditAdminPasscode(league.adminPasscode || 'admin123');
 
     setEditTotalSets(rules.totalSets);
     setEditPointsPerSet(rules.pointsPerSet);
@@ -126,7 +130,16 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
       excludeThirdSetPointsFromDiff: editExcludeThirdSetPointsFromDiff,
     };
 
-    onUpdateLeague(leagueId, editName.trim(), editSport, editStartDate, editEndDate, editMaxTeams, updatedRules);
+    onUpdateLeague(
+      leagueId,
+      editName.trim(),
+      editSport,
+      editStartDate,
+      editEndDate,
+      editMaxTeams,
+      updatedRules,
+      editAdminPasscode.trim() || 'admin123'
+    );
     setEditingLeagueId(null);
   };
 
@@ -452,6 +465,21 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                           onChange={(e) => setEditEndDate(e.target.value)}
                           className="bg-slate-900 border border-slate-800 text-white text-xs rounded-lg px-3 py-1.5"
                         />
+                      </div>
+
+                      {/* Admin Passcode Config */}
+                      <div className="p-2.5 bg-slate-900 border border-rose-500/30 rounded-xl space-y-1">
+                        <label className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
+                          <KeyRound className="h-3.5 w-3.5" /> Master Admin Passcode
+                        </label>
+                        <input
+                          type="text"
+                          value={editAdminPasscode}
+                          onChange={(e) => setEditAdminPasscode(e.target.value)}
+                          placeholder="Master Admin Passcode"
+                          className="w-full bg-slate-950 border border-slate-800 text-rose-300 font-mono font-bold text-xs rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-rose-500 focus:outline-none"
+                        />
+                        <p className="text-[10px] text-slate-400">Master password required for administrative access to this league season.</p>
                       </div>
 
                       {/* Edit Match Rules */}
