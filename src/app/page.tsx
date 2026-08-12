@@ -43,19 +43,21 @@ export default function Home() {
     });
   };
   const isDefaultInitialData = (data: LeagueSeason[]) => {
-    if (!data || data.length !== initialLeaguesList.length) return false;
+    if (!data || data.length === 0) return true;
+    if (data.length !== initialLeaguesList.length) return false;
     return data.every((l, idx) => {
       const init = initialLeaguesList[idx];
       return (
         init &&
         l.id === init.id &&
+        l.name === init.name &&
         l.teams.length === init.teams.length &&
         l.matches.length === init.matches.length
       );
     });
   };
 
-  // Load state from online cloud API on mount (re-hydrate from localStorage if server reset after deployment)
+  // Load state from online cloud API on mount (re-hydrate from localStorage or backup if server reset after deployment)
   useEffect(() => {
     let isMounted = true;
 
@@ -65,9 +67,17 @@ export default function Home() {
 
       try {
         const rawSaved = localStorage.getItem('powerschedule_leagues');
+        const backupSaved = localStorage.getItem('powerschedule_leagues_backup');
         savedActiveId = localStorage.getItem('powerschedule_active_league_id');
-        if (rawSaved) {
-          savedLeagues = JSON.parse(rawSaved);
+
+        let primary = rawSaved ? JSON.parse(rawSaved) : null;
+        let backup = backupSaved ? JSON.parse(backupSaved) : null;
+
+        // If primary is default template, but backup contains custom user data, restore backup!
+        if ((!primary || isDefaultInitialData(primary)) && backup && !isDefaultInitialData(backup)) {
+          savedLeagues = backup;
+        } else {
+          savedLeagues = primary || backup;
         }
       } catch (err) {
         console.warn('Failed to read local storage backup', err);
@@ -81,7 +91,7 @@ export default function Home() {
             const serverIsDefault = isDefaultInitialData(data.leagues);
             const clientHasCustom = savedLeagues && savedLeagues.length > 0 && !isDefaultInitialData(savedLeagues);
 
-            // If server reset to default on deployment, but client has custom data, re-hydrate server!
+            // If server reset to default on deployment, but client/backup has custom data, re-hydrate server!
             if (serverIsDefault && clientHasCustom && savedLeagues) {
               const repaired = repairLeaguesData(savedLeagues);
               if (isMounted) {
@@ -149,8 +159,22 @@ export default function Home() {
         if (res.ok) {
           const data = await res.json();
           if (data?.leagues && Array.isArray(data.leagues) && data.leagues.length > 0) {
-            const repaired = repairLeaguesData(data.leagues);
-            setLeagues(repaired);
+            const serverIsDefault = isDefaultInitialData(data.leagues);
+
+            setLeagues((currentLeagues) => {
+              const currentIsCustom = currentLeagues.length > 0 && !isDefaultInitialData(currentLeagues);
+              // If server is showing default initial template, but client has custom data, re-hydrate server!
+              if (serverIsDefault && currentIsCustom) {
+                fetch('/api/leagues', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ leagues: currentLeagues, activeId: activeLeagueId }),
+                }).catch(() => {});
+                return currentLeagues;
+              }
+              const repaired = repairLeaguesData(data.leagues);
+              return repaired;
+            });
             setIsCloudSynced(true);
           }
         }
@@ -160,7 +184,7 @@ export default function Home() {
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [isLoaded]);
+  }, [isLoaded, activeLeagueId]);
 
   // Persist state to online cloud API and local storage whenever leagues or active league changes
   useEffect(() => {
@@ -168,6 +192,11 @@ export default function Home() {
     try {
       localStorage.setItem('powerschedule_leagues', JSON.stringify(leagues));
       localStorage.setItem('powerschedule_active_league_id', activeLeagueId);
+
+      // Save to permanent backup key whenever custom data exists
+      if (!isDefaultInitialData(leagues)) {
+        localStorage.setItem('powerschedule_leagues_backup', JSON.stringify(leagues));
+      }
 
       // Post updates to online cloud store
       fetch('/api/leagues', {
