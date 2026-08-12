@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Match, Team, Location, Division } from '@/types/league';
 import { Printer, X, Calendar, User, FileText, Check, Layers, MapPin } from 'lucide-react';
+import { formatTime, formatTimeRange } from '@/utils/formatUtils';
 
 interface PrintScheduleModalProps {
   isOpen: boolean;
@@ -264,7 +265,7 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
                                 return (
                                   <tr key={m.id} className="hover:bg-slate-900/40 print:hover:bg-transparent">
                                     <td className="py-2 px-2 font-mono font-bold text-amber-300 print:text-black">
-                                      {m.startTime}
+                                      {formatTime(m.startTime)}
                                     </td>
                                     <td className="py-2 px-2 text-slate-300 print:text-slate-800 font-medium">
                                       {locationLabel}
@@ -458,7 +459,7 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
 
                     {/* Time */}
                     <td className="py-3 px-3 font-mono font-bold text-amber-300 print:text-black">
-                      {m.startTime} - {m.endTime}
+                      {formatTimeRange(m.startTime, m.endTime)}
                     </td>
 
                     {/* Location */}

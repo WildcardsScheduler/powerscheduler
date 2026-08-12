@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Match, Team, Location, Division, SubLocation } from '@/types/league';
 import { Calendar, Clock, MapPin, ShieldAlert, Edit3, CheckCircle2, Building2, Filter, Printer } from 'lucide-react';
 import { PrintScheduleModal } from './PrintScheduleModal';
+import { formatTimeRange } from '@/utils/formatUtils';
 
 interface ScheduleGridProps {
   matches: Match[];
@@ -173,7 +174,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 <div className="flex items-center justify-between text-xs text-slate-400">
                   <div className="flex items-center space-x-1.5">
                     <Clock className="h-3.5 w-3.5 text-amber-400" />
-                    <span>{match.startTime} - {match.endTime}</span>
+                    <span>{formatTimeRange(match.startTime, match.endTime)}</span>
                   </div>
 
                   {/* Primary Location + Sub-location Name */}

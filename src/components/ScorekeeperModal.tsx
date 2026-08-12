@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Match, Team, Division, SetScore } from '@/types/league';
 import { X, CheckCircle, Plus, Minus, Trophy, ShieldAlert, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { formatTime } from '@/utils/formatUtils';
 
 interface ScorekeeperModalProps {
   match: Match;
@@ -89,7 +90,7 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
             <div>
               <h3 className="text-base font-bold text-white">Court-side Scorekeeper</h3>
               <p className="text-xs text-slate-400">
-                Week {match.weekNumber} • {match.startTime} • Court #{match.courtId}
+                Week {match.weekNumber} • {formatTime(match.startTime)} • Court #{match.courtId}
               </p>
             </div>
           </div>

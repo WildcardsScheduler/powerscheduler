@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Team, Match, Location, Division, Player } from '@/types/league';
 import { Users, Calendar, Clock, MapPin, ShieldAlert, CheckCircle2, XCircle, HelpCircle, Phone, Mail, Building2, Edit3, Trophy } from 'lucide-react';
+import { formatTimeRange } from '@/utils/formatUtils';
 
 interface TeamRepDashboardProps {
   teams: Team[];
@@ -130,7 +131,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
               <div className="flex items-center space-x-3 text-slate-300 text-sm">
                 <Clock className="h-5 w-5 text-amber-400 shrink-0" />
                 <div>
-                  <div className="font-bold text-white">{nextMatch.startTime} - {nextMatch.endTime}</div>
+                  <div className="font-bold text-white">{formatTimeRange(nextMatch.startTime, nextMatch.endTime)}</div>
                   <div className="text-xs text-slate-400">{nextMatch.date}</div>
                 </div>
               </div>
@@ -229,7 +230,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
                       <span className="bg-slate-800 text-amber-400 px-2 py-0.5 rounded font-bold">Wk #{m.weekNumber}</span>
-                      <span>{m.date} • {m.startTime} - {m.endTime}</span>
+                      <span>{m.date} • {formatTimeRange(m.startTime, m.endTime)}</span>
                       {pLoc && (
                         <span className="text-slate-400 font-medium">
                           ({pLoc.name} {sLoc ? `— ${sLoc.name}` : ''})

@@ -9,6 +9,7 @@ import {
   PROVINCE_OPTIONS,
   CanadianProvince,
 } from '@/utils/canadianHolidays';
+import { formatTime, formatTimeRange } from '@/utils/formatUtils';
 import {
   X,
   Sparkles,
@@ -456,7 +457,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       key={slot}
                       className="bg-slate-900 text-white border border-slate-800 px-2.5 py-1 rounded-xl font-mono text-xs flex items-center space-x-1.5"
                     >
-                      <span>{slot}</span>
+                      <span>{formatTime(slot)}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveTimeSlot(slot)}
@@ -1057,7 +1058,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                         {/* Dynamic Time Slot Columns */}
                         {generatedReport.effectiveTimeSlots.map((slot) => (
                           <th key={slot} className="py-2 px-3 font-semibold text-center text-amber-400">
-                            {slot}
+                            {formatTime(slot)}
                           </th>
                         ))}
                         <th className="py-2 px-3 font-semibold text-center">Court Distribution</th>
@@ -1275,7 +1276,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                         >
                           <div className="flex items-center space-x-3">
                             <span className="font-mono text-amber-400 font-bold bg-slate-950 px-2 py-1 rounded border border-slate-800">
-                              {m.startTime}
+                              {formatTimeRange(m.startTime, m.endTime)}
                             </span>
                             <span className="text-slate-400 font-medium">📍 {courtName}</span>
                           </div>
