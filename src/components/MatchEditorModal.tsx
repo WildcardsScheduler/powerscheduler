@@ -1,9 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Match, Team, Location, Division, SubLocation, SetScore } from '@/types/league';
-import { X, Calendar, Clock, MapPin, Building2, ShieldAlert, ArrowLeftRight, Trash2, CheckCircle2, AlertTriangle, Scale, Plus, Check } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, Building2, ShieldAlert, ArrowLeftRight, Trash2, CheckCircle2, AlertTriangle, Scale, Plus, Check, Sun, Moon } from 'lucide-react';
 import { calculateScheduleFairnessReport } from '@/utils/schedulerEngine';
+import { formatTime, formatTimeRange } from '@/utils/formatUtils';
+
+const COMMON_TIMES = [
+  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+  '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+  '16:00', '16:30', '17:00', '17:30', '18:00', '18:15', '18:30', '18:45',
+  '19:00', '19:15', '19:30', '19:45', '20:00', '20:15', '20:30', '20:45',
+  '21:00', '21:15', '21:30', '21:45', '22:00', '22:15', '22:30', '23:00'
+];
 
 interface MatchEditorModalProps {
   isOpen: boolean;
@@ -45,9 +54,19 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
   const [isExhibition, setIsExhibition] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>('');
 
-  // Initial population on open
+  // Initial population ONLY on open transition or match switch (prevents background sync from wiping state)
+  const prevOpenRef = useRef(false);
+  const prevMatchIdRef = useRef<string | null>(null);
+
   useEffect(() => {
+    const isOpening = isOpen && !prevOpenRef.current;
+    const matchChanged = isOpen && match?.id !== prevMatchIdRef.current;
+
+    prevOpenRef.current = isOpen;
+    prevMatchIdRef.current = match?.id || null;
+
     if (!isOpen) return;
+    if (!isOpening && !matchChanged) return;
 
     if (match) {
       setDivisionId(match.divisionId || selectedDivisionId || divisions[0]?.id || '');
@@ -80,7 +99,7 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
       setIsExhibition(false);
       setNotes('');
     }
-  }, [isOpen, match, selectedDivisionId, divisions, teams, locations]);
+  }, [isOpen, match?.id]);
 
   const currentDivTeams = useMemo(() => {
     if (divisions.length <= 1) return teams;
@@ -98,6 +117,20 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
     const temp = homeTeamId;
     setHomeTeamId(awayTeamId);
     setAwayTeamId(temp);
+  };
+
+  // Auto calculate 1 hour match duration when Start Time is selected
+  const handleStartTimeChange = (newStart: string) => {
+    setStartTime(newStart);
+    const parts = newStart.split(':');
+    if (parts.length >= 2) {
+      const h = parseInt(parts[0], 10);
+      if (!isNaN(h)) {
+        const endH = (h + 1) % 24;
+        const endHStr = endH < 10 ? `0${endH}` : `${endH}`;
+        setEndTime(`${endHStr}:${parts[1]}`);
+      }
+    }
   };
 
   // Construct draft match object
@@ -314,31 +347,45 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
             <div>
               <label className="text-xs font-bold text-slate-300 flex items-center space-x-1 mb-1">
                 <Clock className="h-3 w-3 text-amber-400" />
-                <span>Start Time</span>
+                <span>Start Time (AM / PM)</span>
               </label>
-              <input
-                type="text"
-                placeholder="e.g. 18:30 or 6:30 PM"
+              <select
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:outline-none focus:border-amber-500"
+                onChange={(e) => handleStartTimeChange(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-amber-400 focus:outline-none focus:border-amber-500 cursor-pointer"
                 required
-              />
+              >
+                {!COMMON_TIMES.includes(startTime) && startTime && (
+                  <option value={startTime}>{formatTime(startTime)}</option>
+                )}
+                {COMMON_TIMES.map((t) => (
+                  <option key={t} value={t} className="bg-slate-900 text-white font-medium">
+                    {formatTime(t)}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* End Time */}
             <div>
               <label className="text-xs font-bold text-slate-300 flex items-center space-x-1 mb-1">
                 <Clock className="h-3 w-3 text-rose-400" />
-                <span>End Time</span>
+                <span>End Time (AM / PM)</span>
               </label>
-              <input
-                type="text"
-                placeholder="e.g. 19:30 or 7:30 PM"
+              <select
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:outline-none focus:border-amber-500"
-              />
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-rose-400 focus:outline-none focus:border-amber-500 cursor-pointer"
+              >
+                {!COMMON_TIMES.includes(endTime) && endTime && (
+                  <option value={endTime}>{formatTime(endTime)}</option>
+                )}
+                {COMMON_TIMES.map((t) => (
+                  <option key={t} value={t} className="bg-slate-900 text-white font-medium">
+                    {formatTime(t)}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
