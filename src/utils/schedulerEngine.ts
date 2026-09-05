@@ -177,10 +177,34 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     const roundPairings: { home: string; away: string }[] = [];
 
     for (let i = 0; i < numTeams / 2; i++) {
-      const home = currentRoundPool[i];
-      const away = currentRoundPool[numTeams - 1 - i];
+      const t1 = currentRoundPool[i];
+      const t2 = currentRoundPool[numTeams - 1 - i];
 
-      if (home !== dummyTeam && away !== dummyTeam) {
+      if (t1 !== dummyTeam && t2 !== dummyTeam) {
+        // Standard Berger table alternation:
+        // 1. The fixed team (i === 0) alternates home/away every round
+        // 2. All other pairings alternate home/away based on round number and position to ensure 50/50 balance
+        let home: string;
+        let away: string;
+
+        if (i === 0) {
+          if (roundIndex % 2 === 0) {
+            home = t1;
+            away = t2;
+          } else {
+            home = t2;
+            away = t1;
+          }
+        } else {
+          if ((i + roundIndex) % 2 === 0) {
+            home = t1;
+            away = t2;
+          } else {
+            home = t2;
+            away = t1;
+          }
+        }
+
         roundPairings.push({ home, away });
       }
     }
@@ -323,8 +347,10 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
               }
 
               if (bestPair) {
-                const home = bestPair.home;
-                const away = bestPair.away;
+                const h1HomeCount = matches.filter((m) => m.homeTeamId === bestPair.home).length;
+                const h2HomeCount = matches.filter((m) => m.homeTeamId === bestPair.away).length;
+                const home = h1HomeCount <= h2HomeCount ? bestPair.home : bestPair.away;
+                const away = h1HomeCount <= h2HomeCount ? bestPair.away : bestPair.home;
 
                 const fillMatch: Match = {
                   id: `gen-${divisionId}-w${week}-m${matchIdCounter++}`,
