@@ -909,7 +909,7 @@ export default function Home() {
             selectedDivisionId={effectiveDivisionId}
             onSelectDivision={setSelectedDivisionId}
           />
-        ) : (
+        ) : currentRole === 'team_rep' ? (
           <TeamRepDashboard
             teams={league.teams}
             matches={league.matches}
@@ -926,7 +926,7 @@ export default function Home() {
             }}
             currentRole={currentRole}
           />
-        )}
+        ) : null}
 
         {/* Division Selector Tabs for Standings & Schedule (Only if Multi-Division mode or >1 divisions) */}
         {league.hasDivisions !== false && league.divisions.length > 1 ? (
