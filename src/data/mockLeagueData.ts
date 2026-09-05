@@ -2,7 +2,7 @@ import { LeagueSeason, TeamStanding, Match, Team, DEFAULT_MATCH_RULES, MatchRule
 
 export const initialLeagueData: LeagueSeason = {
   id: 'league-fall-2026',
-  name: 'Premier Volleyball League - Fall 2026',
+  name: 'My Volleyball League',
   sport: 'Volleyball',
   startDate: '2026-09-08',
   endDate: '2026-11-24',

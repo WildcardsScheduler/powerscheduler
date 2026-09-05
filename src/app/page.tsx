@@ -917,6 +917,20 @@ export default function Home() {
 
   const allSubLocations = league.locations.flatMap((l) => l.subLocations);
 
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-100 font-sans">
+        <div className="relative flex items-center justify-center mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 animate-pulse flex items-center justify-center shadow-lg shadow-rose-500/20">
+            <Trophy className="w-6 h-6 text-white" />
+          </div>
+        </div>
+        <h2 className="text-base font-semibold text-slate-200 tracking-tight">PowerSchedule</h2>
+        <p className="text-xs text-slate-500 mt-1 animate-pulse">Loading league data...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-rose-500 selection:text-white font-sans pb-16">
       
