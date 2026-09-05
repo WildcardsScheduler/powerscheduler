@@ -100,11 +100,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Dynamic Auth / Role Switcher Header Controls */}
-        <div className="flex items-center space-x-2 shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           {onOpenInstallModal && (
             <button
               onClick={onOpenInstallModal}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 border border-slate-800 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 border border-slate-800 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
               title="Install App on iPhone or Android"
             >
               <Download className="h-3.5 w-3.5 text-emerald-400" />
@@ -115,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {onOpenRulesModal && (
             <button
               onClick={onOpenRulesModal}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
               title="View Official League Rules"
             >
               <BookOpen className="h-3.5 w-3.5 text-amber-400" />
@@ -140,10 +140,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
               <button
                 onClick={onOpenLoginModal}
-                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black text-xs shadow-md shadow-rose-500/20 flex items-center space-x-1.5 transition-all"
+                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black text-[11px] sm:text-xs shadow-md shadow-rose-500/20 flex items-center space-x-1 sm:space-x-1.5 transition-all shrink-0"
               >
-                <LogIn className="h-4 w-4" />
-                <span>Scorekeeper / Admin Login</span>
+                <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>Team / Admin Login</span>
               </button>
             </div>
           ) : currentRole === 'team_rep' ? (

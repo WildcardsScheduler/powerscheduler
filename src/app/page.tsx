@@ -890,54 +890,10 @@ export default function Home() {
       />
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6 sm:space-y-8">
         
         {/* Role-Based Upper Section */}
-        {currentRole === 'public' ? (
-          <div className="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider flex items-center space-x-1">
-                    <Globe className="h-3.5 w-3.5" />
-                    <span>Public League Portal</span>
-                  </span>
-                  <span className="text-slate-400 text-xs font-semibold">• Official Standings & Schedule</span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                  {league.name}
-                </h1>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => setIsInstallModalOpen(true)}
-                  className="bg-slate-950 hover:bg-slate-800 border border-emerald-500/30 px-3.5 py-2 rounded-2xl text-xs font-bold text-emerald-400 hover:text-white flex items-center space-x-1.5 transition-all shadow-md"
-                  title="Install PowerSchedule on iPhone, iPad, or Android"
-                >
-                  <Download className="h-4 w-4 text-emerald-400" />
-                  <span>Install App</span>
-                </button>
-                <button
-                  onClick={() => setIsRulesModalOpen(true)}
-                  className="bg-slate-950 hover:bg-slate-800 border border-amber-500/30 px-3.5 py-2 rounded-2xl text-xs font-bold text-amber-400 hover:text-white flex items-center space-x-1.5 transition-all shadow-md"
-                >
-                  <BookOpen className="h-4 w-4 text-amber-400" />
-                  <span>League Rules</span>
-                </button>
-                <div className="bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-2xl text-xs font-mono text-slate-300">
-                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Teams</span>
-                  <strong className="text-white font-extrabold text-sm">{league.teams.length} Registered</strong>
-                </div>
-                <div className="bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-2xl text-xs font-mono text-slate-300">
-                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Total Matches</span>
-                  <strong className="text-white font-extrabold text-sm">{league.matches.length} Scheduled</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : currentRole === 'scheduler' ? (
+        {currentRole === 'scheduler' ? (
           <SchedulerDashboard
             league={league}
             divisions={league.divisions}
