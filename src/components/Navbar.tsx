@@ -1,5 +1,5 @@
 import React from 'react';
-import { Volleyball, ShieldCheck, UserCheck, Trophy, Globe, LogIn, LogOut, Lock } from 'lucide-react';
+import { Volleyball, ShieldCheck, UserCheck, Trophy, Globe, LogIn, LogOut, Lock, BookOpen } from 'lucide-react';
 import { LeagueSeason } from '@/types/league';
 
 export type UserRole = 'public' | 'team_rep' | 'scheduler';
@@ -16,6 +16,7 @@ interface NavbarProps {
   onRoleChange: (role: UserRole) => void;
   onSelectLeague: (id: string) => void;
   onOpenLeagueManager: () => void;
+  onOpenRulesModal?: () => void;
   onOpenLoginModal: () => void;
   onLogout: () => void;
 }
@@ -32,6 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onRoleChange,
   onSelectLeague,
   onOpenLeagueManager,
+  onOpenRulesModal,
   onOpenLoginModal,
   onLogout,
 }) => {
@@ -97,6 +99,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Dynamic Auth / Role Switcher Header Controls */}
         <div className="flex items-center space-x-2 shrink-0">
+          {onOpenRulesModal && (
+            <button
+              onClick={onOpenRulesModal}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-800 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+              title="View Official League Rules"
+            >
+              <BookOpen className="h-3.5 w-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Rules</span>
+            </button>
+          )}
+
           {currentRole === 'public' ? (
             <div className="flex items-center space-x-2">
               {authRole === 'team_rep' && authTeamName && (

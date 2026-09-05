@@ -22,10 +22,13 @@ import {
   Check,
   MessageSquare,
   BookUser,
+  BookOpen,
   ShieldCheck,
   ExternalLink,
 } from 'lucide-react';
 import { formatTimeRange } from '@/utils/formatUtils';
+
+import { DEFAULT_LEAGUE_RULES } from '@/data/defaultRules';
 
 interface TeamRepDashboardProps {
   teams: Team[];
@@ -33,6 +36,8 @@ interface TeamRepDashboardProps {
   locations: Location[];
   divisions: Division[];
   selectedTeamId: string;
+  leagueRulesContent?: string;
+  onOpenRulesModal?: () => void;
   onSelectTeam: (teamId: string) => void;
   onUpdateRsvp: (teamId: string, playerId: string, status: 'Going' | 'Maybe' | 'Out') => void;
   onOpenScorekeeper: (match: Match) => void;
@@ -45,16 +50,22 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
   locations,
   divisions,
   selectedTeamId,
+  leagueRulesContent,
+  onOpenRulesModal,
   onSelectTeam,
   onUpdateRsvp,
   onOpenScorekeeper,
   currentRole,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'directory'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'directory' | 'rules'>('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDivFilter, setSelectedDivFilter] = useState('ALL');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [rulesSearch, setRulesSearch] = useState('');
+  const [copiedRules, setCopiedRules] = useState(false);
+
+  const activeRulesText = leagueRulesContent || DEFAULT_LEAGUE_RULES;
 
   const activeTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
 
@@ -198,6 +209,18 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             <span className="bg-slate-800 text-amber-400 text-[10px] px-1.5 py-0.5 rounded-full font-mono">
               {teams.length}
             </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('rules')}
+            className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
+              activeTab === 'rules'
+                ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 shadow-md font-black'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <BookOpen className="h-4 w-4" />
+            <span>League Rules</span>
           </button>
         </div>
       </div>
@@ -416,7 +439,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
           )}
 
         </div>
-      ) : (
+      ) : activeTab === 'overview' ? (
         /* ========================================================================= */
         /* TEAM OVERVIEW & ROSTER TAB                                                */
         /* ========================================================================= */
@@ -727,6 +750,201 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
 
           </div>
         </>
+      ) : (
+        /* ========================================================================= */
+        /* LEAGUE RULES & POLICIES TAB                                               */
+        /* ========================================================================= */
+        <div className="space-y-6 animate-in fade-in duration-200">
+          
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-slate-900 via-amber-950/20 to-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start space-x-3">
+              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-base font-extrabold text-white">Official League Rules & Guidelines</h3>
+                  <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    Captain & Player Reference
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-1">
+                  Official gameplay rules, match timing, substitution rules, scoring, and sportsmanship policies.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(activeRulesText);
+                  setCopiedRules(true);
+                  setTimeout(() => setCopiedRules(false), 2000);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-md"
+              >
+                {copiedRules ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                <span>{copiedRules ? 'Rules Copied!' : 'Copy Rules'}</span>
+              </button>
+
+              {onOpenRulesModal && (
+                <button
+                  onClick={onOpenRulesModal}
+                  className="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-md shadow-violet-600/20 flex items-center space-x-1.5 transition-all"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  <span>{currentRole === 'scheduler' ? 'Edit / Paste Rules' : 'Open Full Viewer'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Search bar for rules */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between shadow-lg">
+            <div className="relative w-full sm:w-80">
+              <input
+                type="text"
+                placeholder="Search rules (e.g. forfeit, net, scoring, subs)..."
+                value={rulesSearch}
+                onChange={(e) => setRulesSearch(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
+              />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Formatted Rules Document Box */}
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4">
+            <div className="space-y-3 text-slate-300 leading-relaxed text-sm">
+              {activeRulesText.split('\n').map((line, idx) => {
+                const trimmed = line.trim();
+                if (!trimmed) return <div key={idx} className="h-2" />;
+
+                const isHighlighted =
+                  rulesSearch.trim().length > 1 &&
+                  trimmed.toLowerCase().includes(rulesSearch.toLowerCase().trim());
+
+                if (trimmed.startsWith('# ')) {
+                  return (
+                    <h1
+                      key={idx}
+                      className={`text-xl sm:text-2xl font-black text-white pt-4 pb-2 border-b border-slate-800 tracking-tight ${
+                        isHighlighted ? 'bg-amber-500/20 px-2 rounded' : ''
+                      }`}
+                    >
+                      {trimmed.substring(2)}
+                    </h1>
+                  );
+                }
+
+                if (trimmed.startsWith('## ')) {
+                  return (
+                    <h2
+                      key={idx}
+                      className={`text-base sm:text-lg font-extrabold text-amber-400 pt-3 pb-1 tracking-tight ${
+                        isHighlighted ? 'bg-amber-500/20 px-2 rounded' : ''
+                      }`}
+                    >
+                      {trimmed.substring(3)}
+                    </h2>
+                  );
+                }
+
+                if (trimmed.startsWith('### ')) {
+                  return (
+                    <h3
+                      key={idx}
+                      className={`text-sm sm:text-base font-bold text-rose-400 pt-2 pb-1 ${
+                        isHighlighted ? 'bg-amber-500/20 px-2 rounded' : ''
+                      }`}
+                    >
+                      {trimmed.substring(4)}
+                    </h3>
+                  );
+                }
+
+                if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                  const itemText = trimmed.substring(2);
+                  const parts = itemText.split(/(\*\*.*?\*\*)/g);
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-start space-x-2.5 ml-2 ${
+                        isHighlighted ? 'bg-amber-500/20 p-1.5 rounded' : ''
+                      }`}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-400 mt-2 shrink-0" />
+                      <span className="text-slate-200">
+                        {parts.map((p, i) =>
+                          p.startsWith('**') && p.endsWith('**') ? (
+                            <strong key={i} className="text-white font-bold">
+                              {p.slice(2, -2)}
+                            </strong>
+                          ) : (
+                            p
+                          )
+                        )}
+                      </span>
+                    </div>
+                  );
+                }
+
+                if (/^\d+\.\s/.test(trimmed)) {
+                  const match = trimmed.match(/^(\d+\.)\s(.*)/);
+                  if (match) {
+                    const parts = match[2].split(/(\*\*.*?\*\*)/g);
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex items-start space-x-2 ml-2 ${
+                          isHighlighted ? 'bg-amber-500/20 p-1.5 rounded' : ''
+                        }`}
+                      >
+                        <span className="text-amber-400 font-mono font-bold text-xs shrink-0 mt-0.5">
+                          {match[1]}
+                        </span>
+                        <span className="text-slate-200">
+                          {parts.map((p, i) =>
+                            p.startsWith('**') && p.endsWith('**') ? (
+                              <strong key={i} className="text-white font-bold">
+                                {p.slice(2, -2)}
+                              </strong>
+                            ) : (
+                              p
+                            )
+                          )}
+                        </span>
+                      </div>
+                    );
+                  }
+                }
+
+                const parts = trimmed.split(/(\*\*.*?\*\*)/g);
+                return (
+                  <p
+                    key={idx}
+                    className={`text-slate-300 ${
+                      isHighlighted ? 'bg-amber-500/20 p-1 rounded' : ''
+                    }`}
+                  >
+                    {parts.map((p, i) =>
+                      p.startsWith('**') && p.endsWith('**') ? (
+                        <strong key={i} className="text-white font-bold">
+                          {p.slice(2, -2)}
+                        </strong>
+                      ) : (
+                        p
+                      )
+                    )}
+                  </p>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
       )}
 
     </div>

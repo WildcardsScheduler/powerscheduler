@@ -15,15 +15,17 @@ import { LeagueManagerModal } from '@/components/LeagueManagerModal';
 import { DivisionManagerModal } from '@/components/DivisionManagerModal';
 import { TeamManagerModal } from '@/components/TeamManagerModal';
 import { LoginModal } from '@/components/LoginModal';
+import { LeagueRulesModal } from '@/components/LeagueRulesModal';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
 import { formatMatchRulesDescription } from '@/utils/formatRules';
-import { Globe, Trophy, Users, Calendar, MapPin } from 'lucide-react';
+import { Globe, Trophy, Users, Calendar, MapPin, BookOpen } from 'lucide-react';
 
 export default function Home() {
   const [leagues, setLeagues] = useState<LeagueSeason[]>(initialLeaguesList);
   const [activeLeagueId, setActiveLeagueId] = useState<string>(initialLeaguesList[0].id);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
 
   const [isCloudSynced, setIsCloudSynced] = useState(false);
 
@@ -844,6 +846,7 @@ export default function Home() {
         onRoleChange={setAuthRole}
         onSelectLeague={handleSelectLeague}
         onOpenLeagueManager={() => setIsLeagueManagerOpen(true)}
+        onOpenRulesModal={() => setIsRulesModalOpen(true)}
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
         onLogout={handleLogout}
       />
@@ -870,6 +873,13 @@ export default function Home() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setIsRulesModalOpen(true)}
+                  className="bg-slate-950 hover:bg-slate-800 border border-amber-500/30 px-3.5 py-2 rounded-2xl text-xs font-bold text-amber-400 hover:text-white flex items-center space-x-1.5 transition-all shadow-md"
+                >
+                  <BookOpen className="h-4 w-4 text-amber-400" />
+                  <span>League Rules</span>
+                </button>
                 <div className="bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-2xl text-xs font-mono text-slate-300">
                   <span className="text-slate-500 block text-[10px] uppercase font-bold">Teams</span>
                   <strong className="text-white font-extrabold text-sm">{league.teams.length} Registered</strong>
@@ -893,6 +903,7 @@ export default function Home() {
             onOpenDivisionManager={() => setIsDivisionManagerOpen(true)}
             onOpenTeamManager={() => setIsTeamManagerOpen(true)}
             onOpenLeagueManager={() => setIsLeagueManagerOpen(true)}
+            onOpenRulesModal={() => setIsRulesModalOpen(true)}
             selectedDivisionId={effectiveDivisionId}
             onSelectDivision={setSelectedDivisionId}
           />
@@ -903,6 +914,8 @@ export default function Home() {
             locations={league.locations}
             divisions={league.divisions}
             selectedTeamId={effectiveTeamId}
+            leagueRulesContent={league.rulesContent}
+            onOpenRulesModal={() => setIsRulesModalOpen(true)}
             onSelectTeam={handleSelectTeam}
             onUpdateRsvp={handleUpdateRsvp}
             onOpenScorekeeper={(match) => {
@@ -1071,6 +1084,20 @@ export default function Home() {
         authLeagueName={authLeague?.name}
         onSelectLeague={handleSelectLeague}
         onLoginSuccess={handleLoginSuccess}
+      />
+
+      {/* Official League Rules & Guidelines Modal */}
+      <LeagueRulesModal
+        isOpen={isRulesModalOpen}
+        onClose={() => setIsRulesModalOpen(false)}
+        league={league}
+        isAdmin={currentRole === 'scheduler'}
+        onSaveRules={(rulesText) => {
+          updateActiveLeague((prev) => ({
+            ...prev,
+            rulesContent: rulesText,
+          }));
+        }}
       />
 
     </div>

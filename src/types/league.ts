@@ -157,6 +157,7 @@ export interface LeagueSeason {
   hasDivisions?: boolean; // Single Division vs Multi-Division
   matchRules?: MatchRules;
   scheduleOptions?: AdvancedScheduleOptions;
+  rulesContent?: string; // Custom pasted league rules and policies (Markdown / Plain Text)
   locations: Location[];
   facilities?: Location[]; // Alias
   divisions: Division[];
