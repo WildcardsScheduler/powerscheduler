@@ -54,17 +54,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="min-w-0">
-            <div className="flex items-center space-x-1.5 sm:space-x-2">
-              <span className="font-extrabold text-base sm:text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-rose-400 to-violet-400 truncate">
+            <div className="flex items-center space-x-2">
+              <span className="font-extrabold text-base sm:text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-rose-400 to-violet-400 whitespace-nowrap">
                 PowerSchedule
               </span>
 
-              <span className="bg-amber-500/10 text-amber-400 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-medium border border-amber-500/20 shrink-0">
-                {activeLeague?.sport || 'Volleyball'}
-              </span>
-
               {/* Live Cloud Indicator */}
-              <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/20 shrink-0">
+              <span className="hidden md:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/20 shrink-0">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
                 Live Cloud
               </span>
