@@ -1020,6 +1020,7 @@ export default function Home() {
           <StandingsTable
             standings={standings}
             division={activeDivision}
+            leagueName={league.name}
             matchRules={league.matchRules}
           />
         )}

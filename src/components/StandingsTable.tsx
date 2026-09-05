@@ -8,11 +8,16 @@ import { formatMatchRulesDescription } from '@/utils/formatRules';
 interface StandingsTableProps {
   standings: TeamStanding[];
   division: Division;
+  leagueName?: string;
   matchRules?: MatchRules;
 }
 
-export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, division, matchRules }) => {
+export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, division, leagueName, matchRules }) => {
   const setFormatText = formatMatchRulesDescription(division.matchRules || matchRules, division.setFormat);
+
+  const titleText = leagueName
+    ? `${leagueName} — ${division.name} Standings`
+    : `${division.name} Standings`;
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
@@ -21,7 +26,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, divis
         <div>
           <div className="flex items-center space-x-2">
             <Trophy className="h-5 w-5 text-amber-400" />
-            <h3 className="text-lg font-bold text-white tracking-tight">{division.name} Standings</h3>
+            <h3 className="text-lg font-bold text-white tracking-tight">{titleText}</h3>
           </div>
           <p className="text-xs text-slate-400 mt-1">
             Format: <span className="text-slate-200">{setFormatText}</span>
