@@ -84,7 +84,11 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentDivTeams = teams.filter((t) => !divisionId || t.divisionId === divisionId);
+  const currentDivTeams = useMemo(() => {
+    if (divisions.length <= 1) return teams;
+    const filtered = teams.filter((t) => !divisionId || t.divisionId === divisionId);
+    return filtered.length > 0 ? filtered : teams;
+  }, [teams, divisions, divisionId]);
   const selectedLocation = locations.find((l) => l.id === locationId) || locations[0];
   const subLocations = selectedLocation?.subLocations || [];
 

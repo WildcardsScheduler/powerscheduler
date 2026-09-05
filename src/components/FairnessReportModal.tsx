@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Match, Team, Division, Location, SubLocation } from '@/types/league';
 import { X, Scale, CheckCircle2, Clock, MapPin, ShieldAlert, ArrowLeftRight, Users, Printer, Sparkles, Filter, Info } from 'lucide-react';
 import { calculateScheduleFairnessReport, ScheduleFairnessReport } from '@/utils/schedulerEngine';
@@ -32,20 +32,46 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
   );
   const [activeTab, setActiveTab] = useState<'matrix' | 'h2h'>('matrix');
 
+  // Re-sync active division whenever modal opens or division props change
+  useEffect(() => {
+    if (isOpen) {
+      if (selectedDivisionId && divisions.some((d) => d.id === selectedDivisionId)) {
+        setActiveDivId(selectedDivisionId);
+      } else if (divisions.length > 0) {
+        setActiveDivId(divisions[0].id);
+      } else {
+        setActiveDivId('');
+      }
+    }
+  }, [isOpen, selectedDivisionId, divisions]);
+
   // Courts flat list
   const courts: SubLocation[] = useMemo(() => {
     return locations.flatMap((l) => l.subLocations);
   }, [locations]);
 
-  // Filter division teams & matches
+  // Resolve current active division
   const currentDiv = divisions.find((d) => d.id === activeDivId) || divisions[0];
+  const effectiveDivId = currentDiv?.id || activeDivId;
+
+  // Filter division teams & matches safely
   const divisionTeams = useMemo(() => {
-    return teams.filter((t) => !activeDivId || t.divisionId === activeDivId);
-  }, [teams, activeDivId]);
+    // If only 1 division (or single-division mode), show all teams
+    if (divisions.length <= 1) {
+      return teams;
+    }
+    const filtered = teams.filter((t) => !effectiveDivId || t.divisionId === effectiveDivId);
+    // If no teams match this division ID (e.g. legacy/orphaned IDs), fall back to all teams
+    return filtered.length > 0 ? filtered : teams;
+  }, [teams, divisions, effectiveDivId]);
 
   const divisionMatches = useMemo(() => {
-    return matches.filter((m) => !activeDivId || m.divisionId === activeDivId);
-  }, [matches, activeDivId]);
+    if (divisions.length <= 1) {
+      return matches;
+    }
+    const filtered = matches.filter((m) => !effectiveDivId || m.divisionId === effectiveDivId);
+    return filtered.length > 0 ? filtered : matches;
+  }, [matches, divisions, effectiveDivId]);
 
   // Calculate live fairness report
   const report: ScheduleFairnessReport = useMemo(() => {
