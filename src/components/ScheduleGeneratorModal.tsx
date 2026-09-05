@@ -146,6 +146,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
   // Advanced Rules & Priorities
   const [fillAllTimeslots, setFillAllTimeslots] = useState(true); // Default ON to maximize slot utilization
+  const [guaranteeWeeklyPlay, setGuaranteeWeeklyPlay] = useState(true); // Guarantee every team plays on each league night
   const [enableDoubleHeaders, setEnableDoubleHeaders] = useState(false);
   const [doubleHeaderMode, setDoubleHeaderMode] = useState<'back_to_back' | 'spaced'>('back_to_back');
   const [markDoubleHeadersAsExhibition, setMarkDoubleHeadersAsExhibition] = useState(true); // Default ON: Extra double headers marked as Exhibition
@@ -241,6 +242,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
       enableDoubleHeaders,
       doubleHeaderMode,
       fillAllTimeslots,
+      guaranteeWeeklyPlay,
       markDoubleHeadersAsExhibition,
       spaceOutOpponents,
       ensureEqualGames,
@@ -759,6 +761,28 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
                     Customizable Optimization Matrix
                   </span>
+                </div>
+
+                {/* GUARANTEE EVERY TEAM PLAYS EACH LEAGUE NIGHT */}
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
+                  <div className="space-y-0.5 pr-2">
+                    <span className="font-extrabold text-white text-xs flex items-center gap-1.5">
+                      <Calendar className="h-4 w-4 text-cyan-400" />
+                      <span>Guarantee Every Team Plays Each League Night</span>
+                      <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold px-1.5 py-0.2 rounded">
+                        NO BYE WEEKS
+                      </span>
+                    </span>
+                    <p className="text-[11px] text-slate-300">
+                      Ensures every team is scheduled to play at least once on every scheduled week/night (no sit-out weeks). If an odd number of teams or rotation creates a bye, automatically pairs a match so all teams are active every week.
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={guaranteeWeeklyPlay}
+                    onChange={(e) => setGuaranteeWeeklyPlay(e.target.checked)}
+                    className="h-5 w-5 rounded accent-cyan-500 cursor-pointer shrink-0"
+                  />
                 </div>
 
                 {/* 1. CAPACITY BOOSTER: FILL ALL TIMESLOTS */}

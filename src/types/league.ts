@@ -140,6 +140,7 @@ export interface AdvancedScheduleOptions {
   blackoutDates: string[]; // YYYY-MM-DD strings
   enableDoubleHeaders: boolean;
   doubleHeaderMode: 'back_to_back' | 'spaced';
+  guaranteeWeeklyPlay?: boolean; // Ensure every team plays on each league night (no bye weeks)
   spaceOutOpponents: boolean;
   ensureEqualGames: boolean;
   fairnessTimeSlots: boolean;

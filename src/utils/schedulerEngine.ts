@@ -18,6 +18,7 @@ export interface ScheduleGeneratorOptions {
   enableDoubleHeaders?: boolean;
   doubleHeaderMode?: 'back_to_back' | 'spaced';
   fillAllTimeslots?: boolean; // Fill 100% available slots via double headers
+  guaranteeWeeklyPlay?: boolean; // Guarantee every team plays each league night (no bye / sit-out weeks)
   markDoubleHeadersAsExhibition?: boolean; // Flag extra double-header capacity filler games as Exhibition
   spaceOutOpponents?: boolean;
   ensureEqualGames?: boolean;
@@ -89,6 +90,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     enableDoubleHeaders = false,
     doubleHeaderMode = 'back_to_back',
     fillAllTimeslots = true,
+    guaranteeWeeklyPlay = true,
     markDoubleHeadersAsExhibition = true,
     spaceOutOpponents = true,
     ensureEqualGames = true,
@@ -289,6 +291,127 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
 
     if (scheduledPairs.size < roundPairings.length) {
       warnings.push(`Week ${week}: Not enough courts/time-slots to schedule all ${roundPairings.length} matches.`);
+    }
+
+    // Guarantee Every Team Plays Each League Night (No Bye / Sit-Out Weeks)
+    if (guaranteeWeeklyPlay) {
+      const dateMatches = matches.filter((m) => m.date === dateStr);
+      const teamsPlayingToday = new Set<string>();
+      dateMatches.forEach((m) => {
+        teamsPlayingToday.add(m.homeTeamId);
+        teamsPlayingToday.add(m.awayTeamId);
+      });
+
+      const unscheduledTeams = teamIds.filter((id) => !teamsPlayingToday.has(id));
+
+      if (unscheduledTeams.length > 0) {
+        for (let uIdx = 0; uIdx < unscheduledTeams.length; uIdx++) {
+          const uTeam = unscheduledTeams[uIdx];
+          if (matches.some((m) => m.date === dateStr && (m.homeTeamId === uTeam || m.awayTeamId === uTeam))) {
+            continue;
+          }
+
+          let placed = false;
+          for (let slotIdx = 0; slotIdx < effectiveTimeSlots.length && !placed; slotIdx++) {
+            const slotStart = effectiveTimeSlots[slotIdx];
+            const slotEnd = addMinutesToTimeString(slotStart, matchDurationMinutes);
+
+            for (const court of courts) {
+              const slotOccupied = matches.some(
+                (m) => m.date === dateStr && m.startTime === slotStart && m.courtId === court.id
+              );
+
+              if (!slotOccupied) {
+                const currentNightMatches = matches.filter((m) => m.date === dateStr);
+                const teamsBusyInSlot = new Set<string>();
+                currentNightMatches
+                  .filter((m) => m.startTime === slotStart)
+                  .forEach((m) => {
+                    teamsBusyInSlot.add(m.homeTeamId);
+                    teamsBusyInSlot.add(m.awayTeamId);
+                  });
+
+                // Candidates for opponent: other unscheduled teams first, or eligible playing teams for a double header
+                const otherUnscheduled = unscheduledTeams.filter(
+                  (otherId) =>
+                    otherId !== uTeam &&
+                    !matches.some((m) => m.date === dateStr && (m.homeTeamId === otherId || m.awayTeamId === otherId)) &&
+                    !teamsBusyInSlot.has(otherId)
+                );
+
+                let opponentId: string | null = null;
+                if (otherUnscheduled.length > 0) {
+                  opponentId = otherUnscheduled[0];
+                } else {
+                  // Find eligible double-header team
+                  const eligibleOpponents = teamIds.filter((id) => {
+                    if (id === uTeam || teamsBusyInSlot.has(id)) return false;
+                    return isTeamEligibleForSlotOnDate(
+                      id,
+                      slotIdx,
+                      currentNightMatches,
+                      effectiveTimeSlots,
+                      doubleHeaderMode
+                    );
+                  });
+
+                  if (eligibleOpponents.length > 0) {
+                    // Pick opponent with lowest H2H count
+                    let minH2H = Infinity;
+                    let bestOpp = eligibleOpponents[0];
+                    for (const cand of eligibleOpponents) {
+                      const h2h = headToHeadCounts.get(uTeam)?.get(cand) || 0;
+                      if (h2h < minH2H) {
+                        minH2H = h2h;
+                        bestOpp = cand;
+                      }
+                    }
+                    opponentId = bestOpp;
+                  }
+                }
+
+                if (opponentId) {
+                  const h1 = homeGameUsage.get(uTeam) || 0;
+                  const h2 = homeGameUsage.get(opponentId) || 0;
+                  const home = h1 <= h2 ? uTeam : opponentId;
+                  const away = h1 <= h2 ? opponentId : uTeam;
+
+                  const weeklyMatch: Match = {
+                    id: `gen-${divisionId}-w${week}-m${matchIdCounter++}`,
+                    divisionId,
+                    weekNumber: week,
+                    date: dateStr,
+                    startTime: slotStart,
+                    endTime: slotEnd,
+                    locationId: court.locationId,
+                    subLocationId: court.id,
+                    courtId: court.id,
+                    homeTeamId: home,
+                    awayTeamId: away,
+                    status: 'Scheduled',
+                    scores: [],
+                    notes: otherUnscheduled.includes(opponentId) ? undefined : 'Weekly Play Guarantee (Double Header)',
+                  };
+
+                  matches.push(weeklyMatch);
+                  incrementMapCount(homeGameUsage, home);
+                  incrementMapCount(timeSlotUsage.get(home)!, slotStart);
+                  incrementMapCount(timeSlotUsage.get(away)!, slotStart);
+                  incrementMapCount(courtUsage.get(home)!, court.id);
+                  incrementMapCount(courtUsage.get(away)!, court.id);
+                  incrementMapCount(headToHeadCounts.get(home)!, away);
+                  incrementMapCount(headToHeadCounts.get(away)!, home);
+                  teamGameCounts.set(home, (teamGameCounts.get(home) || 0) + 1);
+                  teamGameCounts.set(away, (teamGameCounts.get(away) || 0) + 1);
+
+                  placed = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     // Optional "Fill All Timeslots" algorithm for full capacity utilization via Double Headers
