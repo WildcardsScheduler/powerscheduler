@@ -63,13 +63,22 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [showPasscode, setShowPasscode] = useState(false);
   const [passcodeSaved, setPasscodeSaved] = useState(false);
 
-  // Sync state whenever the modal is opened or leagues update
+  // Sync state only when the modal is freshly opened
   useEffect(() => {
     if (isOpen) {
       setUniversalPasscode(getActivePasscode());
       setPasscodeSaved(false);
     }
-  }, [isOpen, leagues]);
+  }, [isOpen]);
+
+  const handleSavePasscode = () => {
+    const val = universalPasscode.trim() || 'admin123';
+    onUpdateUniversalPasscode(val);
+    setPasscodeSaved(true);
+    setTimeout(() => {
+      setPasscodeSaved(false);
+    }, 6000);
+  };
 
   // New League Form State
   const [name, setName] = useState('');
@@ -212,10 +221,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      const val = universalPasscode.trim() || 'admin123';
-                      onUpdateUniversalPasscode(val);
-                      setPasscodeSaved(true);
-                      setTimeout(() => setPasscodeSaved(false), 3000);
+                      handleSavePasscode();
                     }
                   }}
                   placeholder="Enter Master Admin Passcode"
@@ -232,12 +238,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  const val = universalPasscode.trim() || 'admin123';
-                  onUpdateUniversalPasscode(val);
-                  setPasscodeSaved(true);
-                  setTimeout(() => setPasscodeSaved(false), 3000);
-                }}
+                onClick={handleSavePasscode}
                 className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 ${
                   passcodeSaved
                     ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-black'
