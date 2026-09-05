@@ -18,6 +18,7 @@ import { LoginModal } from '@/components/LoginModal';
 import { LeagueRulesModal } from '@/components/LeagueRulesModal';
 import { PWAInstallModal } from '@/components/PWAInstallModal';
 import { PWAInstallBar } from '@/components/PWAInstallBar';
+import { LeagueSelectorBar } from '@/components/LeagueSelectorBar';
 import { MatchEditorModal } from '@/components/MatchEditorModal';
 import { FairnessReportModal } from '@/components/FairnessReportModal';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
@@ -94,7 +95,8 @@ export default function Home() {
       try {
         const rawSaved = localStorage.getItem('powerschedule_leagues');
         const backupSaved = localStorage.getItem('powerschedule_leagues_backup');
-        savedActiveId = localStorage.getItem('powerschedule_active_league_id');
+        const defaultSavedId = localStorage.getItem('powerschedule_default_league_id');
+        savedActiveId = defaultSavedId || localStorage.getItem('powerschedule_active_league_id');
 
         let primary = rawSaved ? JSON.parse(rawSaved) : null;
         let backup = backupSaved ? JSON.parse(backupSaved) : null;
@@ -141,7 +143,10 @@ export default function Home() {
             const repaired = repairLeaguesData(data.leagues);
             if (isMounted) {
               setLeagues(repaired);
-              if (data.activeId && repaired.some((l: LeagueSeason) => l.id === data.activeId)) {
+              const defaultSavedId = localStorage.getItem('powerschedule_default_league_id');
+              if (defaultSavedId && repaired.some((l: LeagueSeason) => l.id === defaultSavedId)) {
+                setActiveLeagueId(defaultSavedId);
+              } else if (data.activeId && repaired.some((l: LeagueSeason) => l.id === data.activeId)) {
                 setActiveLeagueId(data.activeId);
               } else {
                 setActiveLeagueId(repaired[0].id);
@@ -159,7 +164,10 @@ export default function Home() {
       if (savedLeagues && savedLeagues.length > 0 && isMounted) {
         const repaired = repairLeaguesData(savedLeagues);
         setLeagues(repaired);
-        if (savedActiveId && repaired.some((l: LeagueSeason) => l.id === savedActiveId)) {
+        const defaultSavedId = localStorage.getItem('powerschedule_default_league_id');
+        if (defaultSavedId && repaired.some((l: LeagueSeason) => l.id === defaultSavedId)) {
+          setActiveLeagueId(defaultSavedId);
+        } else if (savedActiveId && repaired.some((l: LeagueSeason) => l.id === savedActiveId)) {
           setActiveLeagueId(savedActiveId);
         } else {
           setActiveLeagueId(repaired[0].id);
@@ -951,6 +959,15 @@ export default function Home() {
         onOpenInstallModal={() => setIsInstallModalOpen(true)}
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
         onLogout={handleLogout}
+      />
+
+      {/* Dedicated League Selector Row with Set Default Option */}
+      <LeagueSelectorBar
+        leagues={leagues}
+        activeLeagueId={activeLeagueId}
+        currentRole={currentRole}
+        onSelectLeague={handleSelectLeague}
+        onOpenLeagueManager={() => setIsLeagueManagerOpen(true)}
       />
 
       {/* Dedicated PWA Install Banner Bar (Mobile & Desktop) */}

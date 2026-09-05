@@ -59,42 +59,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 PowerSchedule
               </span>
 
-              <span className="hidden sm:inline-block bg-amber-500/10 text-amber-400 text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-medium border border-amber-500/20 shrink-0">
+              <span className="bg-amber-500/10 text-amber-400 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-medium border border-amber-500/20 shrink-0">
                 {activeLeague?.sport || 'Volleyball'}
               </span>
 
               {/* Live Cloud Indicator */}
-              <span className="hidden md:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/20 shrink-0">
+              <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/20 shrink-0">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
                 Live Cloud
               </span>
-            </div>
-
-            {/* League Dropdown Selector */}
-            <div className="flex items-center space-x-1 mt-0.5">
-              <Trophy className="h-3 w-3 text-amber-400 shrink-0" />
-              <select
-                value={activeLeagueId}
-                onChange={(e) => {
-                  if (e.target.value === 'MANAGE') {
-                    onOpenLeagueManager();
-                  } else {
-                    onSelectLeague(e.target.value);
-                  }
-                }}
-                className="bg-transparent text-[11px] sm:text-xs text-slate-300 font-semibold focus:outline-none cursor-pointer hover:text-white truncate max-w-[110px] xs:max-w-[150px] sm:max-w-[200px]"
-              >
-                {leagues.map((l) => (
-                  <option key={l.id} value={l.id} className="bg-slate-900 text-white">
-                    {l.name}
-                  </option>
-                ))}
-                {currentRole === 'scheduler' && (
-                  <option value="MANAGE" className="bg-slate-950 text-amber-400 font-bold">
-                    + Manage / Create League...
-                  </option>
-                )}
-              </select>
             </div>
           </div>
         </div>
