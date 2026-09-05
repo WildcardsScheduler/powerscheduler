@@ -1194,6 +1194,13 @@ export default function Home() {
         locations={league.locations}
         selectedDivisionId={effectiveDivisionId}
         isCaptainOrPublic={currentRole !== 'scheduler'}
+        publicFairnessReport={league.publicFairnessReport !== false}
+        onTogglePublicFairnessReport={(enabled) => {
+          updateActiveLeague((prev) => ({
+            ...prev,
+            publicFairnessReport: enabled,
+          }));
+        }}
         onClose={() => setIsFairnessReportOpen(false)}
       />
 

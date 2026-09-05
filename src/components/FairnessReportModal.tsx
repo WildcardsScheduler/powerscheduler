@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Match, Team, Division, Location, SubLocation } from '@/types/league';
-import { X, Scale, CheckCircle2, Clock, MapPin, ShieldAlert, ArrowLeftRight, Users, Printer, Sparkles, Filter, Info } from 'lucide-react';
+import { X, Scale, CheckCircle2, Clock, MapPin, ShieldAlert, ArrowLeftRight, Users, Printer, Sparkles, Filter, Info, Eye, EyeOff } from 'lucide-react';
 import { calculateScheduleFairnessReport, ScheduleFairnessReport } from '@/utils/schedulerEngine';
 import { formatTimeRange } from '@/utils/formatUtils';
 
@@ -15,6 +15,8 @@ interface FairnessReportModalProps {
   locations: Location[];
   selectedDivisionId?: string;
   isCaptainOrPublic?: boolean;
+  publicFairnessReport?: boolean;
+  onTogglePublicFairnessReport?: (enabled: boolean) => void;
 }
 
 export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
@@ -26,6 +28,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
   locations,
   selectedDivisionId,
   isCaptainOrPublic = false,
+  publicFairnessReport = true,
+  onTogglePublicFairnessReport,
 }) => {
   const [activeDivId, setActiveDivId] = useState<string>(
     selectedDivisionId || divisions[0]?.id || ''
@@ -115,12 +119,39 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center space-x-3">
+            {!isCaptainOrPublic && onTogglePublicFairnessReport && (
+              <button
+                type="button"
+                onClick={() => onTogglePublicFairnessReport(!publicFairnessReport)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                  publicFairnessReport
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                }`}
+                title="Click to toggle whether teams and the public can view the fairness report"
+              >
+                {publicFairnessReport ? (
+                  <>
+                    <Eye className="h-3.5 w-3.5 text-emerald-400" />
+                    <span>Teams Access: <strong>Enabled</strong></span>
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="h-3.5 w-3.5 text-slate-500" />
+                    <span>Teams Access: <strong>Hidden</strong></span>
+                  </>
+                )}
+              </button>
+            )}
+
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Division Selector & Tabs Bar */}

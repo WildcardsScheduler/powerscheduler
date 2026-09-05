@@ -82,13 +82,14 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
     }
   }, [isOpen, match, selectedDivisionId, divisions, teams, locations]);
 
-  if (!isOpen) return null;
-
   const currentDivTeams = useMemo(() => {
     if (divisions.length <= 1) return teams;
     const filtered = teams.filter((t) => !divisionId || t.divisionId === divisionId);
     return filtered.length > 0 ? filtered : teams;
   }, [teams, divisions, divisionId]);
+
+  if (!isOpen) return null;
+
   const selectedLocation = locations.find((l) => l.id === locationId) || locations[0];
   const subLocations = selectedLocation?.subLocations || [];
 
