@@ -153,12 +153,14 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   const timeSlotUsage = new Map<string, Map<string, number>>(); // teamId -> (slot -> count)
   const courtUsage = new Map<string, Map<string, number>>(); // teamId -> (courtId -> count)
   const teamGameCounts = new Map<string, number>(); // teamId -> total games
+  const homeGameUsage = new Map<string, number>(); // teamId -> total home games played so far
   const headToHeadCounts = new Map<string, Map<string, number>>(); // teamId -> (opponentId -> count)
 
   teamIds.forEach((id1) => {
     timeSlotUsage.set(id1, new Map());
     courtUsage.set(id1, new Map());
     teamGameCounts.set(id1, 0);
+    homeGameUsage.set(id1, 0);
     headToHeadCounts.set(id1, new Map());
     teamIds.forEach((id2) => {
       headToHeadCounts.get(id1)!.set(id2, 0);
@@ -181,21 +183,22 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
       const t2 = currentRoundPool[numTeams - 1 - i];
 
       if (t1 !== dummyTeam && t2 !== dummyTeam) {
-        // Standard Berger table alternation:
-        // 1. The fixed team (i === 0) alternates home/away every round
-        // 2. All other pairings alternate home/away based on round number and position to ensure 50/50 balance
+        // Dynamic Home/Away Balancing:
+        // Give Home to whichever team currently has fewer home games played.
+        // If tied, alternate based on round index to ensure exact 50/50 balance.
+        const h1 = homeGameUsage.get(t1) || 0;
+        const h2 = homeGameUsage.get(t2) || 0;
         let home: string;
         let away: string;
 
-        if (i === 0) {
-          if (roundIndex % 2 === 0) {
-            home = t1;
-            away = t2;
-          } else {
-            home = t2;
-            away = t1;
-          }
+        if (h1 < h2) {
+          home = t1;
+          away = t2;
+        } else if (h2 < h1) {
+          home = t2;
+          away = t1;
         } else {
+          // Tie-break alternating
           if ((i + roundIndex) % 2 === 0) {
             home = t1;
             away = t2;
@@ -270,6 +273,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
           matches.push(newMatch);
 
           // Update fairness matrices
+          incrementMapCount(homeGameUsage, pairing.home);
           incrementMapCount(timeSlotUsage.get(pairing.home)!, slotStart);
           incrementMapCount(timeSlotUsage.get(pairing.away)!, slotStart);
           incrementMapCount(courtUsage.get(pairing.home)!, court.id);
@@ -373,6 +377,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
                 matches.push(fillMatch);
 
                 // Update fairness matrices
+                incrementMapCount(homeGameUsage, home);
                 incrementMapCount(timeSlotUsage.get(home)!, slotStart);
                 incrementMapCount(timeSlotUsage.get(away)!, slotStart);
                 incrementMapCount(courtUsage.get(home)!, court.id);
