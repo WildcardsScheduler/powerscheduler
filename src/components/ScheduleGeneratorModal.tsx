@@ -849,30 +849,32 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   </div>
 
                   {enableDoubleHeaders && (
-                    <div className="flex items-center space-x-4 pl-3 pt-1 border-t border-slate-800/80">
-                      <span className="text-[11px] text-slate-400">Spacing Preference:</span>
-                      <label className="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="dhMode"
-                          value="back_to_back"
-                          checked={doubleHeaderMode === 'back_to_back'}
-                          onChange={() => setDoubleHeaderMode('back_to_back')}
-                          className="accent-emerald-500"
-                        />
-                        <span>Back-to-Back Slots</span>
-                      </label>
-                      <label className="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="dhMode"
-                          value="spaced"
-                          checked={doubleHeaderMode === 'spaced'}
-                          onChange={() => setDoubleHeaderMode('spaced')}
-                          className="accent-emerald-500"
-                        />
-                        <span>Spaced Out Across Night</span>
-                      </label>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pl-3 pt-1.5 border-t border-slate-800/80">
+                      <span className="text-[11px] font-bold text-emerald-400 shrink-0">Timing Rule (Strict):</span>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <label className="flex items-center space-x-1.5 text-xs text-slate-200 font-semibold cursor-pointer">
+                          <input
+                            type="radio"
+                            name="dhMode"
+                            value="back_to_back"
+                            checked={doubleHeaderMode === 'back_to_back'}
+                            onChange={() => setDoubleHeaderMode('back_to_back')}
+                            className="accent-emerald-500"
+                          />
+                          <span>Strict Back-to-Back (No waiting around)</span>
+                        </label>
+                        <label className="flex items-center space-x-1.5 text-xs text-slate-200 font-semibold cursor-pointer">
+                          <input
+                            type="radio"
+                            name="dhMode"
+                            value="spaced"
+                            checked={doubleHeaderMode === 'spaced'}
+                            onChange={() => setDoubleHeaderMode('spaced')}
+                            className="accent-emerald-500"
+                          />
+                          <span>Strict Spaced Out (Break in-between)</span>
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -949,11 +949,19 @@ function isTeamEligibleForSlotOnDate(
     .filter((idx) => idx !== -1);
 
   if (doubleHeaderMode === 'back_to_back') {
-    // Must be directly adjacent to existing slot (diff === 1)
+    // Hard Rule: Must be directly consecutive / adjacent slot (diff === 1). No waiting between games!
     const isAdjacent = existingSlotIdxs.some(
       (exIdx) => Math.abs(slotIdx - exIdx) === 1
     );
     return isAdjacent;
+  }
+
+  if (doubleHeaderMode === 'spaced') {
+    // Hard Rule: Must have at least 1 break slot between matches (diff > 1)
+    const isSpaced = existingSlotIdxs.some(
+      (exIdx) => Math.abs(slotIdx - exIdx) > 1
+    );
+    return isSpaced;
   }
 
   return true;
