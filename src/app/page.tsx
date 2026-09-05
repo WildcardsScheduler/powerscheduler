@@ -17,6 +17,7 @@ import { TeamManagerModal } from '@/components/TeamManagerModal';
 import { LoginModal } from '@/components/LoginModal';
 import { LeagueRulesModal } from '@/components/LeagueRulesModal';
 import { PWAInstallModal } from '@/components/PWAInstallModal';
+import { PWAInstallBar } from '@/components/PWAInstallBar';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
 import { formatMatchRulesDescription } from '@/utils/formatRules';
 import { Globe, Trophy, Users, Calendar, MapPin, BookOpen, Download } from 'lucide-react';
@@ -888,6 +889,9 @@ export default function Home() {
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
         onLogout={handleLogout}
       />
+
+      {/* Dedicated PWA Install Banner Bar (Mobile & Desktop) */}
+      <PWAInstallBar onOpenInstallModal={() => setIsInstallModalOpen(true)} />
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6 sm:space-y-8">
