@@ -29,17 +29,35 @@ export default function Home() {
 
   const [isCloudSynced, setIsCloudSynced] = useState(false);
 
-  // Helper to repair potential orphaned divisionIds
+  // Helper to repair potential orphaned divisionIds and ensure adminPasscode consistency
   const repairLeaguesData = (data: LeagueSeason[]) => {
+    let activePasscode = 'admin123';
+    if (typeof window !== 'undefined') {
+      const localStored = localStorage.getItem('powerschedule_admin_passcode');
+      if (localStored && localStored.trim()) {
+        activePasscode = localStored.trim();
+      }
+    }
+    const foundFromData = data.find((l) => l.adminPasscode)?.adminPasscode;
+    if (foundFromData && foundFromData.trim()) {
+      activePasscode = foundFromData.trim();
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('powerschedule_admin_passcode', activePasscode);
+        } catch {}
+      }
+    }
+
     return data.map((l) => {
-      if (!l.divisions || l.divisions.length === 0) return l;
-      const validDivisionIds = new Set(l.divisions.map((d) => d.id));
-      const fallbackDivId = l.divisions[0].id;
-      const anyOrphaned = l.teams.some((t) => !validDivisionIds.has(t.divisionId));
-      if (!anyOrphaned) return l;
+      const cleanLeague = { ...l, adminPasscode: activePasscode };
+      if (!cleanLeague.divisions || cleanLeague.divisions.length === 0) return cleanLeague;
+      const validDivisionIds = new Set(cleanLeague.divisions.map((d) => d.id));
+      const fallbackDivId = cleanLeague.divisions[0].id;
+      const anyOrphaned = cleanLeague.teams.some((t) => !validDivisionIds.has(t.divisionId));
+      if (!anyOrphaned) return cleanLeague;
       return {
-        ...l,
-        teams: l.teams.map((t) =>
+        ...cleanLeague,
+        teams: cleanLeague.teams.map((t) =>
           validDivisionIds.has(t.divisionId) ? t : { ...t, divisionId: fallbackDivId }
         ),
       };
@@ -378,8 +396,9 @@ export default function Home() {
     matchRules: MatchRules,
     adminPasscode?: string
   ) => {
+    const localStored = typeof window !== 'undefined' ? localStorage.getItem('powerschedule_admin_passcode') : null;
     const existingPasscode = leagues.find((l) => l.adminPasscode)?.adminPasscode;
-    const universalPasscode = adminPasscode || existingPasscode || 'admin123';
+    const universalPasscode = adminPasscode || localStored || existingPasscode || 'admin123';
 
     const newLeague = autofill
       ? createSampleLeague(name, sport, startDate, endDate, maxTeams, hasDivisions, matchRules)
@@ -406,7 +425,8 @@ export default function Home() {
     adminPasscode?: string
   ) => {
     const formattedDesc = formatMatchRulesDescription(matchRules);
-    const updatedPasscode = adminPasscode?.trim() || leagues.find((l) => l.adminPasscode)?.adminPasscode || 'admin123';
+    const localStored = typeof window !== 'undefined' ? localStorage.getItem('powerschedule_admin_passcode') : null;
+    const updatedPasscode = adminPasscode?.trim() || localStored || leagues.find((l) => l.adminPasscode)?.adminPasscode || 'admin123';
 
     // Universal update across all leagues in the platform
     setLeagues((prev) =>
@@ -442,11 +462,26 @@ export default function Home() {
     }
   };
 
-  // Universal Admin Passcode — applies to all leagues
+  // Universal Admin Passcode — applies to all leagues and syncs everywhere immediately
   const handleUpdateUniversalPasscode = (passcode: string) => {
-    setLeagues((prev) =>
-      prev.map((l) => ({ ...l, adminPasscode: passcode }))
-    );
+    const cleanPasscode = passcode.trim() || 'admin123';
+    try {
+      localStorage.setItem('powerschedule_admin_passcode', cleanPasscode);
+    } catch (e) {
+      console.warn('Failed to save admin passcode to localStorage', e);
+    }
+    setLeagues((prev) => {
+      const updated = prev.map((l) => ({ ...l, adminPasscode: cleanPasscode }));
+      // Immediately post to cloud store
+      fetch('/api/leagues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leagues: updated, activeId: activeLeagueId }),
+      }).then(() => setIsCloudSynced(true)).catch((err) => {
+        console.warn('Cloud sync post error on passcode update:', err);
+      });
+      return updated;
+    });
   };
 
   // Division CRUD Handlers

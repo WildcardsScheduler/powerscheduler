@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { LeagueSeason, Team } from '@/types/league';
-import { KeyRound, ShieldCheck, UserCheck, X, AlertCircle, Sparkles, CheckCircle2, Lock } from 'lucide-react';
+import { KeyRound, ShieldCheck, UserCheck, X, AlertCircle, Sparkles, CheckCircle2, Lock, Eye, EyeOff } from 'lucide-react';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -35,11 +35,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   // Team Captain Form State
   const [selectedTeamId, setSelectedTeamId] = useState<string>(targetLeague?.teams[0]?.id || '');
   const [captainPin, setCaptainPin] = useState<string>('');
+  const [showCaptainPin, setShowCaptainPin] = useState<boolean>(false);
   const [teamError, setTeamError] = useState<string>('');
   const [teamSuccess, setTeamSuccess] = useState<string>('');
 
   // Admin Form State
   const [adminPasscode, setAdminPasscode] = useState<string>('');
+  const [showAdminPasscode, setShowAdminPasscode] = useState<boolean>(false);
   const [adminError, setAdminError] = useState<string>('');
   const [adminSuccess, setAdminSuccess] = useState<string>('');
 
@@ -85,11 +87,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setAdminError('');
     setAdminSuccess('');
 
-    // Check universal master admin passcode across all leagues
+    // Check universal master admin passcode across localStorage and all leagues
+    let storedPasscode: string | null = null;
+    if (typeof window !== 'undefined') {
+      storedPasscode = localStorage.getItem('powerschedule_admin_passcode');
+    }
     const universalPasscode =
-      leagues.find((l) => l.adminPasscode)?.adminPasscode || targetLeague?.adminPasscode || 'admin123';
+      (storedPasscode && storedPasscode.trim()) ||
+      leagues.find((l) => l.adminPasscode)?.adminPasscode ||
+      targetLeague?.adminPasscode ||
+      'admin123';
 
-    if (adminPasscode.trim() === universalPasscode) {
+    if (adminPasscode.trim() === universalPasscode.trim()) {
       setAdminSuccess('Administrator Authorized. Access Granted.');
       onSelectLeague(targetLeague.id);
       setTimeout(() => {
@@ -229,18 +238,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </label>
                 <div className="relative">
                   <input
-                    type="password"
-                    maxLength={6}
-                    placeholder="Enter 4-digit PIN (e.g. 1234)"
+                    type={showCaptainPin ? 'text' : 'password'}
+                    maxLength={10}
+                    placeholder="Enter team PIN (e.g. 1234)"
                     value={captainPin}
                     onChange={(e) => setCaptainPin(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-mono tracking-widest text-amber-400 placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono tracking-wider text-amber-400 placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
                     required
                   />
-                  <Lock className="absolute right-3.5 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
+                  <button
+                    type="button"
+                    onClick={() => setShowCaptainPin(!showCaptainPin)}
+                    className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300"
+                  >
+                    {showCaptainPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
                 <p className="text-[11px] text-slate-500 italic">
-                  Default PIN for teams is <strong className="text-slate-400">1234</strong> (or set in Team Manager).
+                  Default PIN for teams is <strong className="text-slate-400">1234</strong> (or custom configured PIN).
                 </p>
               </div>
 
@@ -274,17 +289,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </label>
                 <div className="relative">
                   <input
-                    type="password"
-                    placeholder="Enter admin passcode (Default: admin123)"
+                    type={showAdminPasscode ? 'text' : 'password'}
+                    placeholder="Enter master admin passcode"
                     value={adminPasscode}
                     onChange={(e) => setAdminPasscode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-mono text-violet-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono text-violet-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500"
                     required
                   />
-                  <Lock className="absolute right-3.5 top-3 h-4 w-4 text-slate-500 pointer-events-none" />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPasscode(!showAdminPasscode)}
+                    className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300"
+                  >
+                    {showAdminPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
                 <p className="text-[11px] text-slate-500 italic">
-                  Default passcode is <strong className="text-slate-400">admin123</strong> (configurable in settings).
+                  Provides full administrator management across all league seasons.
                 </p>
               </div>
 
