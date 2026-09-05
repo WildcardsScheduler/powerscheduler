@@ -16,9 +16,10 @@ import { DivisionManagerModal } from '@/components/DivisionManagerModal';
 import { TeamManagerModal } from '@/components/TeamManagerModal';
 import { LoginModal } from '@/components/LoginModal';
 import { LeagueRulesModal } from '@/components/LeagueRulesModal';
+import { PWAInstallModal } from '@/components/PWAInstallModal';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
 import { formatMatchRulesDescription } from '@/utils/formatRules';
-import { Globe, Trophy, Users, Calendar, MapPin, BookOpen } from 'lucide-react';
+import { Globe, Trophy, Users, Calendar, MapPin, BookOpen, Download } from 'lucide-react';
 
 export default function Home() {
   const [leagues, setLeagues] = useState<LeagueSeason[]>(initialLeaguesList);
@@ -26,6 +27,7 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   const [isCloudSynced, setIsCloudSynced] = useState(false);
 
@@ -882,6 +884,7 @@ export default function Home() {
         onSelectLeague={handleSelectLeague}
         onOpenLeagueManager={() => setIsLeagueManagerOpen(true)}
         onOpenRulesModal={() => setIsRulesModalOpen(true)}
+        onOpenInstallModal={() => setIsInstallModalOpen(true)}
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
         onLogout={handleLogout}
       />
@@ -908,6 +911,14 @@ export default function Home() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setIsInstallModalOpen(true)}
+                  className="bg-slate-950 hover:bg-slate-800 border border-emerald-500/30 px-3.5 py-2 rounded-2xl text-xs font-bold text-emerald-400 hover:text-white flex items-center space-x-1.5 transition-all shadow-md"
+                  title="Install PowerSchedule on iPhone, iPad, or Android"
+                >
+                  <Download className="h-4 w-4 text-emerald-400" />
+                  <span>Install App</span>
+                </button>
                 <button
                   onClick={() => setIsRulesModalOpen(true)}
                   className="bg-slate-950 hover:bg-slate-800 border border-amber-500/30 px-3.5 py-2 rounded-2xl text-xs font-bold text-amber-400 hover:text-white flex items-center space-x-1.5 transition-all shadow-md"
@@ -1133,6 +1144,12 @@ export default function Home() {
             rulesContent: rulesText,
           }));
         }}
+      />
+
+      {/* PWA Install App Modal (iPhone & Android) */}
+      <PWAInstallModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
       />
 
     </div>

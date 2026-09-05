@@ -1,5 +1,5 @@
 import React from 'react';
-import { Volleyball, ShieldCheck, UserCheck, Trophy, Globe, LogIn, LogOut, Lock, BookOpen } from 'lucide-react';
+import { Volleyball, ShieldCheck, UserCheck, Trophy, Globe, LogIn, LogOut, Lock, BookOpen, Download } from 'lucide-react';
 import { LeagueSeason } from '@/types/league';
 
 export type UserRole = 'public' | 'team_rep' | 'scheduler';
@@ -17,6 +17,7 @@ interface NavbarProps {
   onSelectLeague: (id: string) => void;
   onOpenLeagueManager: () => void;
   onOpenRulesModal?: () => void;
+  onOpenInstallModal?: () => void;
   onOpenLoginModal: () => void;
   onLogout: () => void;
 }
@@ -34,6 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectLeague,
   onOpenLeagueManager,
   onOpenRulesModal,
+  onOpenInstallModal,
   onOpenLoginModal,
   onLogout,
 }) => {
@@ -99,6 +101,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Dynamic Auth / Role Switcher Header Controls */}
         <div className="flex items-center space-x-2 shrink-0">
+          {onOpenInstallModal && (
+            <button
+              onClick={onOpenInstallModal}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 border border-slate-800 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+              title="Install App on iPhone or Android"
+            >
+              <Download className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">Install App</span>
+            </button>
+          )}
+
           {onOpenRulesModal && (
             <button
               onClick={onOpenRulesModal}
