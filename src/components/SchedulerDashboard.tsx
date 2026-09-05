@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { LeagueSeason, Division, Team, Match, Location } from '@/types/league';
-import { ShieldCheck, Calendar, Sparkles, Building2, Plus, Layers, MapPin, Users, KeyRound, BookOpen } from 'lucide-react';
+import { ShieldCheck, Calendar, Sparkles, Building2, Plus, Layers, MapPin, Users, KeyRound, BookOpen, Scale } from 'lucide-react';
 
 interface SchedulerDashboardProps {
   league: LeagueSeason;
@@ -16,6 +16,7 @@ interface SchedulerDashboardProps {
   onOpenTeamManager: () => void;
   onOpenLeagueManager: () => void;
   onOpenRulesModal?: () => void;
+  onOpenFairnessReport?: () => void;
   selectedDivisionId: string;
   onSelectDivision: (id: string) => void;
 }
@@ -32,6 +33,7 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
   onOpenTeamManager,
   onOpenLeagueManager,
   onOpenRulesModal,
+  onOpenFairnessReport,
   selectedDivisionId,
   onSelectDivision,
 }) => {
@@ -54,6 +56,16 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+          {onOpenFairnessReport && (
+            <button
+              onClick={onOpenFairnessReport}
+              className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-violet-300 border border-violet-500/30 font-bold text-xs shadow-md transition-all flex items-center justify-center space-x-1.5"
+            >
+              <Scale className="h-4 w-4 text-violet-400" />
+              <span>Fairness Report</span>
+            </button>
+          )}
+
           {onOpenRulesModal && (
             <button
               onClick={onOpenRulesModal}

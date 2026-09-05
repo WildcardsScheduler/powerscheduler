@@ -18,6 +18,8 @@ import { LoginModal } from '@/components/LoginModal';
 import { LeagueRulesModal } from '@/components/LeagueRulesModal';
 import { PWAInstallModal } from '@/components/PWAInstallModal';
 import { PWAInstallBar } from '@/components/PWAInstallBar';
+import { MatchEditorModal } from '@/components/MatchEditorModal';
+import { FairnessReportModal } from '@/components/FairnessReportModal';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
 import { formatMatchRulesDescription } from '@/utils/formatRules';
 import { Globe, Trophy, Users, Calendar, MapPin, BookOpen, Download } from 'lucide-react';
@@ -328,6 +330,9 @@ export default function Home() {
   const [isLeagueManagerOpen, setIsLeagueManagerOpen] = useState(false);
   const [isDivisionManagerOpen, setIsDivisionManagerOpen] = useState(false);
   const [isTeamManagerOpen, setIsTeamManagerOpen] = useState(false);
+  const [isMatchEditorOpen, setIsMatchEditorOpen] = useState(false);
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+  const [isFairnessReportOpen, setIsFairnessReportOpen] = useState(false);
 
   // Derive effective role strictly for the current active league view
   const currentRole: UserRole =
@@ -397,7 +402,8 @@ export default function Home() {
     hasDivisions: boolean,
     autofill: boolean,
     matchRules: MatchRules,
-    adminPasscode?: string
+    adminPasscode?: string,
+    publicFairnessReport?: boolean
   ) => {
     const localStored = typeof window !== 'undefined' ? localStorage.getItem('powerschedule_admin_passcode') : null;
     const existingPasscode = leagues.find((l) => l.adminPasscode)?.adminPasscode;
@@ -408,6 +414,7 @@ export default function Home() {
       : createBlankLeague(name, sport, startDate, endDate, maxTeams, hasDivisions, matchRules);
 
     newLeague.adminPasscode = universalPasscode;
+    newLeague.publicFairnessReport = publicFairnessReport !== undefined ? publicFairnessReport : true;
 
     // Ensure all leagues keep the universal passcode synchronized
     setLeagues((prev) => [
@@ -425,7 +432,8 @@ export default function Home() {
     endDate: string,
     maxTeams: number,
     matchRules: MatchRules,
-    adminPasscode?: string
+    adminPasscode?: string,
+    publicFairnessReport?: boolean
   ) => {
     const formattedDesc = formatMatchRulesDescription(matchRules);
     const localStored = typeof window !== 'undefined' ? localStorage.getItem('powerschedule_admin_passcode') : null;
@@ -444,6 +452,9 @@ export default function Home() {
           endDate: isTarget ? endDate : l.endDate,
           maxTeams: isTarget ? maxTeams : l.maxTeams,
           matchRules: isTarget ? matchRules : l.matchRules,
+          publicFairnessReport: isTarget
+            ? (publicFairnessReport !== undefined ? publicFairnessReport : (l.publicFairnessReport !== false))
+            : l.publicFairnessReport,
           divisions: isTarget
             ? l.divisions.map((d) => ({
                 ...d,
@@ -830,6 +841,44 @@ export default function Home() {
     }));
   };
 
+  // Manual Match Edit & Reschedule Handlers
+  const handleEditMatch = (match: Match) => {
+    setEditingMatch(match);
+    setIsMatchEditorOpen(true);
+  };
+
+  const handleAddMatch = () => {
+    setEditingMatch(null);
+    setIsMatchEditorOpen(true);
+  };
+
+  const handleSaveMatch = (savedMatch: Match) => {
+    updateActiveLeague((prev) => {
+      const exists = prev.matches.some((m) => m.id === savedMatch.id);
+      let updatedMatches: Match[];
+      if (exists) {
+        updatedMatches = prev.matches.map((m) => (m.id === savedMatch.id ? savedMatch : m));
+      } else {
+        updatedMatches = [...prev.matches, savedMatch];
+      }
+      return {
+        ...prev,
+        matches: updatedMatches,
+      };
+    });
+    setIsMatchEditorOpen(false);
+    setEditingMatch(null);
+  };
+
+  const handleDeleteMatch = (matchId: string) => {
+    updateActiveLeague((prev) => ({
+      ...prev,
+      matches: prev.matches.filter((m) => m.id !== matchId),
+    }));
+    setIsMatchEditorOpen(false);
+    setEditingMatch(null);
+  };
+
   // Handle New Generated Schedule Apply
   const handleApplySchedule = (newMatches: Match[], divisionId: string) => {
     updateActiveLeague((prev) => ({
@@ -910,6 +959,7 @@ export default function Home() {
             onOpenTeamManager={() => setIsTeamManagerOpen(true)}
             onOpenLeagueManager={() => setIsLeagueManagerOpen(true)}
             onOpenRulesModal={() => setIsRulesModalOpen(true)}
+            onOpenFairnessReport={() => setIsFairnessReportOpen(true)}
             selectedDivisionId={effectiveDivisionId}
             onSelectDivision={setSelectedDivisionId}
           />
@@ -922,6 +972,8 @@ export default function Home() {
             selectedTeamId={effectiveTeamId}
             leagueRulesContent={league.rulesContent}
             onOpenRulesModal={() => setIsRulesModalOpen(true)}
+            onOpenFairnessReport={() => setIsFairnessReportOpen(true)}
+            showFairnessReport={league.publicFairnessReport !== false}
             onSelectTeam={handleSelectTeam}
             onUpdateRsvp={handleUpdateRsvp}
             onOpenScorekeeper={(match) => {
@@ -986,6 +1038,10 @@ export default function Home() {
             setActiveScoreMatch(match);
             setIsScorekeeperOpen(true);
           }}
+          onEditMatch={handleEditMatch}
+          onAddMatch={handleAddMatch}
+          onOpenFairnessReport={() => setIsFairnessReportOpen(true)}
+          showFairnessReport={currentRole === 'scheduler' || league.publicFairnessReport !== false}
         />
 
       </main>
@@ -1110,6 +1166,35 @@ export default function Home() {
       <PWAInstallModal
         isOpen={isInstallModalOpen}
         onClose={() => setIsInstallModalOpen(false)}
+      />
+
+      {/* Manual Match Editor & In-Season Rescheduling Modal */}
+      <MatchEditorModal
+        isOpen={isMatchEditorOpen}
+        match={editingMatch}
+        teams={league.teams}
+        divisions={league.divisions}
+        locations={league.locations}
+        allMatches={league.matches}
+        selectedDivisionId={effectiveDivisionId}
+        onClose={() => {
+          setIsMatchEditorOpen(false);
+          setEditingMatch(null);
+        }}
+        onSaveMatch={handleSaveMatch}
+        onDeleteMatch={handleDeleteMatch}
+      />
+
+      {/* Schedule Equity & Fairness Audit Report Modal */}
+      <FairnessReportModal
+        isOpen={isFairnessReportOpen}
+        divisions={league.divisions}
+        teams={league.teams}
+        matches={league.matches}
+        locations={league.locations}
+        selectedDivisionId={effectiveDivisionId}
+        isCaptainOrPublic={currentRole !== 'scheduler'}
+        onClose={() => setIsFairnessReportOpen(false)}
       />
 
     </div>

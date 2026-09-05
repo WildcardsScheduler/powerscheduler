@@ -1,4 +1,4 @@
-import { Match, Team, Court, DayOfWeek, AdvancedScheduleOptions } from '@/types/league';
+import { Match, Team, Court, DayOfWeek, AdvancedScheduleOptions, SubLocation } from '@/types/league';
 
 export interface ScheduleGeneratorOptions {
   divisionId: string;
@@ -29,6 +29,8 @@ export interface TeamFairnessMetric {
   teamId: string;
   teamName: string;
   totalGames: number;
+  homeGames?: number;
+  awayGames?: number;
   officialGames: number;
   exhibitionGames: number;
   doubleHeaderCount: number;
@@ -547,6 +549,147 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   };
 
   return { matches, warnings, report };
+}
+
+/**
+ * Calculates a complete ScheduleFairnessReport for any set of matches and teams.
+ * Can be called dynamically after manual schedule edits/swaps during the season.
+ */
+export function calculateScheduleFairnessReport(
+  teams: Team[],
+  matches: Match[],
+  courts: SubLocation[] = [],
+  knownTimeSlots?: string[]
+): ScheduleFairnessReport {
+  const teamIds = teams.map((t) => t.id);
+
+  // Discover time slots from matches or passed slots
+  const effectiveTimeSlots =
+    knownTimeSlots && knownTimeSlots.length > 0
+      ? knownTimeSlots
+      : Array.from(new Set(matches.map((m) => m.startTime).filter(Boolean))).sort();
+
+  const playingDates = Array.from(new Set(matches.map((m) => m.date).filter(Boolean)));
+  const totalSlotsAvailable =
+    playingDates.length *
+    (effectiveTimeSlots.length || 1) *
+    (courts.length || 1);
+  const totalSlotsFilled = matches.length;
+  const slotUtilizationPercentage =
+    totalSlotsAvailable > 0 ? Math.round((totalSlotsFilled / totalSlotsAvailable) * 100) : 100;
+
+  // Track double headers per date
+  const dateTeamMatchCounts = new Map<string, Map<string, number>>();
+  const teamDoubleHeaderCounts = new Map<string, number>();
+  teamIds.forEach((id) => teamDoubleHeaderCounts.set(id, 0));
+
+  matches.forEach((m) => {
+    if (!m.date) return;
+    if (!dateTeamMatchCounts.has(m.date)) {
+      dateTeamMatchCounts.set(m.date, new Map());
+    }
+    const map = dateTeamMatchCounts.get(m.date)!;
+    map.set(m.homeTeamId, (map.get(m.homeTeamId) || 0) + 1);
+    map.set(m.awayTeamId, (map.get(m.awayTeamId) || 0) + 1);
+  });
+
+  dateTeamMatchCounts.forEach((map) => {
+    map.forEach((cnt, tId) => {
+      if (cnt > 1) {
+        teamDoubleHeaderCounts.set(tId, (teamDoubleHeaderCounts.get(tId) || 0) + 1);
+      }
+    });
+  });
+
+  let doubleHeaderMatchesCount = 0;
+  let exhibitionMatchesCount = 0;
+  let officialMatchesCount = 0;
+  matches.forEach((m) => {
+    if (m.notes?.includes('Double Header') || m.notes?.includes('Exhibition')) doubleHeaderMatchesCount++;
+    if (m.isExhibition) exhibitionMatchesCount++;
+    else officialMatchesCount++;
+  });
+
+  // Calculate Head-to-Head Opponent Matrix
+  const opponentMatrix: Record<string, Record<string, number>> = {};
+  teamIds.forEach((t1) => {
+    opponentMatrix[t1] = {};
+    teamIds.forEach((t2) => {
+      opponentMatrix[t1][t2] = 0;
+    });
+  });
+
+  matches.forEach((m) => {
+    if (opponentMatrix[m.homeTeamId] && opponentMatrix[m.homeTeamId][m.awayTeamId] !== undefined) {
+      opponentMatrix[m.homeTeamId][m.awayTeamId]++;
+    }
+    if (opponentMatrix[m.awayTeamId] && opponentMatrix[m.awayTeamId][m.homeTeamId] !== undefined) {
+      opponentMatrix[m.awayTeamId][m.homeTeamId]++;
+    }
+  });
+
+  // Calculate Per-Team Metrics with exact time slot breakdown
+  const teamMetrics: TeamFairnessMetric[] = teams.map((t) => {
+    const tMatches = matches.filter((m) => m.homeTeamId === t.id || m.awayTeamId === t.id);
+    const homeGames = matches.filter((m) => m.homeTeamId === t.id).length;
+    const awayGames = matches.filter((m) => m.awayTeamId === t.id).length;
+    const officialGames = tMatches.filter((m) => !m.isExhibition).length;
+    const exhibitionGames = tMatches.filter((m) => m.isExhibition).length;
+
+    const timeSlotCounts: Record<string, number> = {};
+    effectiveTimeSlots.forEach((slot) => {
+      timeSlotCounts[slot] = 0;
+    });
+
+    const courtCounts: Record<string, number> = {};
+    courts.forEach((c) => {
+      courtCounts[c.id] = 0;
+    });
+
+    let refDutyCount = 0;
+    matches.forEach((m) => {
+      if (m.workTeamId === t.id) {
+        refDutyCount++;
+      }
+    });
+
+    tMatches.forEach((m) => {
+      if (m.startTime) {
+        timeSlotCounts[m.startTime] = (timeSlotCounts[m.startTime] || 0) + 1;
+      }
+      const courtKey = m.subLocationId || m.courtId;
+      if (courtKey) {
+        courtCounts[courtKey] = (courtCounts[courtKey] || 0) + 1;
+      }
+    });
+
+    return {
+      teamId: t.id,
+      teamName: t.name,
+      totalGames: tMatches.length,
+      homeGames,
+      awayGames,
+      officialGames,
+      exhibitionGames,
+      doubleHeaderCount: teamDoubleHeaderCounts.get(t.id) || 0,
+      timeSlotCounts,
+      courtCounts,
+      refDutyCount,
+    };
+  });
+
+  return {
+    totalSlotsAvailable,
+    totalSlotsFilled,
+    slotUtilizationPercentage,
+    totalMatches: matches.length,
+    officialMatchesCount,
+    doubleHeaderMatchesCount,
+    exhibitionMatchesCount,
+    effectiveTimeSlots,
+    teamMetrics,
+    opponentMatrix,
+  };
 }
 
 // Generates valid dates based on selected days of week and skips blackout dates

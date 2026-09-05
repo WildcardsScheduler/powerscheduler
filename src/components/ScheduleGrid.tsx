@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Match, Team, Location, Division, SubLocation } from '@/types/league';
-import { Calendar, Clock, MapPin, ShieldAlert, Edit3, CheckCircle2, Building2, Filter, Printer, Lock } from 'lucide-react';
+import { Calendar, Clock, MapPin, ShieldAlert, Edit3, CheckCircle2, Building2, Filter, Printer, Lock, Plus, Scale, Wrench } from 'lucide-react';
 import { PrintScheduleModal } from './PrintScheduleModal';
 import { formatTimeRange } from '@/utils/formatUtils';
 
@@ -13,6 +13,10 @@ interface ScheduleGridProps {
   divisions: Division[];
   selectedDivisionId: string;
   onOpenScorekeeper: (match: Match) => void;
+  onEditMatch?: (match: Match) => void;
+  onAddMatch?: () => void;
+  onOpenFairnessReport?: () => void;
+  showFairnessReport?: boolean;
   readOnly?: boolean;
   currentRole?: 'public' | 'team_rep' | 'scheduler';
   userTeamId?: string;
@@ -25,6 +29,10 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   divisions,
   selectedDivisionId,
   onOpenScorekeeper,
+  onEditMatch,
+  onAddMatch,
+  onOpenFairnessReport,
+  showFairnessReport = true,
   readOnly = false,
   currentRole,
   userTeamId,
@@ -83,14 +91,38 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             <h3 className="text-lg font-bold text-white tracking-tight">League Match Schedule</h3>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsPrintModalOpen(true)}
-            className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center space-x-1.5 transition-all"
-          >
-            <Printer className="h-4 w-4" />
-            <span>Print Schedules</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {showFairnessReport && onOpenFairnessReport && (
+              <button
+                type="button"
+                onClick={onOpenFairnessReport}
+                className="px-3 py-1.5 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm"
+              >
+                <Scale className="h-4 w-4" />
+                <span>Fairness Report</span>
+              </button>
+            )}
+
+            {currentRole === 'scheduler' && onAddMatch && (
+              <button
+                type="button"
+                onClick={onAddMatch}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-slate-950 font-black text-xs flex items-center space-x-1.5 shadow-md shadow-emerald-500/20 transition-all"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Match</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setIsPrintModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center space-x-1.5 transition-all"
+            >
+              <Printer className="h-4 w-4" />
+              <span>Print Schedules</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -307,22 +339,36 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     }
 
                     return (
-                      <button
-                        onClick={() => onOpenScorekeeper(match)}
-                        className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs transition-colors border border-slate-700"
-                      >
-                        {match.status === 'Completed' ? (
-                          <>
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                            <span>Edit Score</span>
-                          </>
-                        ) : (
-                          <>
-                            <Edit3 className="h-3.5 w-3.5 text-amber-400" />
-                            <span>Record Score</span>
-                          </>
+                      <div className="flex items-center space-x-2">
+                        {currentRole === 'scheduler' && onEditMatch && (
+                          <button
+                            type="button"
+                            onClick={() => onEditMatch(match)}
+                            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 font-medium text-xs transition-colors border border-amber-500/20 hover:border-amber-500/40"
+                            title="Edit & Reschedule Match Fixture"
+                          >
+                            <Wrench className="h-3.5 w-3.5 text-amber-400" />
+                            <span>Edit Game</span>
+                          </button>
                         )}
-                      </button>
+
+                        <button
+                          onClick={() => onOpenScorekeeper(match)}
+                          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs transition-colors border border-slate-700"
+                        >
+                          {match.status === 'Completed' ? (
+                            <>
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                              <span>Edit Score</span>
+                            </>
+                          ) : (
+                            <>
+                              <Edit3 className="h-3.5 w-3.5 text-amber-400" />
+                              <span>Record Score</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     );
                   })()}
                 </div>

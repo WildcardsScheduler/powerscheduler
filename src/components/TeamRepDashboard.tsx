@@ -25,6 +25,7 @@ import {
   BookOpen,
   ShieldCheck,
   ExternalLink,
+  Scale,
 } from 'lucide-react';
 import { formatTimeRange } from '@/utils/formatUtils';
 
@@ -38,6 +39,8 @@ interface TeamRepDashboardProps {
   selectedTeamId: string;
   leagueRulesContent?: string;
   onOpenRulesModal?: () => void;
+  onOpenFairnessReport?: () => void;
+  showFairnessReport?: boolean;
   onSelectTeam: (teamId: string) => void;
   onUpdateRsvp: (teamId: string, playerId: string, status: 'Going' | 'Maybe' | 'Out') => void;
   onOpenScorekeeper: (match: Match) => void;
@@ -52,6 +55,8 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
   selectedTeamId,
   leagueRulesContent,
   onOpenRulesModal,
+  onOpenFairnessReport,
+  showFairnessReport = true,
   onSelectTeam,
   onUpdateRsvp,
   onOpenScorekeeper,
@@ -222,6 +227,16 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             <BookOpen className="h-4 w-4" />
             <span>League Rules</span>
           </button>
+
+          {showFairnessReport && onOpenFairnessReport && (
+            <button
+              onClick={onOpenFairnessReport}
+              className="flex-1 md:flex-none px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 border border-violet-500/20"
+            >
+              <Scale className="h-4 w-4 text-violet-400" />
+              <span>Fairness Report</span>
+            </button>
+          )}
         </div>
       </div>
 

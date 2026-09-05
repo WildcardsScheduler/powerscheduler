@@ -19,7 +19,8 @@ interface LeagueManagerModalProps {
     hasDivisions: boolean,
     autofill: boolean,
     matchRules: MatchRules,
-    adminPasscode?: string
+    adminPasscode?: string,
+    publicFairnessReport?: boolean
   ) => void;
   onUpdateLeague: (
     id: string,
@@ -29,7 +30,8 @@ interface LeagueManagerModalProps {
     endDate: string,
     maxTeams: number,
     matchRules: MatchRules,
-    adminPasscode?: string
+    adminPasscode?: string,
+    publicFairnessReport?: boolean
   ) => void;
   onDeleteLeague: (id: string) => void;
   onUpdateUniversalPasscode: (passcode: string) => void;
@@ -95,6 +97,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [thirdSetRule, setThirdSetRule] = useState<ThirdSetRule>('guaranteed_all');
   const [capRule, setCapRule] = useState<MatchRules['capRule']>('Win by 2 (Uncapped)');
   const [excludeThirdSetPointsFromDiff, setExcludeThirdSetPointsFromDiff] = useState<boolean>(true);
+  const [publicFairnessReport, setPublicFairnessReport] = useState<boolean>(true);
 
   // Edit League Form State
   const [editName, setEditName] = useState('');
@@ -102,6 +105,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [editStartDate, setEditStartDate] = useState('');
   const [editEndDate, setEditEndDate] = useState('');
   const [editMaxTeams, setEditMaxTeams] = useState<number>(12);
+  const [editPublicFairnessReport, setEditPublicFairnessReport] = useState<boolean>(true);
 
   // Edit Match Rules State
   const [editTotalSets, setEditTotalSets] = useState<number>(3);
@@ -127,7 +131,18 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
       excludeThirdSetPointsFromDiff,
     };
 
-    onCreateLeague(name.trim(), sport, startDate, endDate, maxTeams, hasDivisions, false, matchRules);
+    onCreateLeague(
+      name.trim(),
+      sport,
+      startDate,
+      endDate,
+      maxTeams,
+      hasDivisions,
+      false,
+      matchRules,
+      undefined,
+      publicFairnessReport
+    );
     setName('');
     setShowCreateForm(false);
   };
@@ -140,6 +155,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
     setEditStartDate(league.startDate);
     setEditEndDate(league.endDate);
     setEditMaxTeams(league.maxTeams || 12);
+    setEditPublicFairnessReport(league.publicFairnessReport !== false);
 
     setEditTotalSets(rules.totalSets);
     setEditPointsPerSet(rules.pointsPerSet);
@@ -168,7 +184,9 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
       editStartDate,
       editEndDate,
       editMaxTeams,
-      updatedRules
+      updatedRules,
+      undefined,
+      editPublicFairnessReport
     );
     setEditingLeagueId(null);
   };
@@ -441,7 +459,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-2 pt-2 border-t border-slate-800/60">
+                  <div className="mt-2 pt-2 border-t border-slate-800/60 space-y-2">
                     <label className="flex items-center space-x-2 text-xs text-slate-300 font-semibold cursor-pointer">
                       <input
                         type="checkbox"
@@ -451,8 +469,18 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                       />
                       <span>Exclude Set #3 (Tie-breaker) scores from +/- Point Differential calculation</span>
                     </label>
+
+                    <label className="flex items-center space-x-2 text-xs text-slate-300 font-semibold cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={publicFairnessReport}
+                        onChange={(e) => setPublicFairnessReport(e.target.checked)}
+                        className="rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500 h-4 w-4"
+                      />
+                      <span>Allow Teams & Public to view Schedule Fairness Report</span>
+                    </label>
                     <p className="text-[10px] text-slate-500 ml-6">
-                      When enabled, standings +/- point totals only count scores from regulation sets 1 & 2.
+                      Gives team captains and players full visibility into match distribution equity and time-slot balances.
                     </p>
                   </div>
                 </div>
@@ -625,7 +653,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="pt-1">
+                        <div className="pt-1 space-y-1.5">
                           <label className="flex items-center space-x-2 text-[11px] text-slate-300 font-semibold cursor-pointer">
                             <input
                               type="checkbox"
@@ -634,6 +662,16 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                               className="rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-amber-500 h-3.5 w-3.5"
                             />
                             <span>Exclude Set #3 scores from +/- Point Differential</span>
+                          </label>
+
+                          <label className="flex items-center space-x-2 text-[11px] text-slate-300 font-semibold cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editPublicFairnessReport}
+                              onChange={(e) => setEditPublicFairnessReport(e.target.checked)}
+                              className="rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500 h-3.5 w-3.5"
+                            />
+                            <span>Allow Teams & Public to view Schedule Fairness Report</span>
                           </label>
                         </div>
                       </div>

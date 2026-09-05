@@ -158,6 +158,7 @@ export interface LeagueSeason {
   matchRules?: MatchRules;
   scheduleOptions?: AdvancedScheduleOptions;
   rulesContent?: string; // Custom pasted league rules and policies (Markdown / Plain Text)
+  publicFairnessReport?: boolean; // League option: Allow team captains and public to view Fairness Report
   locations: Location[];
   facilities?: Location[]; // Alias
   divisions: Division[];
