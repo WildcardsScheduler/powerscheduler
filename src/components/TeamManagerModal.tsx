@@ -253,7 +253,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col h-[90vh]">
-        
+
         {/* Header */}
         <div className="p-4 sm:p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2.5">
@@ -275,7 +275,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
         {/* Modal Main Body (Grid split into Sidebar + Team Editor) */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
-          
+
           {/* Left Sidebar: Team List & Search */}
           <div className="md:col-span-4 bg-slate-950 border-b md:border-b-0 md:border-r border-slate-800 p-4 flex flex-col space-y-3 overflow-hidden">
             <div className="flex items-center justify-between">
@@ -331,11 +331,10 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                       setSelectedTeamId(team.id);
                       setShowAddTeamForm(false);
                     }}
-                    className={`w-full text-left p-3 rounded-2xl border transition-all space-y-1 ${
-                      isSelected && !showAddTeamForm
+                    className={`w-full text-left p-3 rounded-2xl border transition-all space-y-1 ${isSelected && !showAddTeamForm
                         ? 'bg-emerald-500/10 border-emerald-500/60 text-white shadow-md shadow-emerald-500/10'
                         : 'bg-slate-900/60 border-slate-800/80 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -362,7 +361,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
           {/* Right Editor Panel */}
           <div className="md:col-span-8 p-4 sm:p-6 overflow-y-auto space-y-6">
-            
+
             {showQuickBatchForm || (teams.length === 0 && !showAddTeamForm) ? (
               /* Quick Batch Numbered Teams Form */
               <div className="bg-slate-950 border border-amber-500/40 rounded-2xl p-5 space-y-4 shadow-xl">
@@ -397,11 +396,10 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                           type="button"
                           key={num}
                           onClick={() => setQuickBatchCount(num)}
-                          className={`py-2 text-xs font-bold rounded-xl border transition-all ${
-                            quickBatchCount === num
+                          className={`py-2 text-xs font-bold rounded-xl border transition-all ${quickBatchCount === num
                               ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
                               : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
-                          }`}
+                            }`}
                         >
                           {num} Teams
                         </button>
@@ -534,9 +532,8 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                         type="button"
                         key={color}
                         onClick={() => setNewBadgeColor(color)}
-                        className={`h-7 w-7 rounded-full transition-transform hover:scale-110 ${
-                          newBadgeColor === color ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''
-                        }`}
+                        className={`h-7 w-7 rounded-full transition-transform hover:scale-110 ${newBadgeColor === color ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''
+                          }`}
                         style={{ backgroundColor: color }}
                       />
                     ))}
@@ -565,7 +562,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
             ) : selectedTeam ? (
               /* Active Team Detailed Editor */
               <div className="space-y-6">
-                
+
                 {/* Team Details Form */}
                 <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-4">
                   <div className="flex items-center justify-between">
@@ -691,9 +688,8 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                           type="button"
                           key={color}
                           onClick={() => setEditBadgeColor(color)}
-                          className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${
-                            editBadgeColor === color ? 'ring-2 ring-white ring-offset-1 ring-offset-slate-900 scale-110' : ''
-                          }`}
+                          className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${editBadgeColor === color ? 'ring-2 ring-white ring-offset-1 ring-offset-slate-900 scale-110' : ''
+                            }`}
                           style={{ backgroundColor: color }}
                         />
                       ))}

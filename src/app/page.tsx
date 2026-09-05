@@ -22,7 +22,6 @@ import { Globe, Trophy, Users, Calendar, MapPin } from 'lucide-react';
 export default function Home() {
   const [leagues, setLeagues] = useState<LeagueSeason[]>(initialLeaguesList);
   const [activeLeagueId, setActiveLeagueId] = useState<string>(initialLeaguesList[0].id);
-  const [currentRole, setCurrentRole] = useState<UserRole>('public');
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -152,32 +151,47 @@ export default function Home() {
     };
   }, []);
 
+  const [authRole, setAuthRole] = useState<UserRole>('public');
+  const [authLeagueId, setAuthLeagueId] = useState<string | null>(null);
+  const [authTeamId, setAuthTeamId] = useState<string | null>(null);
+
   // Hydrate auth role and check direct Captain URL query parameters once when loaded
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const savedRole = localStorage.getItem('powerschedule_auth_role') as UserRole;
+      const savedLeagueId = localStorage.getItem('powerschedule_auth_league_id');
       const savedTeamId = localStorage.getItem('powerschedule_auth_team_id');
       
-      if (savedRole === 'scheduler' || savedRole === 'team_rep' || savedRole === 'public') {
-        setCurrentRole(savedRole);
-      }
-      if (savedTeamId) {
-        setSelectedTeamId(savedTeamId);
+      if (savedRole === 'scheduler') {
+        setAuthRole('scheduler');
+      } else if (savedRole === 'team_rep' && savedTeamId && savedLeagueId) {
+        setAuthRole('team_rep');
+        setAuthLeagueId(savedLeagueId);
+        setAuthTeamId(savedTeamId);
+      } else {
+        setAuthRole('public');
       }
 
       // Check URL parameters for direct Captain PIN share links
       const params = new URLSearchParams(window.location.search);
       const teamParam = params.get('team');
       const pinParam = params.get('pin');
+      const leagueParam = params.get('league');
       
       if (teamParam && pinParam && leagues.length > 0) {
-        const targetLeague = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
+        const targetLeague = leagueParam
+          ? leagues.find((l) => l.id === leagueParam) || leagues[0]
+          : leagues.find((l) => l.teams.some((t) => t.id === teamParam)) || leagues[0];
         const matchedTeam = targetLeague?.teams.find((t) => t.id === teamParam);
         if (matchedTeam && (matchedTeam.accessPin || '1234') === pinParam) {
+          setAuthRole('team_rep');
+          setAuthLeagueId(targetLeague.id);
+          setAuthTeamId(matchedTeam.id);
+          setActiveLeagueId(targetLeague.id);
           setSelectedTeamId(matchedTeam.id);
-          setCurrentRole('team_rep');
           localStorage.setItem('powerschedule_auth_role', 'team_rep');
+          localStorage.setItem('powerschedule_auth_league_id', targetLeague.id);
           localStorage.setItem('powerschedule_auth_team_id', matchedTeam.id);
         }
       }
@@ -186,18 +200,30 @@ export default function Home() {
     }
   }, [isLoaded]);
 
-  const handleLoginSuccess = (role: 'scheduler' | 'team_rep', teamId?: string) => {
-    setCurrentRole(role);
+  const handleLoginSuccess = (role: 'scheduler' | 'team_rep', teamId?: string, leagueId?: string) => {
+    setAuthRole(role);
     localStorage.setItem('powerschedule_auth_role', role);
-    if (teamId) {
+    if (role === 'team_rep' && teamId && leagueId) {
+      setAuthLeagueId(leagueId);
+      setAuthTeamId(teamId);
+      setActiveLeagueId(leagueId);
       setSelectedTeamId(teamId);
+      localStorage.setItem('powerschedule_auth_league_id', leagueId);
       localStorage.setItem('powerschedule_auth_team_id', teamId);
+    } else if (role === 'scheduler') {
+      setAuthLeagueId(null);
+      setAuthTeamId(null);
+      localStorage.removeItem('powerschedule_auth_league_id');
+      localStorage.removeItem('powerschedule_auth_team_id');
     }
   };
 
   const handleLogout = () => {
-    setCurrentRole('public');
+    setAuthRole('public');
+    setAuthLeagueId(null);
+    setAuthTeamId(null);
     localStorage.removeItem('powerschedule_auth_role');
+    localStorage.removeItem('powerschedule_auth_league_id');
     localStorage.removeItem('powerschedule_auth_team_id');
   };
 
@@ -280,21 +306,32 @@ export default function Home() {
   const [isDivisionManagerOpen, setIsDivisionManagerOpen] = useState(false);
   const [isTeamManagerOpen, setIsTeamManagerOpen] = useState(false);
 
+  // Derive effective role strictly for the current active league view
+  const currentRole: UserRole =
+    authRole === 'scheduler'
+      ? 'scheduler'
+      : authRole === 'team_rep' && authLeagueId === activeLeagueId
+      ? 'team_rep'
+      : 'public';
+
+  // Info about the globally authenticated session (for banners & navbar)
+  const authLeague = authLeagueId ? leagues.find((l) => l.id === authLeagueId) : undefined;
+  const authTeam = authLeague && authTeamId ? authLeague.teams.find((t) => t.id === authTeamId) : undefined;
+
   // Derive effective active division and team for current active league
   const activeDivision =
     league.divisions.find((d) => d.id === selectedDivisionId) || league.divisions[0];
   const effectiveDivisionId = activeDivision?.id || '';
 
-  const savedAuthTeamId = typeof window !== 'undefined' ? localStorage.getItem('powerschedule_auth_team_id') : null;
   const activeTeam =
-    currentRole === 'team_rep' && savedAuthTeamId
-      ? league.teams.find((t) => t.id === savedAuthTeamId) || league.teams.find((t) => t.id === selectedTeamId) || league.teams[0]
+    currentRole === 'team_rep' && authTeamId
+      ? league.teams.find((t) => t.id === authTeamId) || league.teams[0]
       : league.teams.find((t) => t.id === selectedTeamId) || league.teams[0];
-  const effectiveTeamId = activeTeam?.id || '';
+  const effectiveTeamId = currentRole === 'team_rep' ? (activeTeam?.id || '') : '';
 
   const handleSelectTeam = (teamId: string) => {
     if (currentRole === 'team_rep') {
-      if (savedAuthTeamId && teamId !== savedAuthTeamId) {
+      if (authTeamId && teamId !== authTeamId) {
         return; // Prevent team captain from changing active team
       }
     }
@@ -310,8 +347,8 @@ export default function Home() {
       } else {
         setSelectedDivisionId('');
       }
-      if (currentRole === 'team_rep' && savedAuthTeamId && targetLeague.teams.some((t) => t.id === savedAuthTeamId)) {
-        setSelectedTeamId(savedAuthTeamId);
+      if (authRole === 'team_rep' && authLeagueId === id && authTeamId && targetLeague.teams.some((t) => t.id === authTeamId)) {
+        setSelectedTeamId(authTeamId);
       } else if (targetLeague.teams.length > 0) {
         setSelectedTeamId(targetLeague.teams[0].id);
       } else {
@@ -799,8 +836,12 @@ export default function Home() {
         leagues={leagues}
         activeLeagueId={activeLeagueId}
         currentRole={currentRole}
+        authRole={authRole}
+        authLeagueId={authLeagueId}
+        authLeagueName={authLeague?.name}
         activeTeamName={activeTeam?.name}
-        onRoleChange={setCurrentRole}
+        authTeamName={authTeam?.name}
+        onRoleChange={setAuthRole}
         onSelectLeague={handleSelectLeague}
         onOpenLeagueManager={() => setIsLeagueManagerOpen(true)}
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
@@ -1025,6 +1066,9 @@ export default function Home() {
         onClose={() => setIsLoginModalOpen(false)}
         leagues={leagues}
         activeLeagueId={activeLeagueId}
+        authRole={authRole}
+        authTeamName={authTeam?.name}
+        authLeagueName={authLeague?.name}
         onSelectLeague={handleSelectLeague}
         onLoginSuccess={handleLoginSuccess}
       />

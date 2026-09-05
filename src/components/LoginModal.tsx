@@ -9,8 +9,11 @@ interface LoginModalProps {
   onClose: () => void;
   leagues: LeagueSeason[];
   activeLeagueId: string;
+  authRole?: 'public' | 'team_rep' | 'scheduler';
+  authTeamName?: string;
+  authLeagueName?: string;
   onSelectLeague: (id: string) => void;
-  onLoginSuccess: (role: 'scheduler' | 'team_rep', teamId?: string) => void;
+  onLoginSuccess: (role: 'scheduler' | 'team_rep', teamId?: string, leagueId?: string) => void;
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({
@@ -18,6 +21,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onClose,
   leagues,
   activeLeagueId,
+  authRole,
+  authTeamName,
+  authLeagueName,
   onSelectLeague,
   onLoginSuccess,
 }) => {
@@ -66,7 +72,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       setTeamSuccess(`Welcome back, ${targetTeam.name}! Access Granted.`);
       onSelectLeague(targetLeague.id);
       setTimeout(() => {
-        onLoginSuccess('team_rep', targetTeam.id);
+        onLoginSuccess('team_rep', targetTeam.id, targetLeague.id);
         onClose();
       }, 500);
     } else {
@@ -87,7 +93,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       setAdminSuccess('Administrator Authorized. Access Granted.');
       onSelectLeague(targetLeague.id);
       setTimeout(() => {
-        onLoginSuccess('scheduler');
+        onLoginSuccess('scheduler', undefined, targetLeague.id);
         onClose();
       }, 500);
     } else {
@@ -159,6 +165,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         <div className="p-6 space-y-5">
           {activeTab === 'team' ? (
             <form onSubmit={handleCaptainLogin} className="space-y-4">
+              {authRole === 'team_rep' && authTeamName && (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-300 flex items-start space-x-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-amber-400 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Currently Signed In:</span>{' '}
+                    <strong className="text-white">{authTeamName}</strong>
+                    {authLeagueName && <span className="text-slate-400"> ({authLeagueName})</span>}.
+                    <p className="text-[11px] text-amber-200/80 mt-0.5">
+                      Logging in below will replace your current session with the selected team.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* League Selector (if multiple leagues exist) */}
               {leagues.length > 1 && (
                 <div className="space-y-1.5">

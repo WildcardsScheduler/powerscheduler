@@ -8,7 +8,11 @@ interface NavbarProps {
   leagues: LeagueSeason[];
   activeLeagueId: string;
   currentRole: UserRole;
+  authRole?: UserRole;
+  authLeagueId?: string | null;
+  authLeagueName?: string;
   activeTeamName?: string;
+  authTeamName?: string;
   onRoleChange: (role: UserRole) => void;
   onSelectLeague: (id: string) => void;
   onOpenLeagueManager: () => void;
@@ -20,7 +24,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   leagues,
   activeLeagueId,
   currentRole,
+  authRole,
+  authLeagueId,
+  authLeagueName,
   activeTeamName,
+  authTeamName,
   onRoleChange,
   onSelectLeague,
   onOpenLeagueManager,
@@ -90,13 +98,28 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Dynamic Auth / Role Switcher Header Controls */}
         <div className="flex items-center space-x-2 shrink-0">
           {currentRole === 'public' ? (
-            <button
-              onClick={onOpenLoginModal}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black text-xs shadow-md shadow-rose-500/20 flex items-center space-x-1.5 transition-all"
-            >
-              <LogIn className="h-4 w-4" />
-              <span>Scorekeeper / Admin Login</span>
-            </button>
+            <div className="flex items-center space-x-2">
+              {authRole === 'team_rep' && authTeamName && (
+                <div className="hidden sm:flex items-center space-x-1.5 bg-slate-950 border border-amber-500/30 text-amber-300 px-2.5 py-1 rounded-xl text-[11px]">
+                  <UserCheck className="h-3 w-3 text-amber-400" />
+                  <span>Signed in: <strong className="text-white">{authTeamName}</strong></span>
+                  <button
+                    onClick={onLogout}
+                    className="ml-1 text-slate-400 hover:text-rose-400 font-semibold underline text-[10px]"
+                    title="Log out from team"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={onOpenLoginModal}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black text-xs shadow-md shadow-rose-500/20 flex items-center space-x-1.5 transition-all"
+              >
+                <LogIn className="h-4 w-4" />
+                <span>Scorekeeper / Admin Login</span>
+              </button>
+            </div>
           ) : currentRole === 'team_rep' ? (
             <div className="flex items-center space-x-2">
               <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-xl text-xs font-bold flex items-center space-x-1.5">
