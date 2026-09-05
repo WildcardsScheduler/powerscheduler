@@ -317,7 +317,9 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
                                 <th className="py-2 px-2 font-semibold text-right">Home Team</th>
                                 <th className="py-2 px-2 font-semibold text-center">vs</th>
                                 <th className="py-2 px-2 font-semibold text-left">Away Team</th>
-                                <th className="py-2 px-2 font-semibold text-center">Ref Duty</th>
+                                {divisionMatches.some((m) => !!m.workTeamId) && (
+                                  <th className="py-2 px-2 font-semibold text-center">Ref Duty</th>
+                                )}
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/60 print:divide-slate-300">
@@ -326,6 +328,7 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
                                 const awayTeam = teamMap.get(m.awayTeamId)?.name || m.awayTeamId;
                                 const refTeam = teamMap.get(m.workTeamId || '')?.name;
                                 const locationLabel = getMatchLocationName(m);
+                                const showRefCol = divisionMatches.some((matchItem) => !!matchItem.workTeamId);
 
                                 return (
                                   <tr key={m.id} className="hover:bg-slate-900/40 print:hover:bg-transparent">
@@ -342,9 +345,11 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
                                     <td className="py-2 px-2 text-left font-bold text-white print:text-black">
                                       {awayTeam}
                                     </td>
-                                    <td className="py-2 px-2 text-center text-violet-400 print:text-slate-800 font-semibold text-[11px]">
-                                      {refTeam ? `🏐 ${refTeam}` : '-'}
-                                    </td>
+                                    {showRefCol && (
+                                      <td className="py-2 px-2 text-center text-violet-400 print:text-slate-800 font-semibold text-[11px]">
+                                        {refTeam ? `🏐 ${refTeam}` : '-'}
+                                      </td>
+                                    )}
                                   </tr>
                                 );
                               })}

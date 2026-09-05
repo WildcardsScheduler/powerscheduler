@@ -35,11 +35,6 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, divis
               <Users className="h-3 w-3" /> Min {division.minFemalesOnCourt} F on Court
             </span>
           )}
-          {division.workTeamRequired && (
-            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
-              <ShieldAlert className="h-3 w-3" /> Work Teams Active
-            </span>
-          )}
           <span className="bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-full">
             {division.capRule}
           </span>

@@ -261,8 +261,8 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 </div>
 
                 {/* Bottom Row: Work Team Ref & Scorekeeper Button */}
-                <div className="flex items-center justify-between gap-2 text-xs pt-1">
-                  {work ? (
+                <div className={`flex items-center ${work ? 'justify-between' : 'justify-end'} gap-2 text-xs pt-1`}>
+                  {work && (
                     <div
                       className="flex items-center space-x-1.5 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20 text-[11px] min-w-0 max-w-[65%]"
                       title={`Ref Duty: ${work.name}`}
@@ -270,8 +270,6 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                       <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate">Ref Duty: <strong className="text-white">{work.name}</strong></span>
                     </div>
-                  ) : (
-                    <span className="text-slate-500 text-[11px] shrink-0">No Ref Assigned</span>
                   )}
 
                   {(() => {
