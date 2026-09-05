@@ -1035,6 +1035,7 @@ export default function Home() {
             standings={standings}
             division={activeDivision}
             leagueName={league.name}
+            hasMultipleDivisions={league.divisions.length > 1}
             matchRules={league.matchRules}
           />
         )}

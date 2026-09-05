@@ -9,14 +9,26 @@ interface StandingsTableProps {
   standings: TeamStanding[];
   division: Division;
   leagueName?: string;
+  hasMultipleDivisions?: boolean;
   matchRules?: MatchRules;
 }
 
-export const StandingsTable: React.FC<StandingsTableProps> = ({ standings, division, leagueName, matchRules }) => {
+export const StandingsTable: React.FC<StandingsTableProps> = ({
+  standings,
+  division,
+  leagueName,
+  hasMultipleDivisions,
+  matchRules,
+}) => {
   const setFormatText = formatMatchRulesDescription(division.matchRules || matchRules, division.setFormat);
 
+  // If single division or default "Main Division", display "[League Name] Standings"
+  const isSingleDivision = hasMultipleDivisions === false || division.name === 'Main Division';
+
   const titleText = leagueName
-    ? `${leagueName} — ${division.name} Standings`
+    ? isSingleDivision
+      ? `${leagueName} Standings`
+      : `${leagueName} — ${division.name} Standings`
     : `${division.name} Standings`;
 
   return (
