@@ -252,22 +252,22 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col h-[90vh]">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col h-[90vh]">
 
         {/* Header */}
-        <div className="p-4 sm:p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <Users className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Team & Roster Manager</h3>
-              <p className="text-xs text-slate-400">Create teams, edit captain details, badge colors & player rosters</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Team & Roster Manager</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Create teams, edit captain details, badge colors & player rosters</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -277,9 +277,9 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
         <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
 
           {/* Left Sidebar: Team List & Search */}
-          <div className="md:col-span-4 bg-slate-950 border-b md:border-b-0 md:border-r border-slate-800 p-4 flex flex-col space-y-3 overflow-hidden">
+          <div className="md:col-span-4 bg-slate-50 dark:bg-slate-950 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 p-4 flex flex-col space-y-3 overflow-hidden">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Teams ({teams.length})
               </span>
               <div className="flex items-center space-x-1.5">
@@ -288,7 +288,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                     setShowQuickBatchForm(true);
                     setShowAddTeamForm(false);
                   }}
-                  className="px-2 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-[11px] flex items-center space-x-1 transition-all"
+                  className="px-2 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-bold text-[11px] flex items-center space-x-1 transition-all shadow-sm"
                   title="Quick add numbered teams (Team 1, Team 2, etc.)"
                 >
                   <span>⚡ Add N Teams</span>
@@ -298,7 +298,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                     setShowAddTeamForm(true);
                     setShowQuickBatchForm(false);
                   }}
-                  className="px-2 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] flex items-center space-x-1 transition-all"
+                  className="px-2 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] flex items-center space-x-1 transition-all shadow-sm"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>Custom</span>
@@ -308,13 +308,13 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
             {/* Search Input */}
             <div className="relative">
-              <Search className="h-3.5 w-3.5 text-slate-500 absolute left-3 top-2.5" />
+              <Search className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" />
               <input
                 type="text"
                 placeholder="Search team or captain..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl pl-8 pr-3 py-1.5 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl pl-8 pr-3 py-1.5 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-sm"
               />
             </div>
 
@@ -332,8 +332,8 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                       setShowAddTeamForm(false);
                     }}
                     className={`w-full text-left p-3 rounded-2xl border transition-all space-y-1 ${isSelected && !showAddTeamForm
-                        ? 'bg-emerald-500/10 border-emerald-500/60 text-white shadow-md shadow-emerald-500/10'
-                        : 'bg-slate-900/60 border-slate-800/80 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-400 dark:border-emerald-500/60 text-slate-900 dark:text-white shadow-md shadow-emerald-500/10'
+                        : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                   >
                     <div className="flex items-center justify-between">
@@ -342,14 +342,14 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                           className="h-3 w-3 rounded-full shrink-0"
                           style={{ backgroundColor: team.badgeColor || '#3b82f6' }}
                         />
-                        <span className="font-bold text-xs truncate max-w-[140px]">{team.name}</span>
+                        <span className="font-bold text-xs truncate max-w-[140px] text-slate-900 dark:text-white">{team.name}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-950 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-800">
                         {div?.name || 'Main Div'}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                       <span>Capt: {team.captainName}</span>
                       <span>{team.roster.length} Players</span>
                     </div>
@@ -364,13 +364,13 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
             {showQuickBatchForm || (teams.length === 0 && !showAddTeamForm) ? (
               /* Quick Batch Numbered Teams Form */
-              <div className="bg-slate-950 border border-amber-500/40 rounded-2xl p-5 space-y-4 shadow-xl">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="bg-slate-50 dark:bg-slate-950 border border-amber-500/40 rounded-2xl p-5 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
                   <div>
-                    <h4 className="text-sm font-bold text-amber-400 flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-amber-700 dark:text-amber-400 flex items-center gap-2">
                       <Users className="h-4 w-4" /> Quick Add Numbered Teams
                     </h4>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Generate placeholder teams ("Team 1", "Team 2", etc.) so you can perform schedule generation immediately and update names/captains later.
                     </p>
                   </div>
@@ -378,7 +378,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowQuickBatchForm(false)}
-                      className="text-xs text-slate-400 hover:text-white"
+                      className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-white"
                     >
                       Cancel
                     </button>
@@ -387,7 +387,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
                 <form onSubmit={handleQuickBatchSubmit} className="space-y-4">
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-300 block mb-1.5">
+                    <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
                       Select League / Division Capacity Preset:
                     </label>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
@@ -398,7 +398,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                           onClick={() => setQuickBatchCount(num)}
                           className={`py-2 text-xs font-bold rounded-xl border transition-all ${quickBatchCount === num
                               ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
-                              : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
+                              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }`}
                         >
                           {num} Teams
@@ -409,7 +409,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
                         Number of Teams to Add
                       </label>
                       <input
@@ -418,19 +418,19 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                         max="32"
                         value={quickBatchCount}
                         onChange={(e) => setQuickBatchCount(parseInt(e.target.value) || 1)}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-sm"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">
                         Target Division
                       </label>
                       <select
                         value={quickBatchDivisionId}
                         onChange={(e) => setQuickBatchDivisionId(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs shadow-sm"
                       >
                         {divisions.map((d) => (
                           <option key={d.id} value={d.id}>
@@ -453,14 +453,14 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
             ) : showAddTeamForm ? (
               /* Create New Team Form */
               <form onSubmit={handleCreateTeamSubmit} className="space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                  <h4 className="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                  <h4 className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                     <Plus className="h-4 w-4" /> Register New Team
                   </h4>
                   <button
                     type="button"
                     onClick={() => setShowAddTeamForm(false)}
-                    className="text-xs text-slate-400 hover:text-white"
+                    className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-white"
                   >
                     Cancel
                   </button>
@@ -468,23 +468,23 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">Team Name</label>
+                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Team Name</label>
                     <input
                       type="text"
                       placeholder="e.g. Block Party"
                       value={newTeamName}
                       onChange={(e) => setNewTeamName(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">Division</label>
+                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Division</label>
                     <select
                       value={newDivisionId}
                       onChange={(e) => setNewDivisionId(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs shadow-sm"
                     >
                       {divisions.map((d) => (
                         <option key={d.id} value={d.id}>
@@ -496,49 +496,49 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                 </div>
 
                 {/* Captain Details */}
-                <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-3">
-                  <span className="text-[11px] font-bold text-slate-300 block">Captain Contact Information</span>
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">Captain Contact Information</span>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <input
                       type="text"
                       placeholder="Captain Full Name"
                       value={newCaptainName}
                       onChange={(e) => setNewCaptainName(e.target.value)}
-                      className="bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-1.5 text-xs"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs shadow-sm"
                     />
                     <input
                       type="email"
                       placeholder="Email Address"
                       value={newCaptainEmail}
                       onChange={(e) => setNewCaptainEmail(e.target.value)}
-                      className="bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-1.5 text-xs"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs shadow-sm"
                     />
                     <input
                       type="tel"
                       placeholder="Phone Number"
                       value={newCaptainPhone}
                       onChange={(e) => setNewCaptainPhone(e.target.value)}
-                      className="bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-1.5 text-xs"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs shadow-sm"
                     />
                   </div>
                 </div>
 
                 {/* Color Badge Picker */}
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1.5">Team Color Badge</label>
+                  <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Team Color Badge</label>
                   <div className="flex flex-wrap items-center gap-2">
                     {PRESET_COLORS.map((color) => (
                       <button
                         type="button"
                         key={color}
                         onClick={() => setNewBadgeColor(color)}
-                        className={`h-7 w-7 rounded-full transition-transform hover:scale-110 ${newBadgeColor === color ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''
+                        className={`h-7 w-7 rounded-full transition-transform hover:scale-110 ${newBadgeColor === color ? 'scale-125 ring-2 ring-slate-900 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''
                           }`}
                         style={{ backgroundColor: color }}
                       />
                     ))}
                     <label
-                      className="relative h-7 w-7 rounded-full overflow-hidden border border-slate-700 cursor-pointer hover:border-white transition-colors flex items-center justify-center bg-slate-800 text-[10px] font-bold text-slate-400 shrink-0"
+                      className="relative h-7 w-7 rounded-full overflow-hidden border border-slate-300 dark:border-slate-700 cursor-pointer hover:border-slate-900 dark:hover:border-white transition-colors flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 shrink-0"
                       title="Custom Color Picker"
                     >
                       🎨
@@ -564,19 +564,19 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
               <div className="space-y-6">
 
                 {/* Team Details Form */}
-                <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-4">
+                <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div
                         className="h-4 w-4 rounded-full"
                         style={{ backgroundColor: editBadgeColor || '#3b82f6' }}
                       />
-                      <h4 className="font-extrabold text-white text-base">Edit Team Details</h4>
+                      <h4 className="font-extrabold text-slate-900 dark:text-white text-base">Edit Team Details</h4>
                     </div>
                     <button
                       type="button"
                       onClick={() => onDeleteTeam(selectedTeam.id)}
-                      className="text-xs text-rose-400 hover:bg-rose-500/10 px-2.5 py-1 rounded-lg border border-rose-500/20 flex items-center space-x-1"
+                      className="text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-500/20 flex items-center space-x-1 transition-colors"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       <span>Delete Team</span>
@@ -585,21 +585,21 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Team Name</label>
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Team Name</label>
                       <input
                         type="text"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-1.5 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-sm"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Division</label>
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Division</label>
                       <select
                         value={editDivisionId}
                         onChange={(e) => setEditDivisionId(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-1.5 text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs shadow-sm"
                       >
                         {divisions.map((d) => (
                           <option key={d.id} value={d.id}>
@@ -611,40 +611,40 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                   </div>
 
                   {/* Captain Info Fields */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-800">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">Captain Name</label>
+                      <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Captain Name</label>
                       <input
                         type="text"
                         value={editCaptainName}
                         onChange={(e) => setEditCaptainName(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-2.5 py-1 text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-2.5 py-1 text-xs shadow-sm"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">Captain Email</label>
+                      <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Captain Email</label>
                       <input
                         type="email"
                         value={editCaptainEmail}
                         onChange={(e) => setEditCaptainEmail(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-2.5 py-1 text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-2.5 py-1 text-xs shadow-sm"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-1">Captain Phone</label>
+                      <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Captain Phone</label>
                       <input
                         type="tel"
                         value={editCaptainPhone}
                         onChange={(e) => setEditCaptainPhone(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-2.5 py-1 text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-2.5 py-1 text-xs shadow-sm"
                       />
                     </div>
                   </div>
 
                   {/* Captain Access PIN & Direct Login Share Link */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-800">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <div>
-                      <label className="text-[10px] font-bold text-amber-400 block mb-1 flex items-center gap-1">
+                      <label className="text-[10px] font-bold text-amber-600 dark:text-amber-400 block mb-1 flex items-center gap-1">
                         <KeyRound className="h-3 w-3" /> Captain 4-Digit Login PIN
                       </label>
                       <input
@@ -652,7 +652,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                         maxLength={6}
                         value={editAccessPin}
                         onChange={(e) => setEditAccessPin(e.target.value)}
-                        className="w-full bg-slate-900 border border-amber-500/30 text-amber-400 font-mono font-bold rounded-xl px-2.5 py-1 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                        className="w-full bg-white dark:bg-slate-900 border border-amber-500/40 text-amber-700 dark:text-amber-400 font-mono font-bold rounded-xl px-2.5 py-1 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none shadow-sm"
                       />
                     </div>
 
@@ -665,7 +665,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                           navigator.clipboard.writeText(url);
                           alert(`Direct Captain Access Link copied to clipboard!\n\n${url}`);
                         }}
-                        className="w-full py-1 px-3 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/30 font-semibold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all"
+                        className="w-full py-1 px-3 bg-amber-50 hover:bg-amber-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30 font-semibold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-sm"
                       >
                         <Link className="h-3.5 w-3.5" />
                         <span>Copy Direct Captain Link</span>
@@ -674,11 +674,11 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                   </div>
 
                   {/* Color Badge Swatches */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-800">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                     <div className="flex items-center space-x-2 shrink-0">
-                      <span className="text-[11px] text-slate-400 font-semibold">Badge Color:</span>
+                      <span className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold">Badge Color:</span>
                       <span
-                        className="h-4 w-4 rounded-full border border-slate-700 shadow-sm"
+                        className="h-4 w-4 rounded-full border border-slate-300 dark:border-slate-700 shadow-sm"
                         style={{ backgroundColor: editBadgeColor }}
                       />
                     </div>
@@ -688,13 +688,13 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                           type="button"
                           key={color}
                           onClick={() => setEditBadgeColor(color)}
-                          className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${editBadgeColor === color ? 'ring-2 ring-white ring-offset-1 ring-offset-slate-900 scale-110' : ''
+                          className={`h-5 w-5 rounded-full transition-transform hover:scale-110 ${editBadgeColor === color ? 'ring-2 ring-slate-900 dark:ring-white ring-offset-1 ring-offset-white dark:ring-offset-slate-900 scale-110' : ''
                             }`}
                           style={{ backgroundColor: color }}
                         />
                       ))}
                       <label
-                        className="relative h-5 w-5 rounded-full overflow-hidden border border-slate-700 cursor-pointer hover:border-white transition-colors flex items-center justify-center bg-slate-800 text-[9px] font-bold text-slate-400 shrink-0"
+                        className="relative h-5 w-5 rounded-full overflow-hidden border border-slate-300 dark:border-slate-700 cursor-pointer hover:border-slate-500 dark:hover:border-white transition-colors flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-[9px] font-bold text-slate-600 dark:text-slate-400 shrink-0"
                         title="Custom Color Picker"
                       >
                         🎨
@@ -709,7 +709,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                     <button
                       type="button"
                       onClick={handleSaveTeamEdit}
-                      className="px-4 py-1.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 shrink-0 shadow-md transition-all"
+                      className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white dark:text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 shrink-0 shadow-md transition-all"
                     >
                       Save Team Info
                     </button>
@@ -717,19 +717,19 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                 </div>
 
                 {/* Interactive Player Roster Management */}
-                <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                     <div>
-                      <h4 className="font-bold text-white text-xs uppercase tracking-wider">
+                      <h4 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider">
                         Team Roster ({selectedTeam.roster.length} Players)
                       </h4>
-                      <span className="text-[11px] text-slate-400">Add or edit players on this roster</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Add or edit players on this roster</span>
                     </div>
 
                     {!showAddPlayer && (
                       <button
                         onClick={() => setShowAddPlayer(true)}
-                        className="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs rounded-xl flex items-center space-x-1"
+                        className="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs rounded-xl flex items-center space-x-1 shadow-sm"
                       >
                         <UserPlus className="h-3.5 w-3.5" />
                         <span>+ Add Player</span>
@@ -739,13 +739,13 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
                   {/* Add Player Form */}
                   {showAddPlayer && (
-                    <form onSubmit={handleCreatePlayerSubmit} className="p-3 bg-slate-900 border border-violet-500/30 rounded-xl space-y-3">
+                    <form onSubmit={handleCreatePlayerSubmit} className="p-3 bg-white dark:bg-slate-900 border border-violet-500/30 rounded-xl space-y-3 shadow-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-violet-400">Add Player to Roster</span>
+                        <span className="text-xs font-bold text-violet-600 dark:text-violet-400">Add Player to Roster</span>
                         <button
                           type="button"
                           onClick={() => setShowAddPlayer(false)}
-                          className="text-xs text-slate-400 hover:text-white"
+                          className="text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
                         >
                           Cancel
                         </button>
@@ -757,7 +757,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                           placeholder="Player Name"
                           value={pName}
                           onChange={(e) => setPName(e.target.value)}
-                          className="bg-slate-950 border border-slate-800 text-white rounded-lg px-2.5 py-1 text-xs"
+                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2.5 py-1 text-xs"
                           required
                         />
                         <input
@@ -765,12 +765,12 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                           placeholder="Jersey #"
                           value={pNumber}
                           onChange={(e) => setPNumber(e.target.value)}
-                          className="bg-slate-950 border border-slate-800 text-white rounded-lg px-2.5 py-1 text-xs"
+                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2.5 py-1 text-xs"
                         />
                         <select
                           value={pPosition}
                           onChange={(e) => setPPosition(e.target.value as Player['position'])}
-                          className="bg-slate-950 border border-slate-800 text-white rounded-lg px-2.5 py-1 text-xs"
+                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2.5 py-1 text-xs"
                         >
                           {POSITIONS.map((pos) => (
                             <option key={pos} value={pos}>
@@ -781,7 +781,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                         <select
                           value={pGender}
                           onChange={(e) => setPGender(e.target.value as Player['gender'])}
-                          className="bg-slate-950 border border-slate-800 text-white rounded-lg px-2.5 py-1 text-xs"
+                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2.5 py-1 text-xs"
                         >
                           <option value="M">Male (M)</option>
                           <option value="F">Female (F)</option>
@@ -790,7 +790,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                       </div>
 
                       <div className="flex items-center justify-between pt-1">
-                        <label className="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer">
+                        <label className="flex items-center space-x-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={pIsCaptain}
@@ -819,17 +819,17 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                         return (
                           <div
                             key={player.id}
-                            className="sm:col-span-2 bg-slate-900 border border-amber-500/40 rounded-xl p-3 space-y-2.5"
+                            className="sm:col-span-2 bg-white dark:bg-slate-900 border border-amber-500/40 rounded-xl p-3 space-y-2.5 shadow-sm"
                           >
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-amber-400 flex items-center space-x-1">
+                              <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center space-x-1">
                                 <Edit3 className="h-3.5 w-3.5" />
                                 <span>Edit Player Details</span>
                               </span>
                               <button
                                 type="button"
                                 onClick={() => setEditingPlayerId(null)}
-                                className="text-xs text-slate-400 hover:text-white"
+                                className="text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
                               >
                                 Cancel
                               </button>
@@ -840,20 +840,20 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                                 type="text"
                                 value={editPName}
                                 onChange={(e) => setEditPName(e.target.value)}
-                                className="bg-slate-950 border border-slate-800 text-white rounded-lg px-2.5 py-1 text-xs"
+                                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2.5 py-1 text-xs"
                                 placeholder="Player Name"
                               />
                               <input
                                 type="text"
                                 value={editPNumber}
                                 onChange={(e) => setEditPNumber(e.target.value)}
-                                className="bg-slate-950 border border-slate-800 text-white rounded-lg px-2.5 py-1 text-xs"
+                                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2.5 py-1 text-xs"
                                 placeholder="Jersey #"
                               />
                               <select
                                 value={editPPosition}
                                 onChange={(e) => setEditPPosition(e.target.value as Player['position'])}
-                                className="bg-slate-950 border border-slate-800 text-white rounded-lg px-2.5 py-1 text-xs"
+                                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2.5 py-1 text-xs"
                               >
                                 {POSITIONS.map((pos) => (
                                   <option key={pos} value={pos}>
@@ -864,7 +864,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                               <select
                                 value={editPGender}
                                 onChange={(e) => setEditPGender(e.target.value as Player['gender'])}
-                                className="bg-slate-950 border border-slate-800 text-white rounded-lg px-2.5 py-1 text-xs"
+                                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2.5 py-1 text-xs"
                               >
                                 <option value="M">Male (M)</option>
                                 <option value="F">Female (F)</option>
@@ -873,7 +873,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                             </div>
 
                             <div className="flex items-center justify-between pt-1">
-                              <label className="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer">
+                              <label className="flex items-center space-x-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
                                 <input
                                   type="checkbox"
                                   checked={editPIsCaptain}
@@ -886,7 +886,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleSavePlayerEdit(player.id)}
-                                className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg flex items-center space-x-1"
+                                className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg flex items-center space-x-1 shadow-sm"
                               >
                                 <Check className="h-3.5 w-3.5" />
                                 <span>Save Changes</span>
@@ -899,25 +899,25 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                       return (
                         <div
                           key={player.id}
-                          className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between"
+                          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 flex items-center justify-between shadow-sm"
                         >
                           <div className="flex items-center space-x-2">
-                            <div className="p-1.5 rounded-lg bg-slate-950 text-slate-400">
+                            <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-950 text-slate-500 dark:text-slate-400">
                               <User className="h-3.5 w-3.5" />
                             </div>
                             <div>
                               <div className="flex items-center space-x-1.5">
-                                <span className="font-bold text-xs text-white">{player.name}</span>
+                                <span className="font-bold text-xs text-slate-900 dark:text-white">{player.name}</span>
                                 {player.number && (
-                                  <span className="text-[10px] text-slate-400 font-mono">#{player.number}</span>
+                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">#{player.number}</span>
                                 )}
                                 {player.isCaptain && (
-                                  <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-extrabold px-1.5 py-0.2 rounded">
+                                  <span className="bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30 text-[9px] font-extrabold px-1.5 py-0.2 rounded">
                                     CAPT
                                   </span>
                                 )}
                               </div>
-                              <span className="text-[10px] text-slate-400 block">
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
                                 {player.position} • Gender: {player.gender}
                               </span>
                             </div>
@@ -926,14 +926,14 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                           <div className="flex items-center space-x-1">
                             <button
                               onClick={() => handleStartEditPlayer(player)}
-                              className="p-1 text-slate-400 hover:text-amber-400 hover:bg-slate-950 rounded-lg transition-colors"
+                              className="p-1 text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-950 rounded-lg transition-colors"
                               title="Edit Player"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                             </button>
                             <button
                               onClick={() => onDeletePlayer(selectedTeam.id, player.id)}
-                              className="p-1 text-rose-400 hover:bg-slate-950 rounded-lg transition-colors"
+                              className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-slate-950 rounded-lg transition-colors"
                               title="Remove Player"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -955,10 +955,10 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex justify-end shrink-0">
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-end shrink-0">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-colors"
+            className="px-6 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs transition-colors shadow-sm"
           >
             Done
           </button>

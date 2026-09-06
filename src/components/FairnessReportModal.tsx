@@ -66,7 +66,6 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
       return teams;
     }
     const filtered = teams.filter((t) => !effectiveDivId || t.divisionId === effectiveDivId);
-    // If no teams match this division ID (e.g. legacy/orphaned IDs), fall back to all teams
     return filtered.length > 0 ? filtered : teams;
   }, [teams, divisions, effectiveDivId]);
 
@@ -97,24 +96,24 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl my-6 flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl my-6 flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200 transition-colors duration-150">
         
         {/* Header */}
-        <div className="p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-3 shrink-0">
+        <div className="p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
               <Scale className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="text-base font-extrabold text-white">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                   Schedule Fairness & Equity Audit Report
                 </h3>
-                <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
+                <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
                   {isCaptainOrPublic ? 'Public & Team View' : 'Admin Audit Engine'}
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Mathematical balance inspection for game volume, time slot fairness, court equity, and referee duty.
               </p>
             </div>
@@ -127,19 +126,19 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                 onClick={() => onTogglePublicFairnessReport(!publicFairnessReport)}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
                   publicFairnessReport
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white shadow-xs'
                 }`}
                 title="Click to toggle whether teams and the public can view the fairness report"
               >
                 {publicFairnessReport ? (
                   <>
-                    <Eye className="h-3.5 w-3.5 text-emerald-400" />
+                    <Eye className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Teams Access: <strong>Enabled</strong></span>
                   </>
                 ) : (
                   <>
-                    <EyeOff className="h-3.5 w-3.5 text-slate-500" />
+                    <EyeOff className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                     <span>Teams Access: <strong>Hidden</strong></span>
                   </>
                 )}
@@ -148,7 +147,7 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
 
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors"
+              className="text-slate-400 hover:text-slate-900 dark:hover:text-white p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -156,12 +155,12 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
         </div>
 
         {/* Division Selector & Tabs Bar */}
-        <div className="p-4 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="p-4 bg-slate-100/70 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
           
           {/* Division Selector */}
           {divisions.length > 1 ? (
             <div className="flex items-center space-x-1.5 overflow-x-auto scrollbar-none">
-              <span className="text-xs text-slate-400 font-semibold mr-1">Division:</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold mr-1">Division:</span>
               {divisions.map((d) => (
                 <button
                   key={d.id}
@@ -169,7 +168,7 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                   className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                     activeDivId === d.id
                       ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 shadow-md font-black'
-                      : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                      : 'bg-white hover:bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 shadow-xs'
                   }`}
                 >
                   {d.name}
@@ -177,19 +176,19 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
               ))}
             </div>
           ) : (
-            <div className="text-xs font-bold text-slate-300">
+            <div className="text-xs font-bold text-slate-800 dark:text-slate-300">
               {currentDiv?.name || 'Main Division'} ({divisionTeams.length} Teams)
             </div>
           )}
 
           {/* Sub Tabs */}
-          <div className="flex items-center space-x-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <div className="flex items-center space-x-1.5 bg-white dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
             <button
               onClick={() => setActiveTab('matrix')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                 activeTab === 'matrix'
-                  ? 'bg-amber-500 text-slate-950 font-black'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Time Slots & Court Matrix
@@ -198,8 +197,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
               onClick={() => setActiveTab('h2h')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                 activeTab === 'h2h'
-                  ? 'bg-amber-500 text-slate-950 font-black'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Head-to-Head Opponent Grid
@@ -215,58 +214,58 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             
             {/* Game Count Balance */}
-            <div className="bg-slate-950 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Games per Team</span>
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-2xl space-y-1 shadow-xs">
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Games per Team</span>
               <div className="flex items-baseline space-x-1.5">
-                <span className="text-lg font-black text-white">{minGames}</span>
+                <span className="text-lg font-black text-slate-900 dark:text-white">{minGames}</span>
                 {!isGamesEqual && (
-                  <span className="text-xs font-bold text-amber-400 font-mono">- {maxGames}</span>
+                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400 font-mono">- {maxGames}</span>
                 )}
               </div>
-              <p className={`text-[10px] font-bold ${isGamesEqual ? 'text-emerald-400' : 'text-amber-400'}`}>
+              <p className={`text-[10px] font-bold ${isGamesEqual ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {isGamesEqual ? '✓ 100% Equal Games' : `±${maxGames - minGames} Game Variance`}
               </p>
             </div>
 
             {/* Total Fixtures */}
-            <div className="bg-slate-950 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Matches</span>
-              <div className="text-lg font-black text-white">{report.totalMatches}</div>
-              <p className="text-[10px] font-semibold text-slate-400">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-2xl space-y-1 shadow-xs">
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Total Matches</span>
+              <div className="text-lg font-black text-slate-900 dark:text-white">{report.totalMatches}</div>
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                 {report.officialMatchesCount} Official • {report.exhibitionMatchesCount} Exhibition
               </p>
             </div>
 
             {/* Double Headers */}
-            <div className="bg-slate-950 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Double Headers</span>
-              <div className="text-lg font-black text-amber-400">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-2xl space-y-1 shadow-xs">
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Double Headers</span>
+              <div className="text-lg font-black text-amber-600 dark:text-amber-400">
                 {report.teamMetrics.reduce((sum, m) => sum + m.doubleHeaderCount, 0)}
               </div>
-              <p className="text-[10px] font-semibold text-slate-400">Balanced across schedule</p>
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Balanced across schedule</p>
             </div>
 
             {/* Referee Duty Balance */}
-            <div className="bg-slate-950 border border-slate-800/80 p-3.5 rounded-2xl space-y-1">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Referee Assignments</span>
-              <div className="text-lg font-black text-violet-400">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-2xl space-y-1 shadow-xs">
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Referee Assignments</span>
+              <div className="text-lg font-black text-violet-600 dark:text-violet-400">
                 {minRefs === maxRefs ? minRefs : `${minRefs}-${maxRefs}`}
               </div>
-              <p className="text-[10px] font-semibold text-slate-400">Per-team ref balance</p>
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Per-team ref balance</p>
             </div>
 
           </div>
 
           {/* 2. Main Matrix Tab View */}
           {activeTab === 'matrix' ? (
-            <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl space-y-2">
-              <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl space-y-2">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-bold text-white flex items-center space-x-2">
-                    <Clock className="h-4 w-4 text-amber-400" />
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                    <Clock className="h-4 w-4 text-amber-500 dark:text-amber-400" />
                     <span>Time Slot, Court & Home/Away Breakdown Matrix</span>
                   </h4>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Verifies each team receives an equitable distribution of prime-time slots and court assignments.
                   </p>
                 </div>
@@ -274,7 +273,7 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-900/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800">
+                  <thead className="bg-slate-50 dark:bg-slate-900/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <tr>
                       <th className="py-3 px-4">Team</th>
                       <th className="py-3 px-3 text-center">Total</th>
@@ -283,36 +282,36 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                       
                       {/* Dynamic Time Slot Columns */}
                       {report.effectiveTimeSlots.map((slot) => (
-                        <th key={slot} className="py-3 px-3 text-center text-amber-300">
+                        <th key={slot} className="py-3 px-3 text-center text-amber-600 dark:text-amber-300">
                           {formatTimeRange(slot)}
                         </th>
                       ))}
 
                       {/* Dynamic Court Columns */}
                       {courts.map((court) => (
-                        <th key={court.id} className="py-3 px-3 text-center text-rose-300">
+                        <th key={court.id} className="py-3 px-3 text-center text-rose-600 dark:text-rose-300">
                           {court.name}
                         </th>
                       ))}
 
-                      <th className="py-3 px-3 text-center text-violet-300">Refs</th>
+                      <th className="py-3 px-3 text-center text-violet-600 dark:text-violet-300">Refs</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 font-mono">
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
                     {report.teamMetrics.map((metric) => (
-                      <tr key={metric.teamId} className="hover:bg-slate-900/40 transition-colors">
-                        <td className="py-2.5 px-4 font-sans font-bold text-white whitespace-nowrap">
+                      <tr key={metric.teamId} className="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+                        <td className="py-2.5 px-4 font-sans font-bold text-slate-900 dark:text-white whitespace-nowrap">
                           {metric.teamName}
                         </td>
-                        <td className="py-2.5 px-3 text-center font-bold text-amber-400">
+                        <td className="py-2.5 px-3 text-center font-bold text-amber-600 dark:text-amber-400">
                           {metric.totalGames}
                         </td>
-                        <td className="py-2.5 px-3 text-center text-slate-300 whitespace-nowrap">
-                          <span className="text-emerald-400">{metric.homeGames || 0}H</span>
-                          <span className="text-slate-500"> / </span>
-                          <span className="text-rose-400">{metric.awayGames || 0}A</span>
+                        <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">{metric.homeGames || 0}H</span>
+                          <span className="text-slate-400 dark:text-slate-500"> / </span>
+                          <span className="text-rose-600 dark:text-rose-400 font-bold">{metric.awayGames || 0}A</span>
                         </td>
-                        <td className="py-2.5 px-3 text-center text-slate-300">
+                        <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300">
                           {metric.doubleHeaderCount}
                         </td>
 
@@ -324,8 +323,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                               key={slot}
                               className={`py-2.5 px-3 text-center ${
                                 count === 0
-                                  ? 'text-slate-600'
-                                  : 'text-white font-bold bg-slate-900/40'
+                                  ? 'text-slate-400 dark:text-slate-600'
+                                  : 'text-slate-900 dark:text-white font-bold bg-slate-50 dark:bg-slate-900/40'
                               }`}
                             >
                               {count}
@@ -341,8 +340,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                               key={court.id}
                               className={`py-2.5 px-3 text-center ${
                                 count === 0
-                                  ? 'text-slate-600'
-                                  : 'text-white font-bold bg-slate-900/20'
+                                  ? 'text-slate-400 dark:text-slate-600'
+                                  : 'text-slate-900 dark:text-white font-bold bg-slate-50 dark:bg-slate-900/20'
                               }`}
                             >
                               {count}
@@ -351,7 +350,7 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                         })}
 
                         {/* Referee Duty Count */}
-                        <td className="py-2.5 px-3 text-center text-violet-400 font-bold">
+                        <td className="py-2.5 px-3 text-center text-violet-600 dark:text-violet-400 font-bold">
                           {metric.refDutyCount}
                         </td>
                       </tr>
@@ -362,14 +361,14 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
             </div>
           ) : (
             /* 3. Head-to-Head Opponent Grid */
-            <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl space-y-2">
-              <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl space-y-2">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h4 className="text-sm font-bold text-white flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-amber-400" />
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                    <Users className="h-4 w-4 text-amber-500 dark:text-amber-400" />
                     <span>Head-to-Head Matchup Matrix</span>
                   </h4>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     {h2hFilter === 'breakdown' && 'Showing breakdown: Official League (L) + Exhibition Filler (E)'}
                     {h2hFilter === 'official' && 'Showing Official Standings Matches only (counts toward league rankings)'}
                     {h2hFilter === 'exhibition' && 'Showing Exhibition / Capacity Filler Matches only (does not affect standings)'}
@@ -378,14 +377,14 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                 </div>
 
                 {/* Filter Selector */}
-                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 self-start sm:self-auto">
                   <button
                     type="button"
                     onClick={() => setH2hFilter('breakdown')}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
                       h2hFilter === 'breakdown'
-                        ? 'bg-amber-500 text-slate-950 shadow'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-amber-500 text-slate-950 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     Breakdown (L + E)
@@ -395,8 +394,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                     onClick={() => setH2hFilter('official')}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
                       h2hFilter === 'official'
-                        ? 'bg-emerald-500 text-slate-950 shadow'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-emerald-500 text-slate-950 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     Official Only
@@ -406,8 +405,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                     onClick={() => setH2hFilter('exhibition')}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
                       h2hFilter === 'exhibition'
-                        ? 'bg-purple-500 text-slate-950 shadow'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-purple-500 text-slate-950 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     Exhibition Only
@@ -417,8 +416,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                     onClick={() => setH2hFilter('all')}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
                       h2hFilter === 'all'
-                        ? 'bg-slate-700 text-white shadow'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-slate-700 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     All Combined
@@ -428,26 +427,26 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
 
               <div className="overflow-x-auto p-3">
                 <table className="w-full text-center text-xs">
-                  <thead className="bg-slate-900/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800">
+                  <thead className="bg-slate-50 dark:bg-slate-900/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <tr>
                       <th className="py-2.5 px-3 text-left">Team</th>
                       {divisionTeams.map((t) => (
-                        <th key={t.id} className="py-2.5 px-2 text-[10px] text-slate-300 font-bold min-w-[70px]">
+                        <th key={t.id} className="py-2.5 px-2 text-[10px] text-slate-700 dark:text-slate-300 font-bold min-w-[70px]">
                           {t.name.slice(0, 10)}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 font-mono">
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
                     {divisionTeams.map((t1) => (
-                      <tr key={t1.id} className="hover:bg-slate-900/40">
-                        <td className="py-2.5 px-3 text-left font-sans font-bold text-white whitespace-nowrap">
+                      <tr key={t1.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                        <td className="py-2.5 px-3 text-left font-sans font-bold text-slate-900 dark:text-white whitespace-nowrap">
                           {t1.name}
                         </td>
                         {divisionTeams.map((t2) => {
                           if (t1.id === t2.id) {
                             return (
-                              <td key={t2.id} className="py-2.5 px-2 text-slate-700 bg-slate-900/80">
+                              <td key={t2.id} className="py-2.5 px-2 text-slate-400 dark:text-slate-700 bg-slate-100 dark:bg-slate-900/80">
                                 —
                               </td>
                             );
@@ -461,19 +460,19 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                               {h2hFilter === 'breakdown' && (
                                 <div>
                                   {totalCount === 0 ? (
-                                    <span className="text-slate-600">0</span>
+                                    <span className="text-slate-400 dark:text-slate-600">0</span>
                                   ) : (
                                     <div className="flex items-center justify-center gap-1 text-[11px]">
                                       {offCount > 0 && (
-                                        <span className="text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20" title={`${offCount} Official League Game(s)`}>
+                                        <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20" title={`${offCount} Official League Game(s)`}>
                                           {offCount}L
                                         </span>
                                       )}
                                       {offCount > 0 && exhCount > 0 && (
-                                        <span className="text-slate-600 text-[10px]">+</span>
+                                        <span className="text-slate-400 dark:text-slate-600 text-[10px]">+</span>
                                       )}
                                       {exhCount > 0 && (
-                                        <span className="text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded border border-purple-500/20" title={`${exhCount} Exhibition Game(s)`}>
+                                        <span className="text-purple-600 dark:text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded border border-purple-500/20" title={`${exhCount} Exhibition Game(s)`}>
                                           {exhCount}E
                                         </span>
                                       )}
@@ -485,8 +484,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                                 <span
                                   className={`font-bold ${
                                     offCount > 0
-                                      ? 'text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20'
-                                      : 'text-slate-600'
+                                      ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20'
+                                      : 'text-slate-400 dark:text-slate-600'
                                   }`}
                                 >
                                   {offCount > 0 ? `${offCount}x` : '0'}
@@ -496,8 +495,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                                 <span
                                   className={`font-bold ${
                                     exhCount > 0
-                                      ? 'text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20'
-                                      : 'text-slate-600'
+                                      ? 'text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20'
+                                      : 'text-slate-400 dark:text-slate-600'
                                   }`}
                                 >
                                   {exhCount > 0 ? `${exhCount}x` : '0'}
@@ -507,8 +506,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                                 <span
                                   className={`font-bold ${
                                     totalCount > 0
-                                      ? 'text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20'
-                                      : 'text-slate-600'
+                                      ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20'
+                                      : 'text-slate-400 dark:text-slate-600'
                                   }`}
                                 >
                                   {totalCount > 0 ? `${totalCount}x` : '0'}
@@ -524,13 +523,13 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
               </div>
 
               {/* Legend */}
-              <div className="flex flex-wrap items-center gap-4 px-4 py-2.5 border-t border-slate-800 text-[11px] text-slate-400">
+              <div className="flex flex-wrap items-center gap-4 px-4 py-2.5 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-3.5 rounded bg-emerald-500/20 border border-emerald-500/40 inline-flex items-center justify-center text-[9px] font-bold text-emerald-400">L</span>
+                  <span className="w-3.5 h-3.5 rounded bg-emerald-500/20 border border-emerald-500/40 inline-flex items-center justify-center text-[9px] font-bold text-emerald-600 dark:text-emerald-400">L</span>
                   <span><strong>Official League Matches</strong> (Standings & Rankings)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-3.5 rounded bg-purple-500/20 border border-purple-500/40 inline-flex items-center justify-center text-[9px] font-bold text-purple-400">E</span>
+                  <span className="w-3.5 h-3.5 rounded bg-purple-500/20 border border-purple-500/40 inline-flex items-center justify-center text-[9px] font-bold text-purple-600 dark:text-purple-400">E</span>
                   <span><strong>Exhibition Matches</strong> (Capacity Fillers)</span>
                 </div>
               </div>

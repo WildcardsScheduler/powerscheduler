@@ -82,22 +82,22 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="p-4 sm:p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20">
+            <div className="p-2 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
               <Layers className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Division & Team Assignment Manager</h3>
-              <p className="text-xs text-slate-400">Configure single vs multi-division structure & assign team tiers</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Division & Team Assignment Manager</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Configure single vs multi-division structure & assign team tiers</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -107,8 +107,8 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
           
           {/* Division Structure Mode Selector */}
-          <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 block">
+          <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
               League Division Structure
             </span>
 
@@ -118,13 +118,13 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                 onClick={() => onToggleHasDivisions(false)}
                 className={`p-3 rounded-xl border text-left transition-all ${
                   !hasDivisions
-                    ? 'bg-amber-500/10 border-amber-500 text-amber-400 shadow-md shadow-amber-500/10'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'
+                    ? 'bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-400 shadow-md shadow-amber-500/10'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs">Single Division</span>
-                  {!hasDivisions && <Check className="h-4 w-4 text-amber-400" />}
+                  {!hasDivisions && <Check className="h-4 w-4 text-amber-600 dark:text-amber-400" />}
                 </div>
                 <p className="text-[11px] opacity-80 mt-1">
                   All teams play in 1 single standings table and schedule.
@@ -136,13 +136,13 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                 onClick={() => onToggleHasDivisions(true)}
                 className={`p-3 rounded-xl border text-left transition-all ${
                   hasDivisions
-                    ? 'bg-violet-500/10 border-violet-500 text-violet-400 shadow-md shadow-violet-500/10'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'
+                    ? 'bg-violet-500/10 border-violet-500 text-violet-700 dark:text-violet-400 shadow-md shadow-violet-500/10'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs">Multiple Divisions (Tiered / Gender)</span>
-                  {hasDivisions && <Check className="h-4 w-4 text-violet-400" />}
+                  {hasDivisions && <Check className="h-4 w-4 text-violet-600 dark:text-violet-400" />}
                 </div>
                 <p className="text-[11px] opacity-80 mt-1">
                   Split teams into Division A, B, C or Co-Ed / Men's / Women's tiers.
@@ -155,13 +155,13 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
           {hasDivisions && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs uppercase font-bold text-slate-400 tracking-wider">
+                <h4 className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                   Configured Divisions ({divisions.length})
                 </h4>
                 {!showAddForm && (
                   <button
                     onClick={() => setShowAddForm(true)}
-                    className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs flex items-center space-x-1 transition-all"
+                    className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs flex items-center space-x-1 transition-all shadow-sm"
                   >
                     <Plus className="h-4 w-4" />
                     <span>+ Add Division</span>
@@ -171,15 +171,15 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
 
               {/* Add Division Form */}
               {showAddForm && (
-                <form onSubmit={handleAddSubmit} className="p-4 bg-slate-950 border border-violet-500/30 rounded-2xl space-y-3">
+                <form onSubmit={handleAddSubmit} className="p-4 bg-slate-50 dark:bg-slate-950 border border-violet-500/30 rounded-2xl space-y-3 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-violet-400 flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-violet-600 dark:text-violet-400 flex items-center gap-1.5">
                       <Layers className="h-4 w-4" /> Add New Division
                     </span>
                     <button
                       type="button"
                       onClick={() => setShowAddForm(false)}
-                      className="text-slate-400 hover:text-white text-xs"
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-white text-xs"
                     >
                       Cancel
                     </button>
@@ -187,23 +187,23 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Division Name</label>
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Division Name</label>
                       <input
                         type="text"
                         placeholder="e.g. Division B, Competitive Co-Ed"
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-violet-500 focus:outline-none shadow-sm"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Gender Category</label>
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Gender Category</label>
                       <select
                         value={newGender}
                         onChange={(e) => setNewGender(e.target.value as Division['genderCategory'])}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs shadow-sm"
                       >
                         <option value="Co-Ed">Co-Ed</option>
                         <option value="Men">Men</option>
@@ -214,14 +214,12 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-
                     <div>
-                      <label className="text-[11px] font-semibold text-slate-400 block mb-1">Max Teams</label>
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Max Teams</label>
                       <select
                         value={newMaxTeams}
                         onChange={(e) => setNewMaxTeams(Number(e.target.value))}
-                        className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs shadow-sm"
                       >
                         <option value={4}>4 Teams</option>
                         <option value={6}>6 Teams</option>
@@ -249,7 +247,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                   return (
                     <div
                       key={div.id}
-                      className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3"
+                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 shadow-sm"
                     >
                       {editingDivisionId === div.id ? (
                         /* Edit Division */
@@ -258,13 +256,13 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                             type="text"
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-800 text-white text-xs rounded-lg px-2.5 py-1.5"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs rounded-lg px-2.5 py-1.5"
                           />
                           <div className="grid grid-cols-2 gap-2">
                             <select
                               value={editGender}
                               onChange={(e) => setEditGender(e.target.value as Division['genderCategory'])}
-                              className="bg-slate-900 border border-slate-800 text-white text-xs rounded-lg px-2.5 py-1.5"
+                              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs rounded-lg px-2.5 py-1.5"
                             >
                               <option value="Co-Ed">Co-Ed</option>
                               <option value="Men">Men</option>
@@ -274,7 +272,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                             <select
                               value={editMaxTeams}
                               onChange={(e) => setEditMaxTeams(Number(e.target.value))}
-                              className="bg-slate-900 border border-slate-800 text-white text-xs rounded-lg px-2.5 py-1.5"
+                              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs rounded-lg px-2.5 py-1.5"
                             >
                               <option value={4}>4 Max</option>
                               <option value={6}>6 Max</option>
@@ -286,13 +284,13 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                           <div className="flex items-center space-x-2 pt-1">
                             <button
                               onClick={() => handleSaveEdit(div.id)}
-                              className="px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-xs rounded-lg"
+                              className="px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-xs rounded-lg shadow-sm"
                             >
                               Save
                             </button>
                             <button
                               onClick={() => setEditingDivisionId(null)}
-                              className="px-3 py-1 border border-slate-800 text-slate-400 text-xs rounded-lg"
+                              className="px-3 py-1 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
                             >
                               Cancel
                             </button>
@@ -303,15 +301,15 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                         <div>
                           <div className="flex items-start justify-between">
                             <div>
-                              <h5 className="font-extrabold text-white text-sm">{div.name}</h5>
-                              <span className="text-[11px] text-slate-400">
+                              <h5 className="font-extrabold text-slate-900 dark:text-white text-sm">{div.name}</h5>
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400">
                                 {div.genderCategory}
                               </span>
                             </div>
                             <div className="flex items-center space-x-1">
                               <button
                                 onClick={() => startEdit(div)}
-                                className="p-1 text-amber-400 hover:bg-slate-900 rounded-md"
+                                className="p-1 text-amber-600 dark:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-md"
                               >
                                 <Edit3 className="h-3.5 w-3.5" />
                               </button>
@@ -319,7 +317,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                                 onClick={() => onDeleteDivision(div.id)}
                                 disabled={divisions.length <= 1}
                                 className={`p-1 rounded-md ${
-                                  divisions.length <= 1 ? 'text-slate-600' : 'text-rose-400 hover:bg-slate-900'
+                                  divisions.length <= 1 ? 'text-slate-300 dark:text-slate-600' : 'text-rose-500 dark:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-900'
                                 }`}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -327,9 +325,9 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                             </div>
                           </div>
 
-                          <div className="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                          <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                             <span className="flex items-center gap-1">
-                              <Users className="h-3.5 w-3.5 text-amber-400" />
+                              <Users className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                               {divTeams.length} / {div.maxTeams} Teams Assigned
                             </span>
                           </div>
@@ -343,15 +341,15 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
           )}
 
           {/* Team Assignment Matrix */}
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center space-x-2">
-                <ArrowRightLeft className="h-4 w-4 text-emerald-400" />
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                <ArrowRightLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                   Team Division Assignments ({teams.length} Teams)
                 </h4>
               </div>
-              <span className="text-[11px] text-slate-400">Move teams between divisions below</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">Move teams between divisions below</span>
             </div>
 
             {teams.length === 0 ? (
@@ -364,7 +362,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                   return (
                     <div
                       key={team.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 gap-2"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 gap-2 shadow-sm"
                     >
                       <div className="flex items-center space-x-2">
                         <div
@@ -372,8 +370,8 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                           style={{ backgroundColor: team.badgeColor || '#3b82f6' }}
                         />
                         <div>
-                          <span className="font-bold text-xs text-white">{team.name}</span>
-                          <span className="text-[10px] text-slate-400 block">
+                          <span className="font-bold text-xs text-slate-900 dark:text-white">{team.name}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
                             Captain: {team.captainName} ({team.roster.length} Players)
                           </span>
                         </div>
@@ -382,21 +380,21 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                       {/* Division Switch Selector */}
                       {hasDivisions && divisions.length > 1 ? (
                         <div className="flex items-center space-x-2">
-                          <span className="text-[10px] text-slate-400">Assigned to:</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">Assigned to:</span>
                           <select
                             value={team.divisionId}
                             onChange={(e) => onAssignTeamDivision(team.id, e.target.value)}
-                            className="bg-slate-950 border border-slate-700 text-amber-400 font-bold text-xs rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-amber-500"
+                            className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-400 font-bold text-xs rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-amber-500 shadow-sm"
                           >
                             {divisions.map((d) => (
-                              <option key={d.id} value={d.id} className="bg-slate-900 text-white">
+                              <option key={d.id} value={d.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                                 {d.name}
                               </option>
                             ))}
                           </select>
                         </div>
                       ) : (
-                        <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-lg">
+                        <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-lg">
                           {assignedDiv?.name || 'Main Division'}
                         </span>
                       )}
@@ -410,10 +408,10 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex justify-end">
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-colors"
+            className="px-6 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-bold text-xs transition-colors"
           >
             Done
           </button>

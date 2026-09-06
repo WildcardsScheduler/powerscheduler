@@ -268,33 +268,33 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         
         {/* Header with Navigation Tabs */}
-        <div className="p-4 sm:p-5 bg-slate-950 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <span>Advanced Auto-Schedule Generator</span>
               </h3>
-              <p className="text-xs text-slate-400">Rule Priorities, Capacity Optimization & Fairness Report Engine</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Rule Priorities, Capacity Optimization & Fairness Report Engine</p>
             </div>
           </div>
 
           <div className="flex items-center space-x-2">
             {/* View Mode Tabs (Shown after generating schedule) */}
             {generatedMatches && (
-              <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 space-x-1">
+              <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 space-x-1">
                 <button
                   type="button"
                   onClick={() => setViewMode('config')}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
                     viewMode === 'config'
                       ? 'bg-rose-500 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -306,7 +306,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
                     viewMode === 'report'
                       ? 'bg-amber-500 text-slate-950 shadow-sm font-bold'
-                      : 'text-slate-400 hover:text-white'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <BarChart3 className="h-3.5 w-3.5" />
@@ -318,7 +318,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
                     viewMode === 'fixtures'
                       ? 'bg-violet-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <Layers className="h-3.5 w-3.5" />
@@ -327,7 +327,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsPrintModalOpen(true)}
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 transition-all"
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 bg-amber-500/10 dark:bg-amber-500/20 hover:bg-amber-500/20 dark:hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all"
                 >
                   <Printer className="h-3.5 w-3.5" />
                   <span>Print Studio</span>
@@ -337,7 +337,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -351,9 +351,9 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
           {viewMode === 'config' && (
             <>
               {/* Target Division & Season Dates */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Target Division</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Target Division</label>
                   <select
                     value={selectedDivisionId}
                     onChange={(e) => {
@@ -363,7 +363,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       setWarnings([]);
                       setViewMode('config');
                     }}
-                    className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none shadow-sm"
                   >
                     {divisions.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -374,7 +374,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Season Start Date</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Season Start Date</label>
                   <input
                     type="date"
                     value={startDate}
@@ -383,12 +383,12 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       setGeneratedMatches(null);
                       setGeneratedReport(null);
                     }}
-                    className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none shadow-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Season End Date</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Season End Date</label>
                   <input
                     type="date"
                     value={endDate}
@@ -398,10 +398,10 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       setGeneratedMatches(null);
                       setGeneratedReport(null);
                     }}
-                    className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none shadow-sm"
                   />
-                  <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-                    <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold px-1.5 py-0.5 rounded">{weeksCount} weeks</span>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                    <span className="bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-bold px-1.5 py-0.5 rounded">{weeksCount} weeks</span>
                     <span>calculated from date range</span>
                   </p>
                 </div>
@@ -409,8 +409,8 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
               {/* Days of Week Selection */}
               <div className="space-y-2">
-                <label className="block text-slate-300 font-semibold flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4 text-amber-400" /> Match Night Days of the Week
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4 text-amber-500 dark:text-amber-400" /> Match Night Days of the Week
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {ALL_DAYS.map((day) => {
@@ -423,7 +423,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                         className={`px-3 py-1.5 rounded-xl font-semibold text-xs transition-all ${
                           isSelected
                             ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                            : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-white'
+                            : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         {day}
@@ -434,17 +434,17 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
               </div>
 
               {/* Time Slots & Duration */}
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-slate-200 font-bold flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-violet-400" /> Time Slots & Slot Duration
+                  <label className="text-slate-800 dark:text-slate-200 font-bold flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-violet-600 dark:text-violet-400" /> Time Slots & Slot Duration
                   </label>
                   <div className="flex items-center space-x-2">
-                    <span className="text-[11px] text-slate-400">Slot Duration:</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Slot Duration:</span>
                     <select
                       value={matchDuration}
                       onChange={(e) => setMatchDuration(Number(e.target.value))}
-                      className="bg-slate-900 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2 py-1 text-xs shadow-sm"
                     >
                       <option value={50}>50 min</option>
                       <option value={60}>60 min</option>
@@ -458,13 +458,13 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   {timeSlots.map((slot) => (
                     <div
                       key={slot}
-                      className="bg-slate-900 text-white border border-slate-800 px-2.5 py-1 rounded-xl font-mono text-xs flex items-center space-x-1.5"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-xl font-mono text-xs flex items-center space-x-1.5 shadow-sm"
                     >
                       <span>{formatTime(slot)}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveTimeSlot(slot)}
-                        className="text-slate-400 hover:text-rose-400"
+                        className="text-slate-400 hover:text-rose-500"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -476,7 +476,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       type="time"
                       value={newTimeSlot}
                       onChange={(e) => setNewTimeSlot(e.target.value)}
-                      className="bg-slate-900 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2 py-1 text-xs shadow-sm"
                     />
                     <button
                       type="button"
@@ -490,17 +490,17 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
               </div>
 
               {/* Courts & Playing Surfaces Confirmation */}
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
                   <div>
-                    <label className="text-slate-100 font-extrabold text-sm flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-emerald-400" />
+                    <label className="text-slate-900 dark:text-slate-100 font-extrabold text-sm flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                       <span>Available Courts & Playing Surfaces</span>
-                      <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <span className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
                         {selectedCourtIds.length} of {courts.length} Active
                       </span>
                     </label>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                       Confirm which courts to utilize for match fixture generation
                     </p>
                   </div>
@@ -513,11 +513,11 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                         setGeneratedMatches(null);
                         setGeneratedReport(null);
                       }}
-                      className="text-[11px] font-semibold text-emerald-400 hover:underline"
+                      className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
                     >
                       Select All
                     </button>
-                    <span className="text-slate-600">|</span>
+                    <span className="text-slate-300 dark:text-slate-600">|</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -527,7 +527,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                           setGeneratedReport(null);
                         }
                       }}
-                      className="text-[11px] font-semibold text-slate-400 hover:text-slate-300 hover:underline"
+                      className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300 hover:underline"
                     >
                       Clear (Keep 1)
                     </button>
@@ -535,7 +535,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 </div>
 
                 {courts.length === 0 ? (
-                  <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-center text-xs text-amber-400 flex items-center justify-center gap-1.5">
+                  <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center text-xs text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1.5">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>No courts defined in facility location settings! Please add courts in Location Manager.</span>
                   </div>
@@ -553,21 +553,21 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                           onClick={() => toggleCourt(court.id)}
                           className={`p-3 rounded-xl border text-left flex items-start justify-between transition-all ${
                             isSelected
-                              ? 'bg-emerald-950/30 border-emerald-500/50 text-white shadow-sm'
-                              : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-400 dark:border-emerald-500/50 text-slate-900 dark:text-white shadow-sm'
+                              : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                           }`}
                         >
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
-                              <span className="font-bold text-xs text-white">{court.name}</span>
+                              <span className="font-bold text-xs text-slate-900 dark:text-white">{court.name}</span>
                               {court.surface && (
-                                <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700 font-mono">
+                                <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-mono">
                                   {court.surface}
                                 </span>
                               )}
                             </div>
                             {parentLoc && (
-                              <p className="text-[11px] text-slate-400 flex items-center gap-1">
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                                 <span>📍 {parentLoc.name}</span>
                               </p>
                             )}
@@ -577,7 +577,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                             className={`h-4 w-4 rounded flex items-center justify-center border mt-0.5 transition-colors ${
                               isSelected
                                 ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                                : 'border-slate-700 bg-slate-900'
+                                : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'
                             }`}
                           >
                             {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
@@ -590,29 +590,29 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
               </div>
 
               {/* Canadian Holidays & Blackout Dates Suggestion Engine */}
-              <div className="bg-slate-950 p-4 sm:p-5 rounded-2xl border border-rose-500/30 space-y-4 shadow-xl relative overflow-hidden">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 sm:p-5 rounded-2xl border border-rose-500/30 space-y-4 shadow-xl relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
                   <div>
-                    <label className="text-slate-100 font-extrabold text-sm flex items-center gap-2">
+                    <label className="text-slate-900 dark:text-slate-100 font-extrabold text-sm flex items-center gap-2">
                       <Flag className="h-4 w-4 text-rose-500 fill-rose-500/20" />
                       <span>Canadian Holiday Blackout Suggestions</span>
-                      <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <span className="bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full">
                         🍁 {suggestedHolidays.length} Detected in Season
                       </span>
                     </label>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Season window: <span className="font-semibold text-slate-300">{startDate}</span> to{' '}
-                      <span className="font-semibold text-slate-300">{endDate}</span>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Season window: <span className="font-semibold text-slate-700 dark:text-slate-300">{startDate}</span> to{' '}
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">{endDate}</span>
                     </p>
                   </div>
 
                   {/* Province Selector Dropdown */}
                   <div className="flex items-center space-x-2">
-                    <span className="text-[11px] text-slate-400 whitespace-nowrap">Region:</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">Region:</span>
                     <select
                       value={selectedProvince}
                       onChange={(e) => setSelectedProvince(e.target.value as CanadianProvince)}
-                      className="bg-slate-900 border border-slate-800 text-white rounded-xl px-2.5 py-1 text-xs font-semibold focus:ring-1 focus:ring-rose-500"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-2.5 py-1 text-xs font-semibold focus:ring-1 focus:ring-rose-500 shadow-sm"
                     >
                       {PROVINCE_OPTIONS.map((p) => (
                         <option key={p.code} value={p.code}>
@@ -627,14 +627,14 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 {suggestedHolidays.length > 0 ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         Detected Holidays in Season Window:
                       </span>
                       <div className="flex items-center space-x-2">
                         <button
                           type="button"
                           onClick={handleAddAllCanadianHolidays}
-                          className="text-xs font-bold text-rose-400 hover:text-rose-300 hover:underline flex items-center gap-1"
+                          className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-500 dark:hover:text-rose-300 hover:underline flex items-center gap-1"
                         >
                           <Plus className="h-3.5 w-3.5" /> Select All Canadian Holidays
                         </button>
@@ -653,8 +653,8 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                             onClick={() => toggleHolidayBlackout(holiday.date)}
                             className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all flex items-start justify-between space-x-2 ${
                               isBlackedOut
-                                ? 'bg-rose-500/10 border-rose-500/50 text-white shadow-md'
-                                : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                                ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-400 dark:border-rose-500/50 text-slate-900 dark:text-white shadow-md'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
                             }`}
                           >
                             <div className="space-y-0.5 min-w-0">
@@ -663,15 +663,15 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                               </div>
 
                               <div className="flex items-center space-x-2 text-[11px]">
-                                <span className="font-mono text-rose-300">{holiday.date}</span>
-                                <span className="text-slate-400">({dayName})</span>
-                                <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">
+                                <span className="font-mono text-rose-600 dark:text-rose-300">{holiday.date}</span>
+                                <span className="text-slate-500 dark:text-slate-400">({dayName})</span>
+                                <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                                   {holiday.provinces}
                                 </span>
                               </div>
 
                               {isMatchNight && (
-                                <div className="flex items-center space-x-1 text-[10px] text-amber-400 font-bold pt-0.5">
+                                <div className="flex items-center space-x-1 text-[10px] text-amber-600 dark:text-amber-400 font-bold pt-0.5">
                                   <AlertCircle className="h-3 w-3 shrink-0" />
                                   <span>Direct Match Night Impact ({dayName})</span>
                                 </div>
@@ -684,7 +684,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                                   <Check className="h-3 w-3" /> Skipped
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-semibold bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md hover:text-white">
+                                <span className="text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-md hover:text-slate-900 dark:hover:text-white">
                                   + Skip Date
                                 </span>
                               )}
@@ -695,22 +695,22 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-center text-xs text-slate-400">
+                  <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-center text-xs text-slate-500 dark:text-slate-400">
                     No statutory Canadian holidays detected during this season window ({startDate} to {endDate}).
                   </div>
                 )}
 
                 {/* Active Blackout Dates Chips & Manual Add */}
-                <div className="pt-3 border-t border-slate-800 space-y-2">
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
-                      <Ban className="h-3.5 w-3.5 text-rose-400" /> Active Blackout Dates List ({blackoutDates.length})
+                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Ban className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" /> Active Blackout Dates List ({blackoutDates.length})
                     </span>
                     {blackoutDates.length > 0 && (
                       <button
                         type="button"
                         onClick={handleClearAllBlackouts}
-                        className="text-[11px] text-slate-400 hover:text-rose-400 transition-colors"
+                        className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-rose-500 transition-colors"
                       >
                         Clear All
                       </button>
@@ -721,13 +721,13 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                     {blackoutDates.map((date) => (
                       <div
                         key={date}
-                        className="bg-rose-500/15 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-xl text-xs flex items-center space-x-1.5 shadow-sm"
+                        className="bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 px-2.5 py-1 rounded-xl text-xs flex items-center space-x-1.5 shadow-sm"
                       >
                         <span className="font-mono">{date}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveBlackoutDate(date)}
-                          className="text-rose-400 hover:text-white"
+                          className="text-rose-500 hover:text-rose-700 dark:hover:text-white"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -739,7 +739,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                         type="date"
                         value={newBlackoutDate}
                         onChange={(e) => setNewBlackoutDate(e.target.value)}
-                        className="bg-slate-900 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs"
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-2 py-1 text-xs shadow-sm"
                       />
                       <button
                         type="button"
@@ -755,13 +755,13 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
               </div>
 
               {/* Scheduling Rule Priorities & Capacity Options Card */}
-              <div className="bg-slate-950 p-4 sm:p-5 rounded-2xl border border-amber-500/30 space-y-4 shadow-xl">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h4 className="font-extrabold text-amber-400 text-sm flex items-center gap-2">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 sm:p-5 rounded-2xl border border-amber-500/30 space-y-4 shadow-xl">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                  <h4 className="font-extrabold text-amber-700 dark:text-amber-400 text-sm flex items-center gap-2">
                     <Sliders className="h-4 w-4" />
                     <span>Scheduling Rule Priorities & Capacity Options</span>
                   </h4>
-                  <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
+                  <span className="text-[10px] bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
                     Customizable Optimization Matrix
                   </span>
                 </div>
@@ -769,14 +769,14 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 {/* GUARANTEE EVERY TEAM PLAYS EACH LEAGUE NIGHT */}
                 <div className="flex items-center justify-between p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
                   <div className="space-y-0.5 pr-2">
-                    <span className="font-extrabold text-white text-xs flex items-center gap-1.5">
-                      <Calendar className="h-4 w-4 text-cyan-400" />
+                    <span className="font-extrabold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                      <Calendar className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                       <span>Guarantee Every Team Plays Each League Night</span>
-                      <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold px-1.5 py-0.2 rounded">
+                      <span className="bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 text-[10px] font-bold px-1.5 py-0.2 rounded">
                         NO BYE WEEKS
                       </span>
                     </span>
-                    <p className="text-[11px] text-slate-300">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300">
                       Ensures every team is scheduled to play at least once on every scheduled week/night (no sit-out weeks). If an odd number of teams or rotation creates a bye, automatically pairs a match so all teams are active every week.
                     </p>
                   </div>
@@ -792,14 +792,14 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <span className="font-extrabold text-white text-xs flex items-center gap-1.5">
-                        <Zap className="h-4 w-4 text-amber-400 fill-amber-400/20" />
+                      <span className="font-extrabold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                        <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400 fill-amber-400/20" />
                         <span>Fill All Timeslots (100% Facility Utilization)</span>
                         <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded">
                           HIGH PRIORITY
                         </span>
                       </span>
-                      <p className="text-[11px] text-slate-300">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300">
                         Schedules extra double-header matches whenever spare court time slots exist in a match night.
                         Perfect for 8 teams playing in facilities with 6 or 8 available court slots per night!
                       </p>
@@ -817,14 +817,14 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 {/* END-OF-SEASON EXHIBITION MATCHES TOGGLE */}
                 <div className="flex items-center justify-between p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30">
                   <div className="space-y-0.5">
-                    <span className="font-extrabold text-white text-xs flex items-center gap-1.5">
-                      <Sparkles className="h-4 w-4 text-purple-400" />
+                    <span className="font-extrabold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                       <span>Flag End-of-Season Extra Matches as Exhibition</span>
-                      <span className="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-bold px-1.5 py-0.2 rounded">
+                      <span className="bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-[10px] font-bold px-1.5 py-0.2 rounded">
                         PRE-PLAYOFFS WARMUP
                       </span>
                     </span>
-                    <p className="text-[11px] text-slate-300">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300">
                       Regular double headers count as Official Standings Matches until all teams reach equal league matches (e.g., 14 games = 2 round-robins). Extra matches at the end of the season before playoffs are flagged as Exhibition.
                     </p>
                   </div>
@@ -837,11 +837,11 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 </div>
 
                 {/* 2. DOUBLE HEADER PREFERENCES */}
-                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+                <div className="p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="font-bold text-white text-xs block">Allow Double-Header Matches</span>
-                      <span className="text-[11px] text-slate-400">Permit teams to play 2 fixtures on the same night</span>
+                      <span className="font-bold text-slate-900 dark:text-white text-xs block">Allow Double-Header Matches</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">Permit teams to play 2 fixtures on the same night</span>
                     </div>
                     <input
                       type="checkbox"
@@ -852,10 +852,10 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   </div>
 
                   {enableDoubleHeaders && (
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pl-3 pt-1.5 border-t border-slate-800/80">
-                      <span className="text-[11px] font-bold text-emerald-400 shrink-0">Timing Rule (Strict):</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pl-3 pt-1.5 border-t border-slate-200 dark:border-slate-800/80">
+                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">Timing Rule (Strict):</span>
                       <div className="flex flex-wrap items-center gap-3">
-                        <label className="flex items-center space-x-1.5 text-xs text-slate-200 font-semibold cursor-pointer">
+                        <label className="flex items-center space-x-1.5 text-xs text-slate-700 dark:text-slate-200 font-semibold cursor-pointer">
                           <input
                             type="radio"
                             name="dhMode"
@@ -866,7 +866,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                           />
                           <span>Strict Back-to-Back (No waiting around)</span>
                         </label>
-                        <label className="flex items-center space-x-1.5 text-xs text-slate-200 font-semibold cursor-pointer">
+                        <label className="flex items-center space-x-1.5 text-xs text-slate-700 dark:text-slate-200 font-semibold cursor-pointer">
                           <input
                             type="radio"
                             name="dhMode"
@@ -883,10 +883,10 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 </div>
 
                 {/* 3. OPPONENT REMATCH SPACING */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
                   <div>
-                    <span className="font-bold text-white block text-xs">Opponent Rotation Spacing</span>
-                    <span className="text-[11px] text-slate-400">Prevent teams from facing the same opponent in consecutive weeks</span>
+                    <span className="font-bold text-slate-900 dark:text-white block text-xs">Opponent Rotation Spacing</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Prevent teams from facing the same opponent in consecutive weeks</span>
                   </div>
                   <input
                     type="checkbox"
@@ -897,10 +897,10 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 </div>
 
                 {/* 4. EQUALIZE OFFICIAL GAMES */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
                   <div>
-                    <span className="font-bold text-white block text-xs">Equalize Official Games Count</span>
-                    <span className="text-[11px] text-slate-400">Ensure all teams have identical official games (flag extra double-headers as Exhibition)</span>
+                    <span className="font-bold text-slate-900 dark:text-white block text-xs">Equalize Official Games Count</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Ensure all teams have identical official games (flag extra double-headers as Exhibition)</span>
                   </div>
                   <input
                     type="checkbox"
@@ -912,18 +912,18 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
                 {/* 5. REF / WORK TEAM DUTY */}
                 <div className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
-                  assignWorkTeams ? 'bg-violet-500/10 border-violet-500/30' : 'bg-slate-900/80 border-slate-800'
+                  assignWorkTeams ? 'bg-violet-50 dark:bg-violet-500/10 border-violet-300 dark:border-violet-500/30' : 'bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800'
                 }`}>
                   <div>
-                    <span className="font-bold text-white block text-xs flex items-center gap-1.5">
+                    <span className="font-bold text-slate-900 dark:text-white block text-xs flex items-center gap-1.5">
                       <span>Ref / Work Team Duty Assignment</span>
                       {!assignWorkTeams && (
-                        <span className="bg-slate-800 text-slate-400 text-[10px] font-semibold px-1.5 py-0.5 rounded border border-slate-700">
+                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-semibold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                           Self-Reffed
                         </span>
                       )}
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
                       {assignWorkTeams
                         ? 'Automatically rotate non-playing teams to referee matches'
                         : 'Current mode: Self-Reffed (No work teams assigned)'}
@@ -939,12 +939,12 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
                 {/* 6. FAIRNESS MATRIX TOGGLES */}
                 <div className="space-y-2 pt-1">
-                  <span className="font-bold text-amber-400 text-xs block flex items-center gap-1">
+                  <span className="font-bold text-amber-700 dark:text-amber-400 text-xs block flex items-center gap-1">
                     <Scale className="h-3.5 w-3.5" /> Additional Fairness Balancing Toggles
                   </span>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <label className="flex items-center space-x-2 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-300 cursor-pointer">
+                    <label className="flex items-center space-x-2 bg-white dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={fairnessTimeSlots}
@@ -954,7 +954,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       <span>Equal Early / Late Time Slots</span>
                     </label>
 
-                    <label className="flex items-center space-x-2 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-300 cursor-pointer">
+                    <label className="flex items-center space-x-2 bg-white dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={fairnessCourts}
@@ -983,11 +983,11 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
               {/* Warnings Display */}
               {warnings.length > 0 && (
                 <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3.5 space-y-1">
-                  <div className="flex items-center space-x-1.5 text-amber-400 font-bold text-xs">
+                  <div className="flex items-center space-x-1.5 text-amber-600 dark:text-amber-400 font-bold text-xs">
                     <ShieldAlert className="h-4 w-4" />
                     <span>Scheduling Generator Notices</span>
                   </div>
-                  <ul className="list-disc list-inside text-amber-300/80 text-[11px] space-y-0.5">
+                  <ul className="list-disc list-inside text-amber-700 dark:text-amber-300/80 text-[11px] space-y-0.5">
                     {warnings.map((w, idx) => (
                       <li key={idx}>{w}</li>
                     ))}
@@ -1003,73 +1003,73 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
               
               {/* Header Summary Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-1">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total Fixtures</span>
-                  <span className="text-xl font-black text-white">{generatedReport.totalMatches}</span>
-                  <span className="text-[10px] text-slate-400 block">Across {weeksCount} Weeks</span>
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Fixtures</span>
+                  <span className="text-xl font-black text-slate-900 dark:text-white">{generatedReport.totalMatches}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Across {weeksCount} Weeks</span>
                 </div>
 
-                <div className="bg-slate-950 p-3.5 rounded-2xl border border-amber-500/30 space-y-1">
-                  <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block">Slot Utilization</span>
-                  <span className="text-xl font-black text-amber-400">{generatedReport.slotUtilizationPercentage}%</span>
-                  <span className="text-[10px] text-slate-400 block">
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-amber-500/30 space-y-1">
+                  <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block">Slot Utilization</span>
+                  <span className="text-xl font-black text-amber-600 dark:text-amber-400">{generatedReport.slotUtilizationPercentage}%</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
                     {generatedReport.totalSlotsFilled} / {generatedReport.totalSlotsAvailable} Slots Filled
                   </span>
                 </div>
 
-                <div className="bg-slate-950 p-3.5 rounded-2xl border border-purple-500/30 space-y-1">
-                  <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider block">Game Classification</span>
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-purple-500/30 space-y-1">
+                  <span className="text-[11px] font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider block">Game Classification</span>
                   <div className="flex items-baseline space-x-1.5">
-                    <span className="text-xl font-black text-emerald-400">{generatedReport.officialMatchesCount ?? generatedReport.totalMatches}</span>
-                    <span className="text-xs text-slate-400 font-bold">Official</span>
-                    <span className="text-xs text-slate-500">/</span>
-                    <span className="text-base font-black text-purple-400">{generatedReport.exhibitionMatchesCount}</span>
-                    <span className="text-xs text-slate-400">Exhibition</span>
+                    <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">{generatedReport.officialMatchesCount ?? generatedReport.totalMatches}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">Official</span>
+                    <span className="text-xs text-slate-400">/</span>
+                    <span className="text-base font-black text-purple-600 dark:text-purple-400">{generatedReport.exhibitionMatchesCount}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">Exhibition</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 block">Standings vs Capacity Fillers</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Standings vs Capacity Fillers</span>
                 </div>
 
-                <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-1">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Ref Duty Duties</span>
-                  <span className="text-xl font-black text-violet-400">
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Ref Duty Duties</span>
+                  <span className="text-xl font-black text-violet-600 dark:text-violet-400">
                     {assignWorkTeams ? generatedMatches?.filter((m) => m.workTeamId).length || 0 : '0'}
                   </span>
-                  <span className="text-[10px] text-slate-400 block">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
                     {assignWorkTeams ? 'Assigned Work Teams' : 'Self-Reffed League'}
                   </span>
                 </div>
               </div>
 
               {/* Slot Capacity Utilization Progress Bar */}
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-white flex items-center gap-1.5">
-                    <Zap className="h-4 w-4 text-amber-400" /> Facility Court-Slot Utilization Capacity
+                  <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Zap className="h-4 w-4 text-amber-500 dark:text-amber-400" /> Facility Court-Slot Utilization Capacity
                   </span>
-                  <span className="font-mono text-amber-400 font-bold">
+                  <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">
                     {generatedReport.slotUtilizationPercentage}% Filled
                   </span>
                 </div>
-                <div className="h-3 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                <div className="h-3 w-full bg-slate-200 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800">
                   <div
                     className="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-500 rounded-full"
                     style={{ width: `${Math.min(100, generatedReport.slotUtilizationPercentage)}%` }}
                   />
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
                   <span>Total Available Slot Opportunities: {generatedReport.totalSlotsAvailable}</span>
                   <span>Used Slots: {generatedReport.totalSlotsFilled}</span>
                 </div>
               </div>
 
               {/* Team Time Slot & Court Fairness Matrix Table */}
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <h4 className="font-extrabold text-white text-xs uppercase tracking-wider flex items-center gap-2">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2">
                     <Scale className="h-4 w-4 text-rose-500" />
                     <span>Time Slot & Court Fairness Distribution Matrix</span>
                   </h4>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">
                     {divisionTeams.length} Teams • Per-Time-Slot Fairness Breakdown
                   </span>
                 </div>
@@ -1077,14 +1077,14 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase text-[10px] tracking-wider">
                         <th className="py-2 px-3 font-semibold">Team Name</th>
-                        <th className="py-2 px-3 font-semibold text-center text-emerald-400">Official Games</th>
-                        <th className="py-2 px-3 font-semibold text-center text-purple-400">Exhibition</th>
+                        <th className="py-2 px-3 font-semibold text-center text-emerald-600 dark:text-emerald-400">Official Games</th>
+                        <th className="py-2 px-3 font-semibold text-center text-purple-600 dark:text-purple-400">Exhibition</th>
                         <th className="py-2 px-3 font-semibold text-center">Double Headers</th>
                         {/* Dynamic Time Slot Columns */}
                         {generatedReport.effectiveTimeSlots.map((slot) => (
-                          <th key={slot} className="py-2 px-3 font-semibold text-center text-amber-400">
+                          <th key={slot} className="py-2 px-3 font-semibold text-center text-amber-600 dark:text-amber-400">
                             {formatTime(slot)}
                           </th>
                         ))}
@@ -1092,30 +1092,30 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                         {assignWorkTeams && <th className="py-2 px-3 font-semibold text-center">Ref Duties</th>}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                       {generatedReport.teamMetrics.map((tm) => (
-                        <tr key={tm.teamId} className="hover:bg-slate-900/50 transition-colors">
-                          <td className="py-2.5 px-3 font-bold text-white flex items-center gap-1.5">
+                        <tr key={tm.teamId} className="hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors">
+                          <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                             <span>{tm.teamName}</span>
                           </td>
-                          <td className="py-2.5 px-3 text-center font-extrabold text-emerald-400">
+                          <td className="py-2.5 px-3 text-center font-extrabold text-emerald-600 dark:text-emerald-400">
                             {tm.officialGames ?? tm.totalGames}
                           </td>
-                          <td className="py-2.5 px-3 text-center font-extrabold text-purple-400">
+                          <td className="py-2.5 px-3 text-center font-extrabold text-purple-600 dark:text-purple-400">
                             {tm.exhibitionGames ?? 0}
                           </td>
                           <td className="py-2.5 px-3 text-center">
                             {tm.doubleHeaderCount > 0 ? (
-                              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold text-[10px]">
+                              <span className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold text-[10px]">
                                 {tm.doubleHeaderCount} DH (Back-to-Back)
                               </span>
                             ) : (
-                              <span className="text-slate-500 text-[10px]">-</span>
+                              <span className="text-slate-400 dark:text-slate-500 text-[10px]">-</span>
                             )}
                           </td>
                           {/* Exact per-timeslot counts */}
                           {generatedReport.effectiveTimeSlots.map((slot) => (
-                            <td key={slot} className="py-2.5 px-3 text-center font-mono font-bold text-slate-200">
+                            <td key={slot} className="py-2.5 px-3 text-center font-mono font-bold text-slate-800 dark:text-slate-200">
                               {tm.timeSlotCounts?.[slot] ?? 0}
                             </td>
                           ))}
@@ -1125,7 +1125,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                               return (
                                 <span
                                   key={cId}
-                                  className="inline-block bg-slate-900 text-slate-300 border border-slate-800 px-1.5 py-0.5 rounded font-mono text-[10px] mr-1"
+                                  className="inline-block bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded font-mono text-[10px] mr-1"
                                 >
                                   {cName}: {count}
                                 </span>
@@ -1133,7 +1133,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                             })}
                           </td>
                           {assignWorkTeams && (
-                            <td className="py-2.5 px-3 text-center font-bold text-violet-400">
+                            <td className="py-2.5 px-3 text-center font-bold text-violet-600 dark:text-violet-400">
                               {tm.refDutyCount}
                             </td>
                           )}
@@ -1145,15 +1145,15 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
               </div>
 
               {/* Head-to-Head Opponent Spacing & Matchup Matrix */}
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-800 gap-2">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800 gap-2">
                   <div className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-amber-400" />
+                    <BarChart3 className="h-4 w-4 text-amber-500 dark:text-amber-400" />
                     <div>
-                      <h4 className="font-extrabold text-white text-xs uppercase tracking-wider">
+                      <h4 className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wider">
                         Head-to-Head Opponent Matchup Matrix
                       </h4>
-                      <p className="text-[10px] text-slate-400">
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
                         {h2hFilter === 'breakdown' && 'Showing breakdown: Official League (L) + Exhibition Filler (E)'}
                         {h2hFilter === 'official' && 'Showing Official Standings Matches only (counts toward league rankings)'}
                         {h2hFilter === 'exhibition' && 'Showing Exhibition / Capacity Filler Matches only (does not affect standings)'}
@@ -1163,14 +1163,14 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   </div>
 
                   {/* Filter Mode Selector Pills */}
-                  <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+                  <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 self-start sm:self-auto shadow-sm">
                     <button
                       type="button"
                       onClick={() => setH2hFilter('breakdown')}
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
                         h2hFilter === 'breakdown'
                           ? 'bg-amber-500 text-slate-950 shadow'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Breakdown (L + E)
@@ -1181,7 +1181,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
                         h2hFilter === 'official'
                           ? 'bg-emerald-500 text-slate-950 shadow'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Official Only
@@ -1192,7 +1192,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
                         h2hFilter === 'exhibition'
                           ? 'bg-purple-500 text-slate-950 shadow'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Exhibition Only
@@ -1203,7 +1203,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
                         h2hFilter === 'all'
                           ? 'bg-slate-700 text-white shadow'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       All Combined
@@ -1214,25 +1214,25 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 <div className="overflow-x-auto">
                   <table className="w-full text-center text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase text-[10px] tracking-wider">
                         <th className="py-2 px-3 text-left font-semibold">Team</th>
                         {divisionTeams.map((t) => (
-                          <th key={t.id} className="py-2 px-2 font-semibold text-slate-300 min-w-[75px]">
+                          <th key={t.id} className="py-2 px-2 font-semibold text-slate-700 dark:text-slate-300 min-w-[75px]">
                             {t.name.length > 10 ? `${t.name.slice(0, 9)}…` : t.name}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                       {divisionTeams.map((teamA) => (
-                        <tr key={teamA.id} className="hover:bg-slate-900/50 transition-colors">
-                          <td className="py-2.5 px-3 text-left font-bold text-white whitespace-nowrap">
+                        <tr key={teamA.id} className="hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors">
+                          <td className="py-2.5 px-3 text-left font-bold text-slate-900 dark:text-white whitespace-nowrap">
                             {teamA.name}
                           </td>
                           {divisionTeams.map((teamB) => {
                             if (teamA.id === teamB.id) {
                               return (
-                                <td key={teamB.id} className="py-2.5 px-2 text-slate-700 bg-slate-900/40">
+                                <td key={teamB.id} className="py-2.5 px-2 text-slate-300 dark:text-slate-700 bg-slate-100 dark:bg-slate-900/40">
                                   -
                                 </td>
                               );
@@ -1246,19 +1246,19 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                                 {h2hFilter === 'breakdown' && (
                                   <div>
                                     {totalCount === 0 ? (
-                                      <span className="text-slate-600">0</span>
+                                      <span className="text-slate-400 dark:text-slate-600">0</span>
                                     ) : (
                                       <div className="flex items-center justify-center gap-1 text-[11px]">
                                         {offCount > 0 && (
-                                          <span className="text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20" title={`${offCount} Official League Game(s)`}>
+                                          <span className="text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20" title={`${offCount} Official League Game(s)`}>
                                             {offCount}L
                                           </span>
                                         )}
                                         {offCount > 0 && exhCount > 0 && (
-                                          <span className="text-slate-600 text-[10px]">+</span>
+                                          <span className="text-slate-400 dark:text-slate-600 text-[10px]">+</span>
                                         )}
                                         {exhCount > 0 && (
-                                          <span className="text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded border border-purple-500/20" title={`${exhCount} Exhibition Game(s)`}>
+                                          <span className="text-purple-700 dark:text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded border border-purple-500/20" title={`${exhCount} Exhibition Game(s)`}>
                                             {exhCount}E
                                           </span>
                                         )}
@@ -1270,8 +1270,8 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                                   <span
                                     className={`font-bold ${
                                       offCount > 0
-                                        ? 'text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20'
-                                        : 'text-slate-600'
+                                        ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20'
+                                        : 'text-slate-400 dark:text-slate-600'
                                     }`}
                                   >
                                     {offCount > 0 ? `${offCount}x` : '0'}
@@ -1281,8 +1281,8 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                                   <span
                                     className={`font-bold ${
                                       exhCount > 0
-                                        ? 'text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20'
-                                        : 'text-slate-600'
+                                        ? 'text-purple-700 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20'
+                                        : 'text-slate-400 dark:text-slate-600'
                                     }`}
                                   >
                                     {exhCount > 0 ? `${exhCount}x` : '0'}
@@ -1292,8 +1292,8 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                                   <span
                                     className={`font-bold ${
                                       totalCount > 0
-                                        ? 'text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20'
-                                        : 'text-slate-600'
+                                        ? 'text-amber-700 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20'
+                                        : 'text-slate-400 dark:text-slate-600'
                                     }`}
                                   >
                                     {totalCount > 0 ? `${totalCount}x` : '0'}
@@ -1309,61 +1309,61 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 </div>
 
                 {/* Legend */}
-                <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
+                <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-200 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/40 inline-flex items-center justify-center text-[9px] font-bold text-emerald-400">L</span>
+                    <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/40 inline-flex items-center justify-center text-[9px] font-bold text-emerald-600 dark:text-emerald-400">L</span>
                     <span><strong>Official League Matches</strong> (Count towards Standings)</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded bg-purple-500/20 border border-purple-500/40 inline-flex items-center justify-center text-[9px] font-bold text-purple-400">E</span>
+                    <span className="w-3 h-3 rounded bg-purple-500/20 border border-purple-500/40 inline-flex items-center justify-center text-[9px] font-bold text-purple-600 dark:text-purple-400">E</span>
                     <span><strong>Exhibition Matches</strong> (Capacity Fillers, Not in Standings)</span>
                   </div>
                 </div>
               </div>
 
               {/* Priority Rules Compliance Checklist */}
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-                <h4 className="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                <h4 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   <span>Rule Priorities Compliance Audit</span>
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center space-x-2">
-                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${fillAllTimeslots ? 'text-emerald-400' : 'text-slate-600'}`} />
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center space-x-2">
+                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${fillAllTimeslots ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-600'}`} />
                     <div>
-                      <span className="font-bold text-white block">Fill All Timeslots</span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="font-bold text-slate-900 dark:text-white block">Fill All Timeslots</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
                         {fillAllTimeslots ? 'ACTIVE — Extra double header matches scheduled' : 'OFF'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center space-x-2">
-                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${spaceOutOpponents ? 'text-emerald-400' : 'text-slate-600'}`} />
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center space-x-2">
+                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${spaceOutOpponents ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-600'}`} />
                     <div>
-                      <span className="font-bold text-white block">Opponent Rematch Spacing</span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="font-bold text-slate-900 dark:text-white block">Opponent Rematch Spacing</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
                         {spaceOutOpponents ? 'ACTIVE — Rematches spaced out across season' : 'OFF'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center space-x-2">
-                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${fairnessTimeSlots ? 'text-emerald-400' : 'text-slate-600'}`} />
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center space-x-2">
+                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${fairnessTimeSlots ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-600'}`} />
                     <div>
-                      <span className="font-bold text-white block">Early vs Late Time Slot Balance</span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="font-bold text-slate-900 dark:text-white block">Early vs Late Time Slot Balance</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
                         {fairnessTimeSlots ? 'ACTIVE — Fairness matrix applied' : 'OFF'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center space-x-2">
-                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${assignWorkTeams ? 'text-violet-400' : 'text-amber-400'}`} />
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center space-x-2">
+                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${assignWorkTeams ? 'text-violet-600 dark:text-violet-400' : 'text-amber-600 dark:text-amber-400'}`} />
                     <div>
-                      <span className="font-bold text-white block">Ref / Work Duty Mode</span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="font-bold text-slate-900 dark:text-white block">Ref / Work Duty Mode</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
                         {assignWorkTeams ? 'Work Teams Assigned' : 'Self-Reffed League'}
                       </span>
                     </div>
@@ -1388,7 +1388,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                     className={`px-3 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${
                       previewWeek === wk
                         ? 'bg-violet-600 text-white shadow-md shadow-violet-500/20'
-                        : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                        : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
                     }`}
                   >
                     Week {wk}
@@ -1397,12 +1397,12 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
               </div>
 
               {/* Week Matches Table */}
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <span className="font-bold text-white text-xs">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <span className="font-bold text-slate-900 dark:text-white text-xs">
                     Week {previewWeek} Generated Matches
                   </span>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
                     {generatedMatches.filter((m) => m.weekNumber === previewWeek).length} Matches
                   </span>
                 </div>
@@ -1419,34 +1419,34 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       return (
                         <div
                           key={m.id}
-                          className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+                          className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-sm"
                         >
                           <div className="flex items-center space-x-3">
-                            <span className="font-mono text-amber-400 font-bold bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                            <span className="font-mono text-amber-700 dark:text-amber-400 font-bold bg-slate-100 dark:bg-slate-950 px-2 py-1 rounded border border-slate-200 dark:border-slate-800">
                               {formatTimeRange(m.startTime, m.endTime)}
                             </span>
-                            <span className="text-slate-400 font-medium">📍 {courtName}</span>
+                            <span className="text-slate-600 dark:text-slate-400 font-medium">📍 {courtName}</span>
                           </div>
 
-                          <div className="font-bold text-white text-sm flex items-center space-x-2">
-                            <span className="text-rose-300">{hTeam}</span>
-                            <span className="text-slate-500 font-normal">vs</span>
-                            <span className="text-amber-300">{aTeam}</span>
+                          <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                            <span className="text-rose-600 dark:text-rose-300">{hTeam}</span>
+                            <span className="text-slate-400 dark:text-slate-500 font-normal">vs</span>
+                            <span className="text-amber-600 dark:text-amber-300">{aTeam}</span>
                           </div>
 
                           <div className="flex items-center space-x-2">
                             {wTeam && (
-                              <span className="bg-violet-500/20 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                              <span className="bg-violet-500/10 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
                                 🏐 Ref: {wTeam}
                               </span>
                             )}
                             {m.notes?.includes('Double Header') && (
-                              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                              <span className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
                                 Double Header
                               </span>
                             )}
                             {m.isExhibition && (
-                              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                              <span className="bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
                                 Exhibition
                               </span>
                             )}
@@ -1463,13 +1463,13 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
           <div>
             {generatedMatches && viewMode !== 'config' && (
               <button
                 type="button"
                 onClick={() => setViewMode('config')}
-                className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1"
+                className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1"
               >
                 ← Adjust Rules & Settings
               </button>
@@ -1479,7 +1479,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-slate-400 hover:text-white text-xs font-semibold"
+              className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-semibold"
             >
               Cancel
             </button>

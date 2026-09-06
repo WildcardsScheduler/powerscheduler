@@ -112,29 +112,29 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 transition-colors duration-150">
         
         {/* Header */}
-        <div className="p-6 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-6 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
               <KeyRound className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-white tracking-tight">Access Portal</h3>
-              <p className="text-xs text-slate-400">Sign in for Scorekeeping & Management</p>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Access Portal</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Sign in for Scorekeeping & Management</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Role Selector Tabs */}
-        <div className="p-4 bg-slate-950/50 border-b border-slate-800 flex">
+        <div className="p-4 bg-slate-100 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800 flex">
           <button
             type="button"
             onClick={() => {
@@ -144,8 +144,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             }}
             className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 transition-all ${
               activeTab === 'team'
-                ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
             }`}
           >
             <UserCheck className="h-4 w-4" />
@@ -161,8 +161,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             }}
             className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 transition-all ${
               activeTab === 'admin'
-                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-violet-600 text-white shadow-md shadow-violet-600/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
             }`}
           >
             <ShieldCheck className="h-4 w-4" />
@@ -175,13 +175,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           {activeTab === 'team' ? (
             <form onSubmit={handleCaptainLogin} className="space-y-4">
               {authRole === 'team_rep' && authTeamName && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-300 flex items-start space-x-2">
-                  <AlertCircle className="h-4 w-4 shrink-0 text-amber-400 mt-0.5" />
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-700 dark:text-amber-300 flex items-start space-x-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-amber-500 dark:text-amber-400 mt-0.5" />
                   <div>
                     <span className="font-bold">Currently Signed In:</span>{' '}
-                    <strong className="text-white">{authTeamName}</strong>
-                    {authLeagueName && <span className="text-slate-400"> ({authLeagueName})</span>}.
-                    <p className="text-[11px] text-amber-200/80 mt-0.5">
+                    <strong className="text-slate-900 dark:text-white">{authTeamName}</strong>
+                    {authLeagueName && <span className="text-slate-500 dark:text-slate-400"> ({authLeagueName})</span>}.
+                    <p className="text-[11px] text-amber-900 dark:text-amber-200/80 mt-0.5">
                       Logging in below will replace your current session with the selected team.
                     </p>
                   </div>
@@ -191,9 +191,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               {/* League Selector (if multiple leagues exist) */}
               {leagues.length > 1 && (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                     <span>Select League Season</span>
-                    <span className="text-[10px] text-amber-400 font-mono font-normal">({leagues.length} Available)</span>
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-normal">({leagues.length} Available)</span>
                   </label>
                   <select
                     value={selectedLeagueId}
@@ -206,10 +206,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                         setSelectedTeamId(targetL.teams[0].id);
                       }
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                   >
                     {leagues.map((l) => (
-                      <option key={l.id} value={l.id} className="bg-slate-900 text-white">
+                      <option key={l.id} value={l.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                         {l.name} ({l.sport})
                       </option>
                     ))}
@@ -218,14 +218,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               )}
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300 block">Select Your Team</label>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Select Your Team</label>
                 <select
                   value={selectedTeamId}
                   onChange={(e) => setSelectedTeamId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                 >
                   {targetLeague?.teams.map((t) => (
-                    <option key={t.id} value={t.id} className="bg-slate-900 text-white">
+                    <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                       {t.name}
                     </option>
                   ))}
@@ -233,7 +233,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300 block">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                   4-Digit Captain PIN
                 </label>
                 <div className="relative">
@@ -243,31 +243,31 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     placeholder="Enter team PIN (e.g. 1234)"
                     value={captainPin}
                     onChange={(e) => setCaptainPin(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono tracking-wider text-amber-400 placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono tracking-wider text-amber-600 dark:text-amber-400 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowCaptainPin(!showCaptainPin)}
-                    className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300"
+                    className="absolute right-3.5 top-3 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   >
                     {showCaptainPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
                 <p className="text-[11px] text-slate-500 italic">
-                  Default PIN for teams is <strong className="text-slate-400">1234</strong> (or custom configured PIN).
+                  Default PIN for teams is <strong className="text-slate-700 dark:text-slate-400">1234</strong> (or custom configured PIN).
                 </p>
               </div>
 
               {teamError && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center space-x-2 text-xs text-rose-400 font-semibold">
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center space-x-2 text-xs text-rose-600 dark:text-rose-400 font-semibold">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{teamError}</span>
                 </div>
               )}
 
               {teamSuccess && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2 text-xs text-emerald-400 font-semibold">
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
                   <span>{teamSuccess}</span>
                 </div>
@@ -275,7 +275,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center space-x-2"
+                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-md shadow-amber-500/20 transition-all flex items-center justify-center space-x-2"
               >
                 <UserCheck className="h-4 w-4" />
                 <span>Log In as Team Captain</span>
@@ -284,7 +284,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           ) : (
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300 block">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                   Master Administrator Passcode
                 </label>
                 <div className="relative">
@@ -293,13 +293,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     placeholder="Enter master admin passcode"
                     value={adminPasscode}
                     onChange={(e) => setAdminPasscode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono text-violet-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono text-violet-700 dark:text-violet-300 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-violet-500"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowAdminPasscode(!showAdminPasscode)}
-                    className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300"
+                    className="absolute right-3.5 top-3 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   >
                     {showAdminPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -310,14 +310,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
 
               {adminError && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center space-x-2 text-xs text-rose-400 font-semibold">
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center space-x-2 text-xs text-rose-600 dark:text-rose-400 font-semibold">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{adminError}</span>
                 </div>
               )}
 
               {adminSuccess && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2 text-xs text-emerald-400 font-semibold">
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
                   <span>{adminSuccess}</span>
                 </div>
@@ -325,7 +325,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-sm shadow-lg shadow-violet-600/20 transition-all flex items-center justify-center space-x-2"
+                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-sm shadow-md shadow-violet-600/20 transition-all flex items-center justify-center space-x-2"
               >
                 <ShieldCheck className="h-4 w-4" />
                 <span>Log In as Administrator</span>

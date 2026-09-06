@@ -927,20 +927,20 @@ export default function Home() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-100 font-sans">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-150">
         <div className="relative flex items-center justify-center mb-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 animate-pulse flex items-center justify-center shadow-lg shadow-rose-500/20">
             <Trophy className="w-6 h-6 text-white" />
           </div>
         </div>
-        <h2 className="text-base font-semibold text-slate-200 tracking-tight">PowerSchedule</h2>
+        <h2 className="text-base font-semibold text-slate-800 dark:text-slate-200 tracking-tight">PowerSchedule</h2>
         <p className="text-xs text-slate-500 mt-1 animate-pulse">Loading league data...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-rose-500 selection:text-white font-sans pb-16">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-rose-500 selection:text-white font-sans pb-16 transition-colors duration-150">
       
       {/* Dynamic Top Navbar with Multi-League Support */}
       <Navbar
@@ -1017,8 +1017,8 @@ export default function Home() {
 
         {/* Division Selector Tabs for Standings & Schedule (Only if Multi-Division mode or >1 divisions) */}
         {league.hasDivisions !== false && league.divisions.length > 1 ? (
-          <div className="flex items-center space-x-2 border-b border-slate-800 pb-3 overflow-x-auto scrollbar-none">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2 shrink-0">
+          <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto scrollbar-none">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-2 shrink-0">
               Division View:
             </span>
             {league.divisions.map((div) => (
@@ -1028,7 +1028,7 @@ export default function Home() {
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                   effectiveDivisionId === div.id
                     ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-md shadow-rose-500/20'
-                    : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+                    : 'bg-white hover:bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 shadow-xs'
                 }`}
               >
                 {div.name}
@@ -1036,10 +1036,10 @@ export default function Home() {
             ))}
           </div>
         ) : currentRole === 'scheduler' ? (
-          <div className="flex items-center justify-end border-b border-slate-800 pb-3">
+          <div className="flex items-center justify-end border-b border-slate-200 dark:border-slate-800 pb-3">
             <button
               onClick={() => setIsDivisionManagerOpen(true)}
-              className="text-xs text-violet-400 hover:underline font-semibold"
+              className="text-xs text-violet-600 dark:text-violet-400 hover:underline font-semibold"
             >
               + Edit Division Setup
             </button>

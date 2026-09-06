@@ -28,7 +28,6 @@ import {
   Scale,
 } from 'lucide-react';
 import { formatTimeRange } from '@/utils/formatUtils';
-
 import { DEFAULT_LEAGUE_RULES } from '@/data/defaultRules';
 
 interface TeamRepDashboardProps {
@@ -71,14 +70,13 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
   const [copiedRules, setCopiedRules] = useState(false);
 
   const activeRulesText = leagueRulesContent || DEFAULT_LEAGUE_RULES;
-
   const activeTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
 
   if (!activeTeam) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center text-slate-400 space-y-3">
-        <Users className="h-10 w-10 text-slate-600 mx-auto" />
-        <h3 className="text-lg font-bold text-white">No Teams Registered Yet</h3>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center text-slate-500 dark:text-slate-400 space-y-3 shadow-sm">
+        <Users className="h-10 w-10 text-slate-400 dark:text-slate-600 mx-auto" />
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Teams Registered Yet</h3>
         <p className="text-xs">Select a team or register new teams in the administrative dashboard.</p>
       </div>
     );
@@ -104,26 +102,25 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
 
   const opponentTeam = teams.find((t) => t.id === opponentId);
 
-  // Helper to resolve match location
-  const getMatchLocation = (m: Match) => {
-    const sId = m.subLocationId || m.courtId;
-    const pLoc = locations.find(
-      (l) => l.id === m.locationId || l.subLocations.some((s) => s.id === sId)
+  const getMatchLocation = (match: Match) => {
+    const subLocId = match.subLocationId || match.courtId;
+    const primaryLoc = locations.find(
+      (l) => l.id === match.locationId || l.subLocations.some((s) => s.id === subLocId)
     );
-    const sLoc = pLoc?.subLocations.find((s) => s.id === sId);
-    return { primaryLoc: pLoc, subLoc: sLoc };
+    const subLoc = primaryLoc?.subLocations.find((s) => s.id === subLocId);
+    return { primaryLoc, subLoc };
   };
 
-  const { primaryLoc, subLoc } = nextMatch ? getMatchLocation(nextMatch) : { primaryLoc: undefined, subLoc: undefined };
+  const { primaryLoc, subLoc } = nextMatch
+    ? getMatchLocation(nextMatch)
+    : { primaryLoc: undefined, subLoc: undefined };
 
-  // Copy helper
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  // Copy all emails
   const handleCopyAllEmails = (teamList: Team[]) => {
     const emails = teamList
       .map((t) => t.captainEmail)
@@ -153,21 +150,21 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
     <div className="space-y-6">
       
       {/* Top Header & Tab Navigation Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm dark:shadow-xl transition-colors duration-150">
         <div className="flex items-center space-x-3 w-full md:w-auto">
           <span
-            className="h-6 w-6 rounded-full shrink-0 shadow-md border border-white/20"
+            className="h-6 w-6 rounded-full shrink-0 shadow-md border border-slate-300 dark:border-white/20"
             style={{ backgroundColor: activeTeam.badgeColor }}
           />
           <div>
-            <label className="text-[10px] uppercase font-semibold tracking-wider text-slate-500 block">
+            <label className="text-[10px] uppercase font-semibold tracking-wider text-slate-500 dark:text-slate-500 block">
               Active Team View
             </label>
             {currentRole === 'team_rep' ? (
-              <div className="text-white font-bold text-lg flex items-center space-x-2">
+              <div className="text-slate-900 dark:text-white font-bold text-lg flex items-center space-x-2">
                 <span>{activeTeam.name}</span>
-                <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                  <Lock className="h-3 w-3 text-amber-400" />
+                <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                  <Lock className="h-3 w-3 text-amber-500 dark:text-amber-400" />
                   <span>My Authenticated Team</span>
                 </span>
               </div>
@@ -175,10 +172,10 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
               <select
                 value={activeTeam.id}
                 onChange={(e) => onSelectTeam(e.target.value)}
-                className="bg-transparent text-white font-bold text-lg focus:outline-none cursor-pointer"
+                className="bg-transparent text-slate-900 dark:text-white font-bold text-lg focus:outline-none cursor-pointer"
               >
                 {teams.map((t) => (
-                  <option key={t.id} value={t.id} className="bg-slate-900 text-white">
+                  <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                     {t.name} ({divisions.find((d) => d.id === t.divisionId)?.name})
                   </option>
                 ))}
@@ -188,13 +185,13 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
         </div>
 
         {/* Tab Switcher Pills */}
-        <div className="flex items-center bg-slate-950 p-1.5 rounded-2xl border border-slate-800 w-full md:w-auto">
+        <div className="flex items-center bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 w-full md:w-auto">
           <button
             onClick={() => setActiveTab('overview')}
             className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
               activeTab === 'overview'
                 ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 shadow-md font-black'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Calendar className="h-4 w-4" />
@@ -206,12 +203,12 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
               activeTab === 'directory'
                 ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 shadow-md font-black'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <BookUser className="h-4 w-4" />
             <span>Captains Directory</span>
-            <span className="bg-slate-800 text-amber-400 text-[10px] px-1.5 py-0.5 rounded-full font-mono">
+            <span className="bg-slate-200 dark:bg-slate-800 text-amber-700 dark:text-amber-400 text-[10px] px-1.5 py-0.5 rounded-full font-mono">
               {teams.length}
             </span>
           </button>
@@ -221,7 +218,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
               activeTab === 'rules'
                 ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 shadow-md font-black'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <BookOpen className="h-4 w-4" />
@@ -231,9 +228,9 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
           {showFairnessReport && onOpenFairnessReport && (
             <button
               onClick={onOpenFairnessReport}
-              className="flex-1 md:flex-none px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 border border-violet-500/20"
+              className="flex-1 md:flex-none px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all text-violet-700 dark:text-violet-400 hover:text-violet-900 dark:hover:text-violet-300 hover:bg-violet-500/10 border border-violet-500/30"
             >
-              <Scale className="h-4 w-4 text-violet-400" />
+              <Scale className="h-4 w-4 text-violet-600 dark:text-violet-400" />
               <span>Fairness Report</span>
             </button>
           )}
@@ -247,19 +244,19 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
         <div className="space-y-6 animate-in fade-in duration-200">
           
           {/* Privacy & Info Banner */}
-          <div className="bg-gradient-to-r from-slate-900 via-amber-950/20 to-slate-900 border border-amber-500/30 rounded-3xl p-5 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-gradient-to-r from-white via-amber-50/50 to-white dark:from-slate-900 dark:via-amber-950/20 dark:to-slate-900 border border-amber-500/30 rounded-3xl p-5 shadow-sm dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start space-x-3">
-              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
                 <Lock className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h3 className="text-base font-extrabold text-white">Private Captains Contact Directory</h3>
-                  <span className="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Private Captains Contact Directory</h3>
+                  <span className="bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
                     Captains & Admins Only
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                   Use this directory to contact opposing captains for match coordination, notifications, or emergency updates. This data is hidden from public visitors.
                 </p>
               </div>
@@ -267,12 +264,12 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
 
             <button
               onClick={() => handleCopyAllEmails(filteredTeams)}
-              className="px-4 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-amber-400 hover:text-white border border-amber-500/30 font-bold text-xs flex items-center space-x-2 transition-all shrink-0 shadow-md"
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-amber-700 dark:text-amber-400 hover:text-slate-900 dark:hover:text-white border border-amber-500/30 font-bold text-xs flex items-center space-x-2 transition-all shrink-0 shadow-sm"
             >
               {copiedAll ? (
                 <>
-                  <Check className="h-4 w-4 text-emerald-400" />
-                  <span className="text-emerald-400">All Emails Copied!</span>
+                  <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-emerald-600 dark:text-emerald-400">All Emails Copied!</span>
                 </>
               ) : (
                 <>
@@ -284,25 +281,25 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
           </div>
 
           {/* Search & Filter Controls */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm dark:shadow-lg">
             <div className="relative w-full sm:w-80">
               <input
                 type="text"
                 placeholder="Search team, captain, phone, or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
               />
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500 pointer-events-none" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
             </div>
 
             {divisions.length > 1 && (
               <div className="flex items-center space-x-2 w-full sm:w-auto">
-                <span className="text-xs text-slate-400 font-semibold whitespace-nowrap">Division:</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold whitespace-nowrap">Division:</span>
                 <select
                   value={selectedDivFilter}
                   onChange={(e) => setSelectedDivFilter(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-amber-500 cursor-pointer w-full sm:w-auto"
+                  className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-amber-500 cursor-pointer w-full sm:w-auto"
                 >
                   <option value="ALL">All Divisions ({teams.length})</option>
                   {divisions.map((d) => (
@@ -317,10 +314,10 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
 
           {/* Teams Directory Cards Grid */}
           {filteredTeams.length === 0 ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 text-center text-slate-400 space-y-2">
-              <Search className="h-8 w-8 text-slate-600 mx-auto" />
-              <p className="text-sm font-bold text-white">No teams match your search</p>
-              <p className="text-xs">Try clearing the search query or changing the division filter.</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center text-slate-400 space-y-2">
+              <Search className="h-8 w-8 text-slate-400 dark:text-slate-600 mx-auto" />
+              <p className="text-sm font-bold text-slate-900 dark:text-white">No teams match your search</p>
+              <p className="text-xs text-slate-500">Try clearing the search query or changing the division filter.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -331,25 +328,25 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                 return (
                   <div
                     key={team.id}
-                    className={`bg-slate-900 border rounded-3xl p-5 shadow-xl transition-all space-y-4 relative overflow-hidden ${
+                    className={`bg-white dark:bg-slate-900 border rounded-3xl p-5 shadow-sm dark:shadow-xl transition-all space-y-4 relative overflow-hidden ${
                       isCurrentTeam
-                        ? 'border-amber-500/50 bg-gradient-to-b from-slate-900 to-amber-950/10 ring-1 ring-amber-500/30'
-                        : 'border-slate-800 hover:border-slate-700'
+                        ? 'border-amber-500/50 bg-gradient-to-b from-amber-50/30 to-white dark:from-slate-900 dark:to-amber-950/10 ring-1 ring-amber-500/30'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
                     {/* Top Team Header */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center space-x-3">
                         <span
-                          className="h-6 w-6 rounded-full shrink-0 shadow-md border border-white/20"
+                          className="h-6 w-6 rounded-full shrink-0 shadow-md border border-slate-300 dark:border-white/20"
                           style={{ backgroundColor: team.badgeColor }}
                         />
                         <div>
-                          <h4 className="text-base font-extrabold text-white leading-tight">
+                          <h4 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
                             {team.name}
                           </h4>
                           {teamDiv && (
-                            <span className="text-[11px] text-amber-400 font-semibold block mt-0.5">
+                            <span className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold block mt-0.5">
                               {teamDiv.name}
                             </span>
                           )}
@@ -357,28 +354,28 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                       </div>
 
                       {isCurrentTeam && (
-                        <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black px-2 py-0.5 rounded-full shrink-0">
+                        <span className="bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[10px] font-black px-2 py-0.5 rounded-full shrink-0">
                           Your Team
                         </span>
                       )}
                     </div>
 
                     {/* Captain Contact Details Box */}
-                    <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800/80 space-y-2.5 text-xs">
+                    <div className="bg-slate-50 dark:bg-slate-950/80 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 space-y-2.5 text-xs">
                       <div>
                         <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider block">
                           Team Captain
                         </span>
-                        <span className="text-white font-bold text-sm">{team.captainName || 'Not Listed'}</span>
+                        <span className="text-slate-900 dark:text-white font-bold text-sm">{team.captainName || 'Not Listed'}</span>
                       </div>
 
                       {/* Phone Number Action */}
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
-                        <div className="flex items-center space-x-2 text-slate-300 min-w-0">
-                          <Phone className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-800/60">
+                        <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-300 min-w-0">
+                          <Phone className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <a
                             href={`tel:${team.captainPhone}`}
-                            className="text-slate-200 hover:text-emerald-400 font-mono font-medium truncate hover:underline"
+                            className="text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 font-mono font-medium truncate hover:underline"
                             title="Click to Call"
                           >
                             {team.captainPhone || 'No phone'}
@@ -390,7 +387,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                             <>
                               <a
                                 href={`sms:${team.captainPhone}`}
-                                className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 border border-slate-800 text-[11px] font-bold flex items-center space-x-1"
+                                className="p-1.5 rounded-lg bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-800 text-[11px] font-bold flex items-center space-x-1"
                                 title="Send SMS Text"
                               >
                                 <MessageSquare className="h-3 w-3" />
@@ -398,11 +395,11 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                               </a>
                               <button
                                 onClick={() => handleCopy(team.captainPhone, `phone-${team.id}`)}
-                                className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800"
+                                className="p-1.5 rounded-lg bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800"
                                 title="Copy Phone Number"
                               >
                                 {copiedKey === `phone-${team.id}` ? (
-                                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                  <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                                 ) : (
                                   <Copy className="h-3.5 w-3.5" />
                                 )}
@@ -413,12 +410,12 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                       </div>
 
                       {/* Email Address Action */}
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
-                        <div className="flex items-center space-x-2 text-slate-300 min-w-0">
-                          <Mail className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-800/60">
+                        <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-300 min-w-0">
+                          <Mail className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                           <a
                             href={`mailto:${team.captainEmail}`}
-                            className="text-slate-200 hover:text-blue-400 font-mono font-medium truncate hover:underline"
+                            className="text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-mono font-medium truncate hover:underline"
                             title="Click to Email"
                           >
                             {team.captainEmail || 'No email'}
@@ -428,11 +425,11 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                         {team.captainEmail && (
                           <button
                             onClick={() => handleCopy(team.captainEmail, `email-${team.id}`)}
-                            className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 shrink-0"
+                            className="p-1.5 rounded-lg bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 shrink-0"
                             title="Copy Email Address"
                           >
                             {copiedKey === `email-${team.id}` ? (
-                              <Check className="h-3.5 w-3.5 text-emerald-400" />
+                              <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                             ) : (
                               <Copy className="h-3.5 w-3.5" />
                             )}
@@ -442,9 +439,9 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                     </div>
 
                     {/* Quick Roster Count Footer */}
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
-                      <span>Roster: <strong className="text-slate-200">{team.roster.length} Players</strong></span>
-                      <span className="text-slate-500">ID: {team.id}</span>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                      <span>Roster: <strong className="text-slate-800 dark:text-slate-200">{team.roster.length} Players</strong></span>
+                      <span className="text-slate-400 dark:text-slate-500">ID: {team.id}</span>
                     </div>
 
                   </div>
@@ -461,23 +458,23 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
         <>
           {/* Next Match & Ref Duty Highlight Card */}
           {nextMatch ? (
-            <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+            <div className="relative overflow-hidden bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-2xl space-y-4">
               <div className="flex items-center justify-between">
-                <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">
                   Next Upcoming Fixture
                 </span>
-                <span className="text-xs text-slate-400 font-mono">Week #{nextMatch.weekNumber}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Week #{nextMatch.weekNumber}</span>
               </div>
 
               {/* If Team is assigned to Officiate (Ref Duty) */}
               {isRefDutyNext && (
                 <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-1">
-                  <div className="flex items-center space-x-2 text-amber-400 font-bold text-sm">
+                  <div className="flex items-center space-x-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
                     <ShieldAlert className="h-5 w-5 shrink-0" />
                     <span>Ref Duty Mandatory Alert!</span>
                   </div>
-                  <p className="text-xs text-amber-200/90">
-                    Your team <strong className="text-white">{activeTeam.name}</strong> is assigned to work/officiate this match! Please provide 1 Up-ref, 1 Down-ref, 1 Scorekeeper, and 2 Line judges.
+                  <p className="text-xs text-amber-900 dark:text-amber-200/90">
+                    Your team <strong className="text-slate-900 dark:text-white">{activeTeam.name}</strong> is assigned to work/officiate this match! Please provide 1 Up-ref, 1 Down-ref, 1 Scorekeeper, and 2 Line judges.
                   </p>
                 </div>
               )}
@@ -486,30 +483,30 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 
                 {/* Left: Time & Location */}
-                <div className="space-y-3 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
-                  <div className="flex items-center space-x-3 text-slate-300 text-sm">
-                    <Calendar className="h-4 w-4 text-amber-400 shrink-0" />
+                <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center space-x-3 text-slate-700 dark:text-slate-300 text-sm">
+                    <Calendar className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0" />
                     <span className="font-semibold">{nextMatch.date}</span>
                   </div>
-                  <div className="flex items-center space-x-3 text-slate-300 text-sm">
-                    <Clock className="h-4 w-4 text-rose-400 shrink-0" />
+                  <div className="flex items-center space-x-3 text-slate-700 dark:text-slate-300 text-sm">
+                    <Clock className="h-4 w-4 text-rose-500 dark:text-rose-400 shrink-0" />
                     <span className="font-semibold font-mono">{formatTimeRange(nextMatch.startTime, nextMatch.endTime)}</span>
                   </div>
-                  <div className="flex items-start space-x-3 text-slate-300 text-sm">
-                    <MapPin className="h-4 w-4 text-violet-400 shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-3 text-slate-700 dark:text-slate-300 text-sm">
+                    <MapPin className="h-4 w-4 text-violet-500 dark:text-violet-400 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-white block">
+                      <span className="font-bold text-slate-900 dark:text-white block">
                         {primaryLoc?.name || 'Main Facility'} • {subLoc?.name || 'Court 1'}
                       </span>
                       {primaryLoc?.address && (
-                        <span className="text-xs text-slate-400 block">{primaryLoc.address}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 block">{primaryLoc.address}</span>
                       )}
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Opponent / Teams Involved */}
-                <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                <div className="bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
                   {isPlayingNext ? (
                     <div>
                       <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1">
@@ -517,12 +514,12 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                       </span>
                       <div className="flex items-center space-x-3">
                         <span
-                          className="h-4 w-4 rounded-full"
+                          className="h-4 w-4 rounded-full shadow-sm"
                           style={{ backgroundColor: opponentTeam?.badgeColor || '#94a3b8' }}
                         />
-                        <span className="text-base font-bold text-white">{opponentTeam?.name || 'TBD Opponent'}</span>
+                        <span className="text-base font-bold text-slate-900 dark:text-white">{opponentTeam?.name || 'TBD Opponent'}</span>
                       </div>
-                      <span className="text-xs text-slate-400 block mt-1">
+                      <span className="text-xs text-slate-500 dark:text-slate-400 block mt-1">
                         {nextMatch.homeTeamId === activeTeam.id ? 'Home Match' : 'Away Match'}
                       </span>
                     </div>
@@ -531,7 +528,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                       <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1">
                         Teams Playing (You are Ref / Officiating)
                       </span>
-                      <div className="text-xs space-y-1 font-semibold text-slate-200">
+                      <div className="text-xs space-y-1 font-semibold text-slate-700 dark:text-slate-200">
                         <div>Home: {teams.find((t) => t.id === nextMatch.homeTeamId)?.name}</div>
                         <div>Away: {teams.find((t) => t.id === nextMatch.awayTeamId)?.name}</div>
                       </div>
@@ -541,7 +538,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                   <div className="pt-3">
                     <button
                       onClick={() => onOpenScorekeeper(nextMatch)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black text-xs shadow-lg shadow-rose-500/20 flex items-center justify-center space-x-2 transition-all"
+                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black text-xs shadow-md shadow-rose-500/20 flex items-center justify-center space-x-2 transition-all"
                     >
                       <Edit3 className="h-4 w-4" />
                       <span>{nextMatch.status === 'Completed' ? 'View / Edit Score' : 'Open Scorekeeper'}</span>
@@ -552,24 +549,24 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
               </div>
             </div>
           ) : (
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center text-slate-400 space-y-2">
-              <Calendar className="h-8 w-8 text-slate-600 mx-auto" />
-              <h4 className="text-sm font-bold text-white">No Scheduled Matches Found</h4>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 text-center text-slate-500 dark:text-slate-400 space-y-2">
+              <Calendar className="h-8 w-8 text-slate-400 dark:text-slate-600 mx-auto" />
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">No Scheduled Matches Found</h4>
               <p className="text-xs">Schedule has not been generated for this team yet.</p>
             </div>
           )}
 
           {/* Full Season Fixtures List for this Team */}
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center space-x-2">
-                <Trophy className="h-5 w-5 text-amber-400" />
-                <h3 className="text-base font-bold text-white">Season Schedule & Score Records</h3>
+                <Trophy className="h-5 w-5 text-amber-500 dark:text-amber-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Season Schedule & Score Records</h3>
               </div>
-              <span className="text-xs text-slate-400 font-mono">{teamMatches.length} Matches</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">{teamMatches.length} Matches</span>
             </div>
 
-            <div className="divide-y divide-slate-800/60">
+            <div className="divide-y divide-slate-200 dark:divide-slate-800/60">
               {teamMatches.length === 0 ? (
                 <p className="text-xs text-slate-500 py-4 text-center">No fixtures found.</p>
               ) : (
@@ -587,25 +584,25 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                     >
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-mono text-slate-400 font-bold">Wk #{m.weekNumber}</span>
-                          <span className="text-slate-500">•</span>
-                          <span className="text-white font-semibold">{m.date}</span>
-                          <span className="text-slate-400 font-mono">({formatTimeRange(m.startTime, m.endTime)})</span>
+                          <span className="font-mono text-slate-500 dark:text-slate-400 font-bold">Wk #{m.weekNumber}</span>
+                          <span className="text-slate-400 dark:text-slate-500">•</span>
+                          <span className="text-slate-900 dark:text-white font-semibold">{m.date}</span>
+                          <span className="text-slate-500 dark:text-slate-400 font-mono">({formatTimeRange(m.startTime, m.endTime)})</span>
                           {isRef && (
-                            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                            <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold">
                               Ref Duty
                             </span>
                           )}
                         </div>
 
-                        <div className="text-slate-300">
+                        <div className="text-slate-700 dark:text-slate-300">
                           {isPlaying ? (
                             <span>
-                              vs <strong className="text-white">{opp?.name || 'TBD'}</strong> (
+                              vs <strong className="text-slate-900 dark:text-white">{opp?.name || 'TBD'}</strong> (
                               {m.homeTeamId === activeTeam.id ? 'Home' : 'Away'})
                             </span>
                           ) : (
-                            <span className="text-slate-400">
+                            <span className="text-slate-500 dark:text-slate-400">
                               Officiating: {teams.find((t) => t.id === m.homeTeamId)?.name} vs{' '}
                               {teams.find((t) => t.id === m.awayTeamId)?.name}
                             </span>
@@ -634,20 +631,20 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                             <span
                               className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold flex items-center space-x-1.5 border ${
                                 isWin
-                                  ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+                                  ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
                                   : isLoss
-                                  ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
-                                  : 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+                                  ? 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30'
+                                  : 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30'
                               }`}
                             >
                               {isPlaying && (
                                 <span
                                   className={`text-[10px] uppercase font-black px-1.5 py-0.2 rounded ${
                                     isWin
-                                      ? 'bg-emerald-500/20 text-emerald-300'
+                                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
                                       : isLoss
-                                      ? 'bg-rose-500/20 text-rose-300'
-                                      : 'bg-amber-500/20 text-amber-300'
+                                      ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300'
+                                      : 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
                                   }`}
                                 >
                                   {isWin ? 'W' : isLoss ? 'L' : 'T'}
@@ -662,7 +659,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
 
                         <button
                           onClick={() => onOpenScorekeeper(m)}
-                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-rose-500/10 hover:from-amber-500/20 hover:to-rose-500/20 text-amber-400 hover:text-white font-bold text-xs border border-amber-500/30 flex items-center space-x-1.5 transition-all shadow-sm"
+                          className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:text-slate-900 dark:hover:text-white font-bold text-xs border border-amber-500/30 flex items-center space-x-1.5 transition-all shadow-sm"
                         >
                           <Edit3 className="h-3.5 w-3.5" />
                           <span>{m.status === 'Completed' ? 'Edit Score' : 'Report Score'}</span>
@@ -676,24 +673,24 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
           </div>
 
           {/* Roster & Mobile RSVP Check-in Section */}
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center space-x-2">
-                <Users className="h-5 w-5 text-emerald-400" />
-                <h3 className="text-base font-bold text-white">Team Roster & Player RSVPs</h3>
+                <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Team Roster & Player RSVPs</h3>
               </div>
-              <span className="text-xs text-slate-400 font-mono">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                 {activeTeam.roster.filter((p) => p.rsvpStatus === 'Going').length} / {activeTeam.roster.length} Attending
               </span>
             </div>
 
             {/* Captain Card Header */}
-            <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-between text-xs text-slate-300">
+            <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
               <div>
-                <span className="text-slate-400">Team Captain: </span>
-                <strong className="text-white font-bold">{activeTeam.captainName}</strong>
+                <span className="text-slate-500">Team Captain: </span>
+                <strong className="text-slate-900 dark:text-white font-bold">{activeTeam.captainName}</strong>
               </div>
-              <div className="flex items-center space-x-3 text-slate-400">
+              <div className="flex items-center space-x-3 text-slate-500 dark:text-slate-400">
                 <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" /> {activeTeam.captainEmail}</span>
                 <span className="flex items-center gap-1 hidden sm:flex"><Phone className="h-3.5 w-3.5" /> {activeTeam.captainPhone}</span>
               </div>
@@ -704,34 +701,34 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
               {activeTeam.roster.map((player) => (
                 <div
                   key={player.id}
-                  className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between space-x-3"
+                  className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between space-x-3 shadow-xs"
                 >
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-white text-sm">{player.name}</span>
+                      <span className="font-bold text-slate-900 dark:text-white text-sm">{player.name}</span>
                       {player.number && (
-                        <span className="bg-slate-800 text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded">
+                        <span className="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded">
                           #{player.number}
                         </span>
                       )}
                       {player.isCaptain && (
-                        <span className="bg-amber-500/10 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-500/20">
+                        <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-500/20">
                           Captain
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-slate-400 block mt-0.5">{player.position}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">{player.position}</span>
                   </div>
 
                   {/* RSVP Mobile Buttons */}
-                  <div className="flex items-center space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                  <div className="flex items-center space-x-1 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
                     <button
                       onClick={() => onUpdateRsvp(activeTeam.id, player.id, 'Going')}
                       title="Attending"
                       className={`p-1.5 rounded-lg transition-all ${
                         player.rsvpStatus === 'Going'
-                          ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+                          : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <CheckCircle2 className="h-4 w-4" />
@@ -741,8 +738,8 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                       title="Maybe"
                       className={`p-1.5 rounded-lg transition-all ${
                         player.rsvpStatus === 'Maybe'
-                          ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                          : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <HelpCircle className="h-4 w-4" />
@@ -752,8 +749,8 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                       title="Out"
                       className={`p-1.5 rounded-lg transition-all ${
                         player.rsvpStatus === 'Out'
-                          ? 'bg-rose-500 text-white font-bold shadow-md shadow-rose-500/20'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-rose-500 text-white font-bold shadow-sm'
+                          : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       <XCircle className="h-4 w-4" />
@@ -772,19 +769,19 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
         <div className="space-y-6 animate-in fade-in duration-200">
           
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-slate-900 via-amber-950/20 to-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-gradient-to-r from-white via-amber-50/50 to-white dark:from-slate-900 dark:via-amber-950/20 dark:to-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start space-x-3">
-              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
                 <BookOpen className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h3 className="text-base font-extrabold text-white">Official League Rules & Guidelines</h3>
-                  <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Official League Rules & Guidelines</h3>
+                  <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
                     Captain & Player Reference
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                   Official gameplay rules, match timing, substitution rules, scoring, and sportsmanship policies.
                 </p>
               </div>
@@ -797,9 +794,9 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                   setCopiedRules(true);
                   setTimeout(() => setCopiedRules(false), 2000);
                 }}
-                className="px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-md"
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-800 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
               >
-                {copiedRules ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                {copiedRules ? <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="h-4 w-4" />}
                 <span>{copiedRules ? 'Rules Copied!' : 'Copy Rules'}</span>
               </button>
 
@@ -816,22 +813,22 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
           </div>
 
           {/* Search bar for rules */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between shadow-lg">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 flex items-center justify-between shadow-sm dark:shadow-lg">
             <div className="relative w-full sm:w-80">
               <input
                 type="text"
                 placeholder="Search rules (e.g. forfeit, net, scoring, subs)..."
                 value={rulesSearch}
                 onChange={(e) => setRulesSearch(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
               />
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500 pointer-events-none" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
             </div>
           </div>
 
           {/* Formatted Rules Document Box */}
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4">
-            <div className="space-y-3 text-slate-300 leading-relaxed text-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-2xl space-y-4">
+            <div className="space-y-3 text-slate-700 dark:text-slate-300 leading-relaxed text-sm">
               {activeRulesText.split('\n').map((line, idx) => {
                 const trimmed = line.trim();
                 if (!trimmed) return <div key={idx} className="h-2" />;
@@ -844,7 +841,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                   return (
                     <h1
                       key={idx}
-                      className={`text-xl sm:text-2xl font-black text-white pt-4 pb-2 border-b border-slate-800 tracking-tight ${
+                      className={`text-xl sm:text-2xl font-black text-slate-900 dark:text-white pt-4 pb-2 border-b border-slate-200 dark:border-slate-800 tracking-tight ${
                         isHighlighted ? 'bg-amber-500/20 px-2 rounded' : ''
                       }`}
                     >
@@ -857,7 +854,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                   return (
                     <h2
                       key={idx}
-                      className={`text-base sm:text-lg font-extrabold text-amber-400 pt-3 pb-1 tracking-tight ${
+                      className={`text-base sm:text-lg font-extrabold text-amber-600 dark:text-amber-400 pt-3 pb-1 tracking-tight ${
                         isHighlighted ? 'bg-amber-500/20 px-2 rounded' : ''
                       }`}
                     >
@@ -870,7 +867,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                   return (
                     <h3
                       key={idx}
-                      className={`text-sm sm:text-base font-bold text-rose-400 pt-2 pb-1 ${
+                      className={`text-sm sm:text-base font-bold text-rose-600 dark:text-rose-400 pt-2 pb-1 ${
                         isHighlighted ? 'bg-amber-500/20 px-2 rounded' : ''
                       }`}
                     >
@@ -890,11 +887,11 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                         isHighlighted ? 'bg-amber-500/20 p-1.5 rounded' : ''
                       }`}
                     >
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-400 mt-2 shrink-0" />
-                      <span className="text-slate-200">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 dark:bg-amber-400 mt-2 shrink-0" />
+                      <span className="text-slate-800 dark:text-slate-200">
                         {parts.map((p, i) =>
                           p.startsWith('**') && p.endsWith('**') ? (
-                            <strong key={i} className="text-white font-bold">
+                            <strong key={i} className="text-slate-900 dark:text-white font-bold">
                               {p.slice(2, -2)}
                             </strong>
                           ) : (
@@ -917,13 +914,13 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                           isHighlighted ? 'bg-amber-500/20 p-1.5 rounded' : ''
                         }`}
                       >
-                        <span className="text-amber-400 font-mono font-bold text-xs shrink-0 mt-0.5">
+                        <span className="text-amber-600 dark:text-amber-400 font-mono font-bold text-xs shrink-0 mt-0.5">
                           {match[1]}
                         </span>
-                        <span className="text-slate-200">
+                        <span className="text-slate-800 dark:text-slate-200">
                           {parts.map((p, i) =>
                             p.startsWith('**') && p.endsWith('**') ? (
-                              <strong key={i} className="text-white font-bold">
+                              <strong key={i} className="text-slate-900 dark:text-white font-bold">
                                 {p.slice(2, -2)}
                               </strong>
                             ) : (
@@ -940,13 +937,13 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                 return (
                   <p
                     key={idx}
-                    className={`text-slate-300 ${
+                    className={`text-slate-700 dark:text-slate-300 ${
                       isHighlighted ? 'bg-amber-500/20 p-1 rounded' : ''
                     }`}
                   >
                     {parts.map((p, i) =>
                       p.startsWith('**') && p.endsWith('**') ? (
-                        <strong key={i} className="text-white font-bold">
+                        <strong key={i} className="text-slate-900 dark:text-white font-bold">
                           {p.slice(2, -2)}
                         </strong>
                       ) : (
