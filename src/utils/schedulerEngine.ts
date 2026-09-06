@@ -518,70 +518,69 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     }
   }
 
-  // Post-Processing: Equalize Official Standings Matches & Flag End-of-Season Extras as Exhibition
+  // Post-Processing: Equalize Official Standings Matches & Flag Extra Games as Exhibition
   if (ensureEqualGames || markDoubleHeadersAsExhibition) {
-    // Determine the maximum integer K such that EVERY team can reach EXACTLY K official games
-    let maxEqualOfficialGames = 0;
-
-    for (let k = 1; k <= 100; k++) {
-      const testCounts = new Map<string, number>();
-      teamIds.forEach((id) => testCounts.set(id, 0));
-
-      matches.forEach((m) => {
-        const h = testCounts.get(m.homeTeamId) || 0;
-        const a = testCounts.get(m.awayTeamId) || 0;
-
-        if (h < k) testCounts.set(m.homeTeamId, h + 1);
-        if (a < k) testCounts.set(m.awayTeamId, a + 1);
-      });
-
-      const counts = Array.from(testCounts.values());
-      const minOfficial = counts.length > 0 ? Math.min(...counts) : 0;
-
-      if (minOfficial >= k) {
-        maxEqualOfficialGames = k;
-      } else {
-        break; // Stop at the highest k reachable by ALL teams
-      }
-    }
-
-    // Fallback if maxEqualOfficialGames is 0
-    if (maxEqualOfficialGames === 0) {
-      const teamTotalCounts = new Map<string, number>();
-      teamIds.forEach((id) => teamTotalCounts.set(id, 0));
-      matches.forEach((m) => {
-        teamTotalCounts.set(m.homeTeamId, (teamTotalCounts.get(m.homeTeamId) || 0) + 1);
-        teamTotalCounts.set(m.awayTeamId, (teamTotalCounts.get(m.awayTeamId) || 0) + 1);
-      });
-      maxEqualOfficialGames = Math.min(...Array.from(teamTotalCounts.values()));
-    }
-
-    // Apply the exact cap: every team gets EXACTLY maxEqualOfficialGames official games
-    const teamOfficialCount = new Map<string, number>();
-    teamIds.forEach((id) => teamOfficialCount.set(id, 0));
-
+    // 1. Calculate each team's total scheduled games count
+    const teamTotalCounts = new Map<string, number>();
+    teamIds.forEach((id) => teamTotalCounts.set(id, 0));
     matches.forEach((m) => {
-      const hCount = teamOfficialCount.get(m.homeTeamId) || 0;
-      const aCount = teamOfficialCount.get(m.awayTeamId) || 0;
-
-      let isOfficialForMatch = false;
-
-      if (hCount < maxEqualOfficialGames) {
-        teamOfficialCount.set(m.homeTeamId, hCount + 1);
-        isOfficialForMatch = true;
-      }
-      if (aCount < maxEqualOfficialGames) {
-        teamOfficialCount.set(m.awayTeamId, aCount + 1);
-        isOfficialForMatch = true;
-      }
-
-      if (isOfficialForMatch) {
-        m.isExhibition = false;
-      } else {
-        m.isExhibition = true;
-        m.notes = m.notes ? `${m.notes} - End-of-Season Exhibition` : 'End-of-Season Exhibition (Pre-Playoffs)';
-      }
+      teamTotalCounts.set(m.homeTeamId, (teamTotalCounts.get(m.homeTeamId) || 0) + 1);
+      teamTotalCounts.set(m.awayTeamId, (teamTotalCounts.get(m.awayTeamId) || 0) + 1);
     });
+
+    const minTotalGames = Math.min(...Array.from(teamTotalCounts.values()));
+
+    // 2. Find maximum integer K <= minTotalGames such that EVERY team gets EXACTLY K official games
+    let bestK = 0;
+    let bestOfficialSet = new Set<string>();
+
+    for (let testK = minTotalGames; testK >= 1; testK--) {
+      const teamOfficialCount = new Map<string, number>();
+      teamIds.forEach((id) => teamOfficialCount.set(id, 0));
+      const currentOfficialMatches = new Set<string>();
+
+      // Prioritize regular season matches over slot fills / double headers
+      const sortedMatches = [...matches].sort((a, b) => {
+        const aIsFill = a.notes?.includes('Slot Fill') || a.notes?.includes('Double Header') ? 1 : 0;
+        const bIsFill = b.notes?.includes('Slot Fill') || b.notes?.includes('Double Header') ? 1 : 0;
+        if (aIsFill !== bIsFill) return aIsFill - bIsFill;
+        return a.weekNumber - b.weekNumber;
+      });
+
+      for (const m of sortedMatches) {
+        const hCount = teamOfficialCount.get(m.homeTeamId) || 0;
+        const aCount = teamOfficialCount.get(m.awayTeamId) || 0;
+
+        // ONLY mark as official if BOTH teams still need an official game to reach testK
+        if (hCount < testK && aCount < testK) {
+          teamOfficialCount.set(m.homeTeamId, hCount + 1);
+          teamOfficialCount.set(m.awayTeamId, aCount + 1);
+          currentOfficialMatches.add(m.id);
+        }
+      }
+
+      // Check if ALL teams reached EXACTLY testK official games
+      const allReached = teamIds.every((id) => (teamOfficialCount.get(id) || 0) === testK);
+      if (allReached) {
+        bestK = testK;
+        bestOfficialSet = currentOfficialMatches;
+        break;
+      }
+    }
+
+    // Apply the official vs exhibition designation
+    if (bestK > 0) {
+      matches.forEach((m) => {
+        if (bestOfficialSet.has(m.id)) {
+          m.isExhibition = false;
+        } else {
+          m.isExhibition = true;
+          if (!m.notes || !m.notes.includes('Exhibition')) {
+            m.notes = m.notes ? `${m.notes} (Exhibition)` : 'Exhibition Match (Non-Standings)';
+          }
+        }
+      });
+    }
   }
 
   // Assign Referee Work Teams if enabled
