@@ -49,13 +49,23 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white w-full overflow-x-hidden transition-colors duration-150">
       <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
-        {/* Brand Logo & Multi-League Switcher */}
+        {/* Brand Theme Toggle Button & PowerSchedule Title */}
         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-          <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-violet-600 p-0.5 shadow-lg shadow-rose-500/20 shrink-0">
-            <div className="h-full w-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <Volleyball className="h-4 w-4 sm:h-6 sm:w-6 text-amber-400 animate-pulse" />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-violet-600 p-0.5 shadow-md shadow-rose-500/20 shrink-0 hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+            title={resolvedTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            aria-label="Toggle Light and Dark Mode"
+          >
+            <div className="h-full w-full bg-white dark:bg-slate-950 rounded-[10px] flex items-center justify-center transition-colors">
+              {resolvedTheme === 'dark' ? (
+                <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400 animate-in spin-in duration-300" />
+              ) : (
+                <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600 animate-in spin-in duration-300" />
+              )}
             </div>
-          </div>
+          </button>
 
           <div className="min-w-0">
             <div className="flex items-center space-x-2">
@@ -74,21 +84,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Dynamic Auth / Role Switcher Header Controls */}
         <div className="flex items-center space-x-2 shrink-0">
-          
-          {/* Light / Dark Mode Toggle Button */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all shadow-sm flex items-center justify-center"
-            title={resolvedTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            aria-label="Toggle Theme"
-          >
-            {resolvedTheme === 'dark' ? (
-              <Sun className="h-4 w-4 text-amber-400 animate-in spin-in duration-300" />
-            ) : (
-              <Moon className="h-4 w-4 text-violet-600 animate-in spin-in duration-300" />
-            )}
-          </button>
 
           {onOpenRulesModal && (
             <button
