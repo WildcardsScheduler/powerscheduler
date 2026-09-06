@@ -45,20 +45,31 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [adminError, setAdminError] = useState<string>('');
   const [adminSuccess, setAdminSuccess] = useState<string>('');
 
-  // Update team selection if active league changes or modal opens
+  // Update team selection ONLY when modal opens
   React.useEffect(() => {
-    setSelectedLeagueId(activeLeagueId);
-    const currL = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
-    if (currL && currL.teams.length > 0) {
-      setSelectedTeamId(currL.teams[0].id);
+    if (isOpen) {
+      setSelectedLeagueId(activeLeagueId);
+      const currL = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
+      if (currL && currL.teams.length > 0) {
+        setSelectedTeamId(currL.teams[0].id);
+      }
+      setCaptainPin('');
+      setAdminPasscode('');
+      setTeamError('');
+      setAdminError('');
+      setTeamSuccess('');
+      setAdminSuccess('');
     }
-    setCaptainPin('');
-    setAdminPasscode('');
-    setTeamError('');
-    setAdminError('');
-    setTeamSuccess('');
-    setAdminSuccess('');
-  }, [activeLeagueId, isOpen, leagues]);
+  }, [isOpen]);
+
+  // Ensure selected team is valid if targetLeague changes
+  React.useEffect(() => {
+    if (isOpen && targetLeague && targetLeague.teams.length > 0) {
+      if (!targetLeague.teams.some((t) => t.id === selectedTeamId)) {
+        setSelectedTeamId(targetLeague.teams[0].id);
+      }
+    }
+  }, [isOpen, selectedLeagueId, targetLeague]);
 
   if (!isOpen) return null;
 

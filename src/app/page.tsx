@@ -283,6 +283,9 @@ export default function Home() {
                 return currentLeagues;
               }
               const repaired = repairLeaguesData(data.leagues);
+              if (JSON.stringify(repaired) === JSON.stringify(currentLeagues)) {
+                return currentLeagues;
+              }
               return repaired;
             });
             setIsCloudSynced(true);
