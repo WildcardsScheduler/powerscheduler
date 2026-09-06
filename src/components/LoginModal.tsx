@@ -52,6 +52,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     if (currL && currL.teams.length > 0) {
       setSelectedTeamId(currL.teams[0].id);
     }
+    setCaptainPin('');
+    setAdminPasscode('');
+    setTeamError('');
+    setAdminError('');
+    setTeamSuccess('');
+    setAdminSuccess('');
   }, [activeLeagueId, isOpen, leagues]);
 
   if (!isOpen) return null;
@@ -205,6 +211,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       if (targetL && targetL.teams.length > 0) {
                         setSelectedTeamId(targetL.teams[0].id);
                       }
+                      setCaptainPin('');
+                      setTeamError('');
+                      setTeamSuccess('');
                     }}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                   >
@@ -221,7 +230,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Select Your Team</label>
                 <select
                   value={selectedTeamId}
-                  onChange={(e) => setSelectedTeamId(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedTeamId(e.target.value);
+                    setCaptainPin('');
+                    setTeamError('');
+                    setTeamSuccess('');
+                  }}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                 >
                   {targetLeague?.teams.map((t) => (
@@ -238,8 +252,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </label>
                 <div className="relative">
                   <input
+                    id="captain-team-access-pin"
+                    name="captain-team-access-pin"
                     type={showCaptainPin ? 'text' : 'password'}
                     maxLength={10}
+                    autoComplete="new-password"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    data-form-type="other"
                     placeholder="Enter team PIN (e.g. 1234)"
                     value={captainPin}
                     onChange={(e) => setCaptainPin(e.target.value)}
@@ -289,7 +309,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </label>
                 <div className="relative">
                   <input
+                    id="admin-master-security-passcode"
+                    name="admin-master-security-passcode"
                     type={showAdminPasscode ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    data-form-type="other"
                     placeholder="Enter master admin passcode"
                     value={adminPasscode}
                     onChange={(e) => setAdminPasscode(e.target.value)}

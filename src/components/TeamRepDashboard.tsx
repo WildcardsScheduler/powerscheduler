@@ -26,6 +26,13 @@ import {
   ShieldCheck,
   ExternalLink,
   Scale,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Share2,
+  Sparkles,
+  Shield,
+  X,
 } from 'lucide-react';
 import { formatTimeRange } from '@/utils/formatUtils';
 import { DEFAULT_LEAGUE_RULES } from '@/data/defaultRules';
@@ -43,6 +50,7 @@ interface TeamRepDashboardProps {
   onSelectTeam: (teamId: string) => void;
   onUpdateRsvp: (teamId: string, playerId: string, status: 'Going' | 'Maybe' | 'Out') => void;
   onOpenScorekeeper: (match: Match) => void;
+  onUpdateTeamPin?: (teamId: string, newPin: string) => void;
   currentRole?: 'public' | 'team_rep' | 'scheduler';
 }
 
@@ -59,6 +67,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
   onSelectTeam,
   onUpdateRsvp,
   onOpenScorekeeper,
+  onUpdateTeamPin,
   currentRole,
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'directory' | 'rules'>('overview');
@@ -68,6 +77,17 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
   const [copiedAll, setCopiedAll] = useState(false);
   const [rulesSearch, setRulesSearch] = useState('');
   const [copiedRules, setCopiedRules] = useState(false);
+
+  // Captain PIN Management State
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [showCurrentPin, setShowCurrentPin] = useState(false);
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [showNewPin, setShowNewPin] = useState(false);
+  const [pinError, setPinError] = useState('');
+  const [pinSuccess, setPinSuccess] = useState('');
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedPinQuick, setCopiedPinQuick] = useState(false);
 
   const activeRulesText = leagueRulesContent || DEFAULT_LEAGUE_RULES;
   const activeTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
@@ -131,6 +151,56 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
     setTimeout(() => setCopiedAll(false), 2500);
   };
 
+  const handleCopyCaptainLink = () => {
+    if (typeof window === 'undefined') return;
+    const origin = window.location.origin;
+    const pathname = window.location.pathname;
+    const currentPin = activeTeam.accessPin || '1234';
+    const directUrl = `${origin}${pathname}?team=${activeTeam.id}&pin=${encodeURIComponent(currentPin)}`;
+    navigator.clipboard.writeText(directUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleCopyCurrentPin = () => {
+    const currentPin = activeTeam.accessPin || '1234';
+    navigator.clipboard.writeText(currentPin);
+    setCopiedPinQuick(true);
+    setTimeout(() => setCopiedPinQuick(false), 2000);
+  };
+
+  const handleSaveNewPin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinError('');
+    setPinSuccess('');
+
+    const cleanPin = newPin.trim();
+    if (!cleanPin) {
+      setPinError('PIN cannot be empty.');
+      return;
+    }
+    if (cleanPin.length < 4) {
+      setPinError('PIN must be at least 4 digits/characters.');
+      return;
+    }
+    if (cleanPin !== confirmPin.trim()) {
+      setPinError('New PIN and Confirm PIN do not match.');
+      return;
+    }
+
+    if (onUpdateTeamPin) {
+      onUpdateTeamPin(activeTeam.id, cleanPin);
+    }
+    setPinSuccess(`Team PIN successfully updated!`);
+    setTimeout(() => {
+      setNewPin('');
+      setConfirmPin('');
+      setIsPinModalOpen(false);
+      setPinSuccess('');
+      setPinError('');
+    }, 1200);
+  };
+
   // Filtered teams for directory
   const filteredTeams = teams.filter((t) => {
     const matchesDiv = selectedDivFilter === 'ALL' || t.divisionId === selectedDivFilter;
@@ -185,7 +255,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
         </div>
 
         {/* Tab Switcher Pills */}
-        <div className="flex items-center bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 w-full md:w-auto">
+        <div className="flex items-center flex-wrap gap-1.5 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 w-full md:w-auto">
           <button
             onClick={() => setActiveTab('overview')}
             className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
@@ -231,7 +301,24 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
               className="flex-1 md:flex-none px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all text-violet-700 dark:text-violet-400 hover:text-violet-900 dark:hover:text-violet-300 hover:bg-violet-500/10 border border-violet-500/30"
             >
               <Scale className="h-4 w-4 text-violet-600 dark:text-violet-400" />
-              <span>Fairness Report</span>
+              <span>Fairness</span>
+            </button>
+          )}
+
+          {onUpdateTeamPin && (
+            <button
+              onClick={() => {
+                setNewPin('');
+                setConfirmPin('');
+                setPinError('');
+                setPinSuccess('');
+                setIsPinModalOpen(true);
+              }}
+              className="flex-1 md:flex-none px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/30 shadow-xs"
+              title="Manage Team Captain PIN"
+            >
+              <KeyRound className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+              <span>Captain PIN</span>
             </button>
           )}
         </div>
@@ -672,6 +759,100 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             </div>
           </div>
 
+          {/* Captain Access & PIN Security Banner Card */}
+          <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                  <KeyRound className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Captain Access PIN & Security</h3>
+                    <span className="bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-500/30">
+                      Private
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                    Your 4-digit PIN authenticates your team captain portal and scorekeeper access for <strong className="text-slate-900 dark:text-white">{activeTeam.name}</strong>.
+                  </p>
+                </div>
+              </div>
+
+              {onUpdateTeamPin && (
+                <div className="flex items-center space-x-2 w-full sm:w-auto">
+                  <button
+                    onClick={() => {
+                      setNewPin('');
+                      setConfirmPin('');
+                      setPinError('');
+                      setPinSuccess('');
+                      setIsPinModalOpen(true);
+                    }}
+                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span>Change 4-Digit PIN</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Current PIN & Quick Actions Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div className="bg-white dark:bg-slate-950/80 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Current Captain PIN</span>
+                  <span className="text-base font-mono font-black text-amber-600 dark:text-amber-400">
+                    {showCurrentPin ? (activeTeam.accessPin || '1234') : '••••'}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPin(!showCurrentPin)}
+                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 transition-colors"
+                    title={showCurrentPin ? 'Hide PIN' : 'Reveal PIN'}
+                  >
+                    {showCurrentPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyCurrentPin}
+                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 transition-colors"
+                    title="Copy PIN"
+                  >
+                    {copiedPinQuick ? <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-950/80 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div className="min-w-0 pr-2">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Direct Captain Link</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400 truncate block">Instant sign-in URL with PIN</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyCaptainLink}
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 text-xs font-bold flex items-center space-x-1.5 transition-colors shrink-0 cursor-pointer"
+                >
+                  {copiedLink ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-600 dark:text-emerald-400">Link Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="h-3.5 w-3.5" />
+                      <span>Copy Link</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Roster & Mobile RSVP Check-in Section */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
@@ -685,14 +866,29 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             </div>
 
             {/* Captain Card Header */}
-            <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
+            <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300">
               <div>
                 <span className="text-slate-500">Team Captain: </span>
                 <strong className="text-slate-900 dark:text-white font-bold">{activeTeam.captainName}</strong>
               </div>
-              <div className="flex items-center space-x-3 text-slate-500 dark:text-slate-400">
+              <div className="flex items-center flex-wrap gap-3 text-slate-500 dark:text-slate-400">
                 <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" /> {activeTeam.captainEmail}</span>
                 <span className="flex items-center gap-1 hidden sm:flex"><Phone className="h-3.5 w-3.5" /> {activeTeam.captainPhone}</span>
+                {onUpdateTeamPin && (
+                  <button
+                    onClick={() => {
+                      setNewPin('');
+                      setConfirmPin('');
+                      setPinError('');
+                      setPinSuccess('');
+                      setIsPinModalOpen(true);
+                    }}
+                    className="text-amber-600 dark:text-amber-400 font-bold hover:underline flex items-center gap-1"
+                  >
+                    <KeyRound className="h-3.5 w-3.5" />
+                    <span>Change PIN</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -956,6 +1152,142 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* Change Captain PIN Modal */}
+      {isPinModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 transition-colors duration-150">
+            {/* Modal Header */}
+            <div className="p-6 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                  <KeyRound className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                    Change Captain PIN
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {activeTeam.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsPinModalOpen(false);
+                  setPinError('');
+                  setPinSuccess('');
+                }}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveNewPin} className="p-6 space-y-4">
+              <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-xs text-amber-800 dark:text-amber-300 flex items-start space-x-2.5">
+                <Shield className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div>
+                  <span>Current PIN: </span>
+                  <strong className="font-mono font-bold text-slate-900 dark:text-white">
+                    {activeTeam.accessPin || '1234'}
+                  </strong>
+                  <p className="text-[11px] text-amber-700/80 dark:text-amber-300/80 mt-0.5">
+                    Setting a new PIN will immediately update login credentials for your team.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  New 4-Digit PIN
+                </label>
+                <div className="relative">
+                  <input
+                    id="new-captain-pin-input"
+                    name="new-captain-pin-input"
+                    type={showNewPin ? 'text' : 'password'}
+                    maxLength={10}
+                    autoComplete="new-password"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    data-form-type="other"
+                    placeholder="Enter new 4-digit PIN (e.g. 5829)"
+                    value={newPin}
+                    onChange={(e) => setNewPin(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono tracking-wider text-amber-600 dark:text-amber-400 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPin(!showNewPin)}
+                    className="absolute right-3.5 top-3 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  >
+                    {showNewPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  Confirm New PIN
+                </label>
+                <input
+                  id="confirm-captain-pin-input"
+                  name="confirm-captain-pin-input"
+                  type={showNewPin ? 'text' : 'password'}
+                  maxLength={10}
+                  autoComplete="new-password"
+                  data-lpignore="true"
+                  data-1p-ignore="true"
+                  data-form-type="other"
+                  placeholder="Re-type new PIN"
+                  value={confirmPin}
+                  onChange={(e) => setConfirmPin(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-mono tracking-wider text-amber-600 dark:text-amber-400 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                  required
+                />
+              </div>
+
+              {pinError && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center space-x-2 text-xs text-rose-600 dark:text-rose-400 font-semibold">
+                  <XCircle className="h-4 w-4 shrink-0" />
+                  <span>{pinError}</span>
+                </div>
+              )}
+
+              {pinSuccess && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>{pinSuccess}</span>
+                </div>
+              )}
+
+              <div className="flex items-center space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPinModalOpen(false);
+                    setPinError('');
+                    setPinSuccess('');
+                  }}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                >
+                  <Check className="h-4 w-4" />
+                  <span>Save New PIN</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

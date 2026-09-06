@@ -450,7 +450,7 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
   const targetTeam = teamMap.get(teamId);
 
   if (!targetTeam) {
-    return <div className="text-slate-400 p-4">Select a team to view schedule.</div>;
+    return <div className="text-slate-500 dark:text-slate-400 p-4">Select a team to view schedule.</div>;
   }
 
   // Filter matches involving this team (as Home, Away, or Work Team)
@@ -462,39 +462,39 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
   const totalRefDuties = teamMatches.filter((m) => m.workTeamId === teamId).length;
 
   return (
-    <div className="space-y-6 print:space-y-3 bg-slate-950 print:bg-white p-4 print:p-0 rounded-xl border border-slate-800 print:border-none">
+    <div className="space-y-6 print:space-y-3 bg-white dark:bg-slate-950 print:bg-white p-4 sm:p-6 print:p-0 rounded-2xl border border-slate-200 dark:border-slate-800 print:border-none shadow-sm">
       
       {/* Team Header Banner */}
       <div className="border-b-2 border-amber-500 pb-4 flex items-center justify-between">
         <div>
-          <span className="text-[11px] font-extrabold uppercase tracking-widest text-amber-400 print:text-slate-800 block">
+          <span className="text-[11px] font-extrabold uppercase tracking-widest text-amber-600 dark:text-amber-400 print:text-slate-800 block">
             {leagueName} • {currentDivisionName || 'Main Division'}
           </span>
-          <h1 className="text-2xl font-black text-white print:text-black mt-0.5">
-            Team Schedule: <span className="text-amber-400 print:text-black underline decoration-amber-500">{targetTeam.name}</span>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white print:text-black mt-0.5">
+            Team Schedule: <span className="text-amber-600 dark:text-amber-400 print:text-black underline decoration-amber-500">{targetTeam.name}</span>
           </h1>
-          <p className="text-xs text-slate-400 print:text-slate-600 mt-1">
-            Season Summary: <strong className="text-white print:text-black">{totalPlayingGames} Matches</strong> Scheduled
+          <p className="text-xs text-slate-500 dark:text-slate-400 print:text-slate-600 mt-1">
+            Season Summary: <strong className="text-slate-900 dark:text-white print:text-black">{totalPlayingGames} Matches</strong> Scheduled
             {totalRefDuties > 0 && <span> • <strong>{totalRefDuties} Referee Duties</strong></span>}
           </p>
         </div>
 
         <div className="text-right shrink-0">
-          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 print:border-slate-800 print:bg-slate-100 text-center">
-            <span className="block text-xs font-bold text-amber-400 print:text-black">TEAM SCHEDULE</span>
-            <span className="block text-[10px] text-slate-400 print:text-slate-600 font-mono">HIGHLIGHTED</span>
+          <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 print:border-slate-800 print:bg-slate-100 text-center">
+            <span className="block text-xs font-bold text-amber-700 dark:text-amber-400 print:text-black">TEAM SCHEDULE</span>
+            <span className="block text-[10px] text-slate-500 dark:text-slate-400 print:text-slate-600 font-mono">HIGHLIGHTED</span>
           </div>
         </div>
       </div>
 
       {/* Team Matches Table */}
       {teamMatches.length === 0 ? (
-        <div className="text-center py-8 text-slate-400">No scheduled matches found for team {targetTeam.name}.</div>
+        <div className="text-center py-8 text-slate-500 dark:text-slate-400">No scheduled matches found for team {targetTeam.name}.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b-2 border-slate-800 print:border-slate-400 text-slate-400 print:text-slate-800 uppercase text-[10px] tracking-wider">
+              <tr className="border-b-2 border-slate-200 dark:border-slate-800 print:border-slate-400 text-slate-500 dark:text-slate-400 print:text-slate-800 uppercase text-[10px] tracking-wider">
                 <th className="py-2.5 px-3 font-bold">Week / Date</th>
                 <th className="py-2.5 px-3 font-bold">Time</th>
                 <th className="py-2.5 px-3 font-bold">Court / Location</th>
@@ -503,7 +503,7 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
                 <th className="py-2.5 px-3 font-bold text-right">Notes</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80 print:divide-slate-300">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 print:divide-slate-300">
               {teamMatches.map((m) => {
                 const isHome = m.homeTeamId === teamId;
                 const isAway = m.awayTeamId === teamId;
@@ -518,30 +518,30 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
                     key={m.id}
                     className={`transition-colors ${
                       isRef
-                        ? 'bg-violet-500/10 print:bg-slate-100'
-                        : 'bg-slate-900/40 print:bg-white'
+                        ? 'bg-violet-50/70 dark:bg-violet-500/10 print:bg-slate-100'
+                        : 'bg-slate-50/60 dark:bg-slate-900/40 print:bg-white'
                     }`}
                   >
                     {/* Date */}
-                    <td className="py-3 px-3 font-bold text-white print:text-black">
-                      <span className="text-amber-400 print:text-black mr-1">W{m.weekNumber}</span>
-                      <span className="font-mono text-slate-300 print:text-slate-800">• {m.date}</span>
+                    <td className="py-3 px-3 font-bold text-slate-900 dark:text-white print:text-black">
+                      <span className="text-amber-600 dark:text-amber-400 print:text-black mr-1">W{m.weekNumber}</span>
+                      <span className="font-mono text-slate-600 dark:text-slate-300 print:text-slate-800">• {m.date}</span>
                     </td>
 
                     {/* Time */}
-                    <td className="py-3 px-3 font-mono font-bold text-amber-300 print:text-black">
+                    <td className="py-3 px-3 font-mono font-bold text-amber-600 dark:text-amber-300 print:text-black">
                       {formatTimeRange(m.startTime, m.endTime)}
                     </td>
 
                     {/* Location */}
-                    <td className="py-3 px-3 text-slate-300 print:text-slate-800 font-medium">
+                    <td className="py-3 px-3 text-slate-700 dark:text-slate-300 print:text-slate-800 font-medium">
                       {locationLabel}
                     </td>
 
                     {/* Fixture Matchup with Target Team HIGHLIGHTED */}
                     <td className="py-3 px-3 text-sm font-bold">
                       {isRef ? (
-                        <span className="text-violet-300 print:text-slate-800">
+                        <span className="text-violet-700 dark:text-violet-300 print:text-slate-800">
                           Ref Officiating: {teamMap.get(m.homeTeamId)?.name} vs {teamMap.get(m.awayTeamId)?.name}
                         </span>
                       ) : (
@@ -550,18 +550,18 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
                             className={`px-2 py-0.5 rounded-lg border font-black ${
                               isHome
                                 ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-sm print:bg-amber-200 print:border-black print:text-black'
-                                : 'text-slate-300 print:text-slate-700 border-slate-700'
+                                : 'text-slate-700 dark:text-slate-300 print:text-slate-700 border-slate-300 dark:border-slate-700'
                             }`}
                           >
                             {teamMap.get(m.homeTeamId)?.name}
                             {isHome && ' (Home)'}
                           </span>
-                          <span className="text-slate-500 text-xs">vs</span>
+                          <span className="text-slate-400 dark:text-slate-500 text-xs">vs</span>
                           <span
                             className={`px-2 py-0.5 rounded-lg border font-black ${
                               isAway
                                 ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-sm print:bg-amber-200 print:border-black print:text-black'
-                                : 'text-slate-300 print:text-slate-700 border-slate-700'
+                                : 'text-slate-700 dark:text-slate-300 print:text-slate-700 border-slate-300 dark:border-slate-700'
                             }`}
                           >
                             {teamMap.get(m.awayTeamId)?.name}
@@ -574,23 +574,23 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
                     {/* Role / Duty */}
                     <td className="py-3 px-3 text-center">
                       {isRef ? (
-                        <span className="bg-violet-500/20 text-violet-300 border border-violet-500/30 print:border-slate-800 print:text-slate-950 px-2 py-0.5 rounded-md font-extrabold text-[11px]">
+                        <span className="bg-violet-100 dark:bg-violet-500/20 text-violet-800 dark:text-violet-300 border border-violet-300 dark:border-violet-500/30 print:border-slate-800 print:text-slate-950 px-2 py-0.5 rounded-md font-extrabold text-[11px]">
                           🏐 REFEREE
                         </span>
                       ) : isHome ? (
-                        <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 print:border-slate-800 print:text-slate-950 px-2 py-0.5 rounded-md font-bold text-[11px]">
+                        <span className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 print:border-slate-800 print:text-slate-950 px-2 py-0.5 rounded-md font-bold text-[11px]">
                           HOME TEAM
                         </span>
                       ) : (
-                        <span className="bg-sky-500/20 text-sky-300 border border-sky-500/30 print:border-slate-800 print:text-slate-950 px-2 py-0.5 rounded-md font-bold text-[11px]">
+                        <span className="bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-500/30 print:border-slate-800 print:text-slate-950 px-2 py-0.5 rounded-md font-bold text-[11px]">
                           AWAY TEAM
                         </span>
                       )}
                     </td>
 
                     {/* Notes */}
-                    <td className="py-3 px-3 text-right font-medium text-[11px] text-slate-400 print:text-slate-700">
-                      {m.isExhibition && <span className="text-amber-400 print:text-black font-bold">[Exhibition] </span>}
+                    <td className="py-3 px-3 text-right font-medium text-[11px] text-slate-500 dark:text-slate-400 print:text-slate-700">
+                      {m.isExhibition && <span className="text-amber-600 dark:text-amber-400 print:text-black font-bold">[Exhibition] </span>}
                       {m.notes || '-'}
                     </td>
                   </tr>

@@ -614,7 +614,8 @@ export default function Home() {
     captainName: string,
     captainEmail: string,
     captainPhone: string,
-    badgeColor: string
+    badgeColor: string,
+    accessPin?: string
   ) => {
     const newTeamId = `team-${Date.now()}`;
     const newTeam: Team = {
@@ -625,6 +626,7 @@ export default function Home() {
       captainEmail,
       captainPhone,
       badgeColor,
+      accessPin: accessPin?.trim() || '1234',
       roster: [
         {
           id: `p-${Date.now()}-c`,
@@ -666,6 +668,7 @@ export default function Home() {
         captainEmail: `captain${num}@example.com`,
         captainPhone: `(555) 000-00${num < 10 ? '0' + num : num}`,
         badgeColor: colors[i % colors.length],
+        accessPin: '1234',
         roster: [],
       });
     }
@@ -683,14 +686,34 @@ export default function Home() {
     captainName: string,
     captainEmail: string,
     captainPhone: string,
-    badgeColor: string
+    badgeColor: string,
+    accessPin?: string
   ) => {
     updateActiveLeague((prev) => ({
       ...prev,
       teams: prev.teams.map((t) =>
         t.id === teamId
-          ? { ...t, name, divisionId, captainName, captainEmail, captainPhone, badgeColor }
+          ? {
+              ...t,
+              name,
+              divisionId,
+              captainName,
+              captainEmail,
+              captainPhone,
+              badgeColor,
+              accessPin: accessPin !== undefined ? (accessPin.trim() || '1234') : (t.accessPin || '1234'),
+            }
           : t
+      ),
+    }));
+  };
+
+  const handleUpdateTeamPin = (teamId: string, newPin: string) => {
+    const cleanPin = newPin.trim() || '1234';
+    updateActiveLeague((prev) => ({
+      ...prev,
+      teams: prev.teams.map((t) =>
+        t.id === teamId ? { ...t, accessPin: cleanPin } : t
       ),
     }));
   };
@@ -1011,6 +1034,7 @@ export default function Home() {
               setActiveScoreMatch(match);
               setIsScorekeeperOpen(true);
             }}
+            onUpdateTeamPin={handleUpdateTeamPin}
             currentRole={currentRole}
           />
         ) : null}
