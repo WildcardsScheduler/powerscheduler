@@ -50,7 +50,9 @@ export interface ScheduleFairnessReport {
   exhibitionMatchesCount: number;
   effectiveTimeSlots: string[]; // List of slot strings like ["18:30", "19:30", "20:30"]
   teamMetrics: TeamFairnessMetric[];
-  opponentMatrix: Record<string, Record<string, number>>; // opponentMatrix[teamA_Id][teamB_Id] = number of matchups
+  opponentMatrix: Record<string, Record<string, number>>; // Total matchups (official + exhibition)
+  officialOpponentMatrix?: Record<string, Record<string, number>>; // Official Standings matchups only
+  exhibitionOpponentMatrix?: Record<string, Record<string, number>>; // Exhibition matchups only
 }
 
 export interface GeneratedScheduleResult {
@@ -625,21 +627,38 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     else officialMatchesCount++;
   });
 
-  // Calculate Head-to-Head Opponent Matrix
+  // Calculate Head-to-Head Opponent Matrix (Total, Official Standings, and Exhibition)
   const opponentMatrix: Record<string, Record<string, number>> = {};
+  const officialOpponentMatrix: Record<string, Record<string, number>> = {};
+  const exhibitionOpponentMatrix: Record<string, Record<string, number>> = {};
+
   teamIds.forEach((t1) => {
     opponentMatrix[t1] = {};
+    officialOpponentMatrix[t1] = {};
+    exhibitionOpponentMatrix[t1] = {};
     teamIds.forEach((t2) => {
       opponentMatrix[t1][t2] = 0;
+      officialOpponentMatrix[t1][t2] = 0;
+      exhibitionOpponentMatrix[t1][t2] = 0;
     });
   });
 
   matches.forEach((m) => {
     if (opponentMatrix[m.homeTeamId] && opponentMatrix[m.homeTeamId][m.awayTeamId] !== undefined) {
       opponentMatrix[m.homeTeamId][m.awayTeamId]++;
+      if (m.isExhibition) {
+        exhibitionOpponentMatrix[m.homeTeamId][m.awayTeamId]++;
+      } else {
+        officialOpponentMatrix[m.homeTeamId][m.awayTeamId]++;
+      }
     }
     if (opponentMatrix[m.awayTeamId] && opponentMatrix[m.awayTeamId][m.homeTeamId] !== undefined) {
       opponentMatrix[m.awayTeamId][m.homeTeamId]++;
+      if (m.isExhibition) {
+        exhibitionOpponentMatrix[m.awayTeamId][m.homeTeamId]++;
+      } else {
+        officialOpponentMatrix[m.awayTeamId][m.homeTeamId]++;
+      }
     }
   });
 
@@ -699,6 +718,8 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     effectiveTimeSlots,
     teamMetrics,
     opponentMatrix,
+    officialOpponentMatrix,
+    exhibitionOpponentMatrix,
   };
 
   return { matches, warnings, report };
@@ -763,21 +784,38 @@ export function calculateScheduleFairnessReport(
     else officialMatchesCount++;
   });
 
-  // Calculate Head-to-Head Opponent Matrix
+  // Calculate Head-to-Head Opponent Matrix (Total, Official Standings, and Exhibition)
   const opponentMatrix: Record<string, Record<string, number>> = {};
+  const officialOpponentMatrix: Record<string, Record<string, number>> = {};
+  const exhibitionOpponentMatrix: Record<string, Record<string, number>> = {};
+
   teamIds.forEach((t1) => {
     opponentMatrix[t1] = {};
+    officialOpponentMatrix[t1] = {};
+    exhibitionOpponentMatrix[t1] = {};
     teamIds.forEach((t2) => {
       opponentMatrix[t1][t2] = 0;
+      officialOpponentMatrix[t1][t2] = 0;
+      exhibitionOpponentMatrix[t1][t2] = 0;
     });
   });
 
   matches.forEach((m) => {
     if (opponentMatrix[m.homeTeamId] && opponentMatrix[m.homeTeamId][m.awayTeamId] !== undefined) {
       opponentMatrix[m.homeTeamId][m.awayTeamId]++;
+      if (m.isExhibition) {
+        exhibitionOpponentMatrix[m.homeTeamId][m.awayTeamId]++;
+      } else {
+        officialOpponentMatrix[m.homeTeamId][m.awayTeamId]++;
+      }
     }
     if (opponentMatrix[m.awayTeamId] && opponentMatrix[m.awayTeamId][m.homeTeamId] !== undefined) {
       opponentMatrix[m.awayTeamId][m.homeTeamId]++;
+      if (m.isExhibition) {
+        exhibitionOpponentMatrix[m.awayTeamId][m.homeTeamId]++;
+      } else {
+        officialOpponentMatrix[m.awayTeamId][m.homeTeamId]++;
+      }
     }
   });
 
@@ -842,6 +880,8 @@ export function calculateScheduleFairnessReport(
     effectiveTimeSlots,
     teamMetrics,
     opponentMatrix,
+    officialOpponentMatrix,
+    exhibitionOpponentMatrix,
   };
 }
 

@@ -162,6 +162,9 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   const [previewWeek, setPreviewWeek] = useState<number>(1);
   const [warnings, setWarnings] = useState<string[]>([]);
 
+  // Head-to-Head Opponent Matrix View Mode
+  const [h2hFilter, setH2hFilter] = useState<'breakdown' | 'official' | 'exhibition' | 'all'>('breakdown');
+
   const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
 
   if (!isOpen) return null;
@@ -1143,14 +1146,69 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
               {/* Head-to-Head Opponent Spacing & Matchup Matrix */}
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <h4 className="font-extrabold text-white text-xs uppercase tracking-wider flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-800 gap-2">
+                  <div className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4 text-amber-400" />
-                    <span>Head-to-Head Opponent Matchup Matrix</span>
-                  </h4>
-                  <span className="text-[10px] text-slate-400">
-                    Exact Matchup Frequencies Per Opponent Pair
-                  </span>
+                    <div>
+                      <h4 className="font-extrabold text-white text-xs uppercase tracking-wider">
+                        Head-to-Head Opponent Matchup Matrix
+                      </h4>
+                      <p className="text-[10px] text-slate-400">
+                        {h2hFilter === 'breakdown' && 'Showing breakdown: Official League (L) + Exhibition Filler (E)'}
+                        {h2hFilter === 'official' && 'Showing Official Standings Matches only (counts toward league rankings)'}
+                        {h2hFilter === 'exhibition' && 'Showing Exhibition / Capacity Filler Matches only (does not affect standings)'}
+                        {h2hFilter === 'all' && 'Showing Total Combined Matchups (Official + Exhibition)'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Filter Mode Selector Pills */}
+                  <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setH2hFilter('breakdown')}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                        h2hFilter === 'breakdown'
+                          ? 'bg-amber-500 text-slate-950 shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Breakdown (L + E)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setH2hFilter('official')}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                        h2hFilter === 'official'
+                          ? 'bg-emerald-500 text-slate-950 shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Official Only
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setH2hFilter('exhibition')}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                        h2hFilter === 'exhibition'
+                          ? 'bg-purple-500 text-slate-950 shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Exhibition Only
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setH2hFilter('all')}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                        h2hFilter === 'all'
+                          ? 'bg-slate-700 text-white shadow'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      All Combined
+                    </button>
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -1159,7 +1217,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
                         <th className="py-2 px-3 text-left font-semibold">Team</th>
                         {divisionTeams.map((t) => (
-                          <th key={t.id} className="py-2 px-2 font-semibold text-slate-300 min-w-[70px]">
+                          <th key={t.id} className="py-2 px-2 font-semibold text-slate-300 min-w-[75px]">
                             {t.name.length > 10 ? `${t.name.slice(0, 9)}…` : t.name}
                           </th>
                         ))}
@@ -1179,15 +1237,68 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                                 </td>
                               );
                             }
-                            const count = generatedReport.opponentMatrix[teamA.id]?.[teamB.id] ?? 0;
+                            const totalCount = generatedReport.opponentMatrix[teamA.id]?.[teamB.id] ?? 0;
+                            const offCount = generatedReport.officialOpponentMatrix?.[teamA.id]?.[teamB.id] ?? 0;
+                            const exhCount = generatedReport.exhibitionOpponentMatrix?.[teamA.id]?.[teamB.id] ?? 0;
+
                             return (
-                              <td
-                                key={teamB.id}
-                                className={`py-2.5 px-2 font-mono font-bold ${
-                                  count > 0 ? 'text-amber-400' : 'text-slate-600'
-                                }`}
-                              >
-                                {count > 0 ? `${count}x` : '0'}
+                              <td key={teamB.id} className="py-2.5 px-2 font-mono">
+                                {h2hFilter === 'breakdown' && (
+                                  <div>
+                                    {totalCount === 0 ? (
+                                      <span className="text-slate-600">0</span>
+                                    ) : (
+                                      <div className="flex items-center justify-center gap-1 text-[11px]">
+                                        {offCount > 0 && (
+                                          <span className="text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20" title={`${offCount} Official League Game(s)`}>
+                                            {offCount}L
+                                          </span>
+                                        )}
+                                        {offCount > 0 && exhCount > 0 && (
+                                          <span className="text-slate-600 text-[10px]">+</span>
+                                        )}
+                                        {exhCount > 0 && (
+                                          <span className="text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded border border-purple-500/20" title={`${exhCount} Exhibition Game(s)`}>
+                                            {exhCount}E
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {h2hFilter === 'official' && (
+                                  <span
+                                    className={`font-bold ${
+                                      offCount > 0
+                                        ? 'text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20'
+                                        : 'text-slate-600'
+                                    }`}
+                                  >
+                                    {offCount > 0 ? `${offCount}x` : '0'}
+                                  </span>
+                                )}
+                                {h2hFilter === 'exhibition' && (
+                                  <span
+                                    className={`font-bold ${
+                                      exhCount > 0
+                                        ? 'text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20'
+                                        : 'text-slate-600'
+                                    }`}
+                                  >
+                                    {exhCount > 0 ? `${exhCount}x` : '0'}
+                                  </span>
+                                )}
+                                {h2hFilter === 'all' && (
+                                  <span
+                                    className={`font-bold ${
+                                      totalCount > 0
+                                        ? 'text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20'
+                                        : 'text-slate-600'
+                                    }`}
+                                  >
+                                    {totalCount > 0 ? `${totalCount}x` : '0'}
+                                  </span>
+                                )}
                               </td>
                             );
                           })}
@@ -1195,6 +1306,18 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Legend */}
+                <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/40 inline-flex items-center justify-center text-[9px] font-bold text-emerald-400">L</span>
+                    <span><strong>Official League Matches</strong> (Count towards Standings)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-purple-500/20 border border-purple-500/40 inline-flex items-center justify-center text-[9px] font-bold text-purple-400">E</span>
+                    <span><strong>Exhibition Matches</strong> (Capacity Fillers, Not in Standings)</span>
+                  </div>
                 </div>
               </div>
 

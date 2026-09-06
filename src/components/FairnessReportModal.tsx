@@ -35,6 +35,7 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
     selectedDivisionId || divisions[0]?.id || ''
   );
   const [activeTab, setActiveTab] = useState<'matrix' | 'h2h'>('matrix');
+  const [h2hFilter, setH2hFilter] = useState<'breakdown' | 'official' | 'exhibition' | 'all'>('breakdown');
 
   // Re-sync active division whenever modal opens or division props change
   useEffect(() => {
@@ -362,24 +363,77 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
           ) : (
             /* 3. Head-to-Head Opponent Grid */
             <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl space-y-2">
-              <div className="p-4 border-b border-slate-800">
-                <h4 className="text-sm font-bold text-white flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-amber-400" />
-                  <span>Head-to-Head Matchup Matrix</span>
-                </h4>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Shows the exact number of times each team faces every opposing team during the season.
-                </p>
+              <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-bold text-white flex items-center space-x-2">
+                    <Users className="h-4 w-4 text-amber-400" />
+                    <span>Head-to-Head Matchup Matrix</span>
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {h2hFilter === 'breakdown' && 'Showing breakdown: Official League (L) + Exhibition Filler (E)'}
+                    {h2hFilter === 'official' && 'Showing Official Standings Matches only (counts toward league rankings)'}
+                    {h2hFilter === 'exhibition' && 'Showing Exhibition / Capacity Filler Matches only (does not affect standings)'}
+                    {h2hFilter === 'all' && 'Showing Total Combined Matchups (Official + Exhibition)'}
+                  </p>
+                </div>
+
+                {/* Filter Selector */}
+                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setH2hFilter('breakdown')}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                      h2hFilter === 'breakdown'
+                        ? 'bg-amber-500 text-slate-950 shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Breakdown (L + E)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setH2hFilter('official')}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                      h2hFilter === 'official'
+                        ? 'bg-emerald-500 text-slate-950 shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Official Only
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setH2hFilter('exhibition')}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                      h2hFilter === 'exhibition'
+                        ? 'bg-purple-500 text-slate-950 shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Exhibition Only
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setH2hFilter('all')}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                      h2hFilter === 'all'
+                        ? 'bg-slate-700 text-white shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    All Combined
+                  </button>
+                </div>
               </div>
 
-              <div className="overflow-x-auto p-2">
+              <div className="overflow-x-auto p-3">
                 <table className="w-full text-center text-xs">
                   <thead className="bg-slate-900/80 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800">
                     <tr>
                       <th className="py-2.5 px-3 text-left">Team</th>
                       {divisionTeams.map((t) => (
-                        <th key={t.id} className="py-2.5 px-2 text-[10px] text-slate-300 font-bold">
-                          {t.name.slice(0, 8)}
+                        <th key={t.id} className="py-2.5 px-2 text-[10px] text-slate-300 font-bold min-w-[70px]">
+                          {t.name.slice(0, 10)}
                         </th>
                       ))}
                     </tr>
@@ -398,17 +452,68 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                               </td>
                             );
                           }
-                          const matchups = report.opponentMatrix[t1.id]?.[t2.id] || 0;
+                          const totalCount = report.opponentMatrix[t1.id]?.[t2.id] || 0;
+                          const offCount = report.officialOpponentMatrix?.[t1.id]?.[t2.id] ?? 0;
+                          const exhCount = report.exhibitionOpponentMatrix?.[t1.id]?.[t2.id] ?? 0;
+
                           return (
-                            <td
-                              key={t2.id}
-                              className={`py-2.5 px-2 font-bold ${
-                                matchups === 0
-                                  ? 'text-slate-600'
-                                  : 'text-amber-400 bg-amber-500/10'
-                              }`}
-                            >
-                              {matchups}
+                            <td key={t2.id} className="py-2.5 px-2">
+                              {h2hFilter === 'breakdown' && (
+                                <div>
+                                  {totalCount === 0 ? (
+                                    <span className="text-slate-600">0</span>
+                                  ) : (
+                                    <div className="flex items-center justify-center gap-1 text-[11px]">
+                                      {offCount > 0 && (
+                                        <span className="text-emerald-400 font-bold bg-emerald-500/10 px-1 py-0.5 rounded border border-emerald-500/20" title={`${offCount} Official League Game(s)`}>
+                                          {offCount}L
+                                        </span>
+                                      )}
+                                      {offCount > 0 && exhCount > 0 && (
+                                        <span className="text-slate-600 text-[10px]">+</span>
+                                      )}
+                                      {exhCount > 0 && (
+                                        <span className="text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded border border-purple-500/20" title={`${exhCount} Exhibition Game(s)`}>
+                                          {exhCount}E
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {h2hFilter === 'official' && (
+                                <span
+                                  className={`font-bold ${
+                                    offCount > 0
+                                      ? 'text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20'
+                                      : 'text-slate-600'
+                                  }`}
+                                >
+                                  {offCount > 0 ? `${offCount}x` : '0'}
+                                </span>
+                              )}
+                              {h2hFilter === 'exhibition' && (
+                                <span
+                                  className={`font-bold ${
+                                    exhCount > 0
+                                      ? 'text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20'
+                                      : 'text-slate-600'
+                                  }`}
+                                >
+                                  {exhCount > 0 ? `${exhCount}x` : '0'}
+                                </span>
+                              )}
+                              {h2hFilter === 'all' && (
+                                <span
+                                  className={`font-bold ${
+                                    totalCount > 0
+                                      ? 'text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20'
+                                      : 'text-slate-600'
+                                  }`}
+                                >
+                                  {totalCount > 0 ? `${totalCount}x` : '0'}
+                                </span>
+                              )}
                             </td>
                           );
                         })}
@@ -416,6 +521,18 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Legend */}
+              <div className="flex flex-wrap items-center gap-4 px-4 py-2.5 border-t border-slate-800 text-[11px] text-slate-400">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 rounded bg-emerald-500/20 border border-emerald-500/40 inline-flex items-center justify-center text-[9px] font-bold text-emerald-400">L</span>
+                  <span><strong>Official League Matches</strong> (Standings & Rankings)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 rounded bg-purple-500/20 border border-purple-500/40 inline-flex items-center justify-center text-[9px] font-bold text-purple-400">E</span>
+                  <span><strong>Exhibition Matches</strong> (Capacity Fillers)</span>
+                </div>
               </div>
             </div>
           )}
