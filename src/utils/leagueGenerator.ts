@@ -1,6 +1,7 @@
 import { LeagueSeason, Division, Location, Team, Match, SportType, MatchRules, DEFAULT_MATCH_RULES } from '@/types/league';
 import { generateVolleyballSchedule } from './schedulerEngine';
 import { formatMatchRulesDescription } from './formatRules';
+import { generateRandomPin } from './pinGenerator';
 
 export function createBlankLeague(
   name: string,
@@ -297,6 +298,7 @@ export function createSampleLeague(
         captainEmail: `captain.${divIndex * 16 + i + 1}@example.com`,
         captainPhone: `(555) 10${divIndex}-${i + 1}00`,
         badgeColor: colors[(divIndex * 8 + i) % colors.length],
+        accessPin: generateRandomPin(),
         roster: [
           {
             id: `p-${timestamp}-d${divIndex}-${i}-1`,

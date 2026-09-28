@@ -337,7 +337,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                         data-lpignore="true"
                         data-1p-ignore="true"
                         data-form-type="other"
-                        placeholder="Enter team PIN (e.g. 1234)"
+                        placeholder="Enter team 4-digit PIN"
                         value={captainPin}
                         onChange={(e) => setCaptainPin(e.target.value)}
                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono tracking-wider text-amber-600 dark:text-amber-400 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
@@ -352,7 +352,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       </button>
                     </div>
                     <p className="text-[11px] text-slate-500 italic">
-                      Default PIN for teams is <strong className="text-slate-700 dark:text-slate-400">1234</strong> (or custom configured PIN).
+                      PIN assigned by League Admin upon team creation (or use direct captain access link).
                     </p>
                   </div>
 

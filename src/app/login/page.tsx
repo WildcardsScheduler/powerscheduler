@@ -287,7 +287,7 @@ export default function LoginPage() {
                         type={showCaptainPin ? 'text' : 'password'}
                         maxLength={10}
                         autoComplete="new-password"
-                        placeholder="Enter team PIN (e.g. 1234)"
+                        placeholder="Enter team 4-digit PIN"
                         value={captainPin}
                         onChange={(e) => setCaptainPin(e.target.value)}
                         className="w-full bg-slate-50 dark:bg-[#1c1f24] border border-[#e5e7eb] dark:border-[#333943] rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono tracking-wider text-[#242424] dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#566171] focus:outline-none focus:border-[#101010] dark:focus:border-[#007afc]"
@@ -302,7 +302,7 @@ export default function LoginPage() {
                       </button>
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-[#8b96aa] italic">
-                      Default PIN for teams is <strong className="text-slate-700 dark:text-slate-300">1234</strong>.
+                      PIN assigned by League Admin upon team creation (or use direct captain access link).
                     </p>
                   </div>
 

@@ -18,7 +18,9 @@ import {
   Search,
   KeyRound,
   Link,
+  Dices,
 } from 'lucide-react';
+import { generateRandomPin } from '@/utils/pinGenerator';
 
 interface TeamManagerModalProps {
   teams: Team[];
@@ -107,6 +109,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
   const [newCaptainEmail, setNewCaptainEmail] = useState('');
   const [newCaptainPhone, setNewCaptainPhone] = useState('');
   const [newBadgeColor, setNewBadgeColor] = useState('#3b82f6');
+  const [newAccessPin, setNewAccessPin] = useState(() => generateRandomPin());
 
   // Sync the default division picker when the active league's divisions change
   React.useEffect(() => {
@@ -173,13 +176,14 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
       newCaptainEmail.trim() || 'captain@example.com',
       newCaptainPhone.trim() || '(555) 000-0000',
       newBadgeColor,
-      '1234'
+      newAccessPin.trim() || generateRandomPin()
     );
 
     setNewTeamName('');
     setNewCaptainName('');
     setNewCaptainEmail('');
     setNewCaptainPhone('');
+    setNewAccessPin(generateRandomPin());
     setShowAddTeamForm(false);
   };
 
@@ -523,6 +527,36 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                   </div>
                 </div>
 
+                {/* Auto-generated Captain Access PIN */}
+                <div className="bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                      <KeyRound className="h-3.5 w-3.5" />
+                      <span>Captain Login PIN (Auto-Generated)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setNewAccessPin(generateRandomPin())}
+                      className="text-[10px] text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300 font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                      title="Generate new random PIN"
+                    >
+                      <Dices className="h-3.5 w-3.5" />
+                      <span>Randomize PIN</span>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={newAccessPin}
+                    onChange={(e) => setNewAccessPin(e.target.value)}
+                    placeholder="Auto-generated PIN"
+                    className="w-full bg-white dark:bg-slate-900 border border-amber-500/40 text-amber-700 dark:text-amber-400 font-mono font-bold rounded-xl px-3 py-1.5 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none shadow-sm"
+                  />
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                    A secure 4-digit PIN is automatically assigned for captain login and direct links.
+                  </p>
+                </div>
+
                 {/* Color Badge Picker */}
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Team Color Badge</label>
@@ -644,9 +678,20 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                   {/* Captain Access PIN & Direct Login Share Link */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <div>
-                      <label className="text-[10px] font-bold text-amber-600 dark:text-amber-400 block mb-1 flex items-center gap-1">
-                        <KeyRound className="h-3 w-3" /> Captain 4-Digit Login PIN
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <KeyRound className="h-3 w-3" /> Captain 4-Digit Login PIN
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setEditAccessPin(generateRandomPin())}
+                          className="text-[10px] text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                          title="Generate new random PIN"
+                        >
+                          <Dices className="h-3 w-3" />
+                          <span>Randomize PIN</span>
+                        </button>
+                      </div>
                       <input
                         type="text"
                         maxLength={6}

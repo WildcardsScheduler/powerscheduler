@@ -23,6 +23,7 @@ import { MatchEditorModal } from '@/components/MatchEditorModal';
 import { FairnessReportModal } from '@/components/FairnessReportModal';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
 import { formatMatchRulesDescription } from '@/utils/formatRules';
+import { generateRandomPin } from '@/utils/pinGenerator';
 import { Globe, Trophy, Users, Calendar, MapPin, BookOpen, Download } from 'lucide-react';
 
 export default function Home() {
@@ -593,7 +594,7 @@ export default function Home() {
       captainEmail,
       captainPhone,
       badgeColor,
-      accessPin: accessPin?.trim() || '1234',
+      accessPin: accessPin?.trim() || generateRandomPin(),
       roster: [
         {
           id: `p-${Date.now()}-c`,
@@ -635,7 +636,7 @@ export default function Home() {
         captainEmail: `captain${num}@example.com`,
         captainPhone: `(555) 000-00${num < 10 ? '0' + num : num}`,
         badgeColor: colors[i % colors.length],
-        accessPin: '1234',
+        accessPin: generateRandomPin(),
         roster: [],
       });
     }

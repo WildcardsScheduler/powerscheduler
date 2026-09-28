@@ -3,6 +3,7 @@ import { LeagueSeason, Team } from '@/types/league';
 import { initialLeaguesList } from '@/data/mockLeagueData';
 import { getStoreData, setStoreData, LeagueStoreData } from '@/lib/store';
 import { getSession } from '@/lib/auth';
+import { generateRandomPin } from '@/utils/pinGenerator';
 
 export async function GET() {
   const store = await getStoreData();
@@ -124,7 +125,7 @@ export async function POST(request: Request) {
       adminPasscode: l.adminPasscode || currentPasscodeMap.get(l.id) || 'admin123',
       teams: l.teams.map((t: Team) => ({
         ...t,
-        accessPin: t.accessPin || currentPinMap.get(t.id) || '1234',
+        accessPin: t.accessPin || currentPinMap.get(t.id) || generateRandomPin(),
       })),
     }));
 
