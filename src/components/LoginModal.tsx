@@ -352,7 +352,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       </button>
                     </div>
                     <p className="text-[11px] text-slate-500 italic">
-                      PIN assigned by League Admin upon team creation (or use direct captain access link).
+                      PIN assigned by League Admin upon team creation.
                     </p>
                   </div>
 

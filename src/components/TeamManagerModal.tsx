@@ -17,7 +17,7 @@ import {
   Check,
   Search,
   KeyRound,
-  Link,
+  Copy,
   Dices,
 } from 'lucide-react';
 import { generateRandomPin } from '@/utils/pinGenerator';
@@ -126,6 +126,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
   const [editCaptainPhone, setEditCaptainPhone] = useState('');
   const [editBadgeColor, setEditBadgeColor] = useState('#3b82f6');
   const [editAccessPin, setEditAccessPin] = useState('1234');
+  const [copiedPin, setCopiedPin] = useState(false);
 
   // Add Player Form State
   const [showAddPlayer, setShowAddPlayer] = useState(false);
@@ -553,7 +554,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                     className="w-full bg-white dark:bg-slate-900 border border-amber-500/40 text-amber-700 dark:text-amber-400 font-mono font-bold rounded-xl px-3 py-1.5 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none shadow-sm"
                   />
                   <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                    A secure 4-digit PIN is automatically assigned for captain login and direct links.
+                    A secure 4-digit PIN is automatically assigned for captain login.
                   </p>
                 </div>
 
@@ -675,45 +676,52 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Captain Access PIN & Direct Login Share Link */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                          <KeyRound className="h-3 w-3" /> Captain 4-Digit Login PIN
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setEditAccessPin(generateRandomPin())}
-                          className="text-[10px] text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 font-semibold flex items-center gap-1 hover:underline cursor-pointer"
-                          title="Generate new random PIN"
-                        >
-                          <Dices className="h-3 w-3" />
-                          <span>Randomize PIN</span>
-                        </button>
-                      </div>
+                  {/* Captain Access PIN & Copy PIN */}
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        <KeyRound className="h-3 w-3" /> Captain 4-Digit Login PIN
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setEditAccessPin(generateRandomPin())}
+                        className="text-[10px] text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                        title="Generate new random PIN"
+                      >
+                        <Dices className="h-3 w-3" />
+                        <span>Randomize PIN</span>
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <input
                         type="text"
                         maxLength={6}
                         value={editAccessPin}
                         onChange={(e) => setEditAccessPin(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-amber-500/40 text-amber-700 dark:text-amber-400 font-mono font-bold rounded-xl px-2.5 py-1 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none shadow-sm"
+                        className="flex-1 bg-white dark:bg-slate-900 border border-amber-500/40 text-amber-700 dark:text-amber-400 font-mono font-bold rounded-xl px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none shadow-sm"
                       />
-                    </div>
-
-                    <div className="flex items-end">
                       <button
                         type="button"
                         onClick={() => {
                           const pin = editAccessPin || selectedTeam.accessPin || '1234';
-                          const url = `${window.location.origin}/?team=${selectedTeam.id}&pin=${pin}`;
-                          navigator.clipboard.writeText(url);
-                          alert(`Direct Captain Access Link copied to clipboard!\n\n${url}`);
+                          navigator.clipboard.writeText(pin);
+                          setCopiedPin(true);
+                          setTimeout(() => setCopiedPin(false), 2000);
                         }}
-                        className="w-full py-1 px-3 bg-amber-50 hover:bg-amber-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30 font-semibold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-sm"
+                        className="py-1.5 px-3 bg-amber-50 hover:bg-amber-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30 font-semibold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-sm shrink-0 cursor-pointer"
+                        title="Copy 4-digit PIN to clipboard"
                       >
-                        <Link className="h-3.5 w-3.5" />
-                        <span>Copy Direct Captain Link</span>
+                        {copiedPin ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-emerald-600 dark:text-emerald-400">PIN Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3.5 w-3.5" />
+                            <span>Copy PIN</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>

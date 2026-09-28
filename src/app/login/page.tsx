@@ -302,7 +302,7 @@ export default function LoginPage() {
                       </button>
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-[#8b96aa] italic">
-                      PIN assigned by League Admin upon team creation (or use direct captain access link).
+                      PIN assigned by League Admin upon team creation.
                     </p>
                   </div>
 

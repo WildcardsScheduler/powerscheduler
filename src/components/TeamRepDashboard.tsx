@@ -86,7 +86,6 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
   const [showNewPin, setShowNewPin] = useState(false);
   const [pinError, setPinError] = useState('');
   const [pinSuccess, setPinSuccess] = useState('');
-  const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPinQuick, setCopiedPinQuick] = useState(false);
 
   const activeRulesText = leagueRulesContent || DEFAULT_LEAGUE_RULES;
@@ -149,16 +148,6 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
     navigator.clipboard.writeText(emails);
     setCopiedAll(true);
     setTimeout(() => setCopiedAll(false), 2500);
-  };
-
-  const handleCopyCaptainLink = () => {
-    if (typeof window === 'undefined') return;
-    const origin = window.location.origin;
-    const pathname = window.location.pathname;
-    const directUrl = `${origin}${pathname}?team=${activeTeam.id}`;
-    navigator.clipboard.writeText(directUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
   };
 
   const handleCopyCurrentPin = () => {
@@ -824,30 +813,6 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                     {copiedPinQuick ? <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="h-4 w-4" />}
                   </button>
                 </div>
-              </div>
-
-              <div className="bg-white dark:bg-slate-950/80 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <div className="min-w-0 pr-2">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Direct Captain Link</span>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 truncate block">Instant sign-in URL with PIN</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCopyCaptainLink}
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 text-xs font-bold flex items-center space-x-1.5 transition-colors shrink-0 cursor-pointer"
-                >
-                  {copiedLink ? (
-                    <>
-                      <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span className="text-emerald-600 dark:text-emerald-400">Link Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="h-3.5 w-3.5" />
-                      <span>Copy Link</span>
-                    </>
-                  )}
-                </button>
               </div>
             </div>
           </div>
