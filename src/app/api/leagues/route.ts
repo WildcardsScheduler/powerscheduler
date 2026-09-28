@@ -1,122 +1,141 @@
 import { NextResponse } from 'next/server';
-import { LeagueSeason } from '@/types/league';
+import { LeagueSeason, Team } from '@/types/league';
 import { initialLeaguesList } from '@/data/mockLeagueData';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-
-// Global memory cache in Next.js server instance
-declare global {
-  var __POWER_SCHEDULE_STORE__: { leagues: LeagueSeason[]; activeId: string } | undefined;
-}
-
-const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
-
-const TEMP_FILE_PATH = path.join(os.tmpdir(), '.powerschedule_cloud_data.json');
-
-async function getStoreData(): Promise<{ leagues: LeagueSeason[]; activeId: string }> {
-  // 1. Check Upstash Redis / Cloud KV DB if credentials exist
-  if (UPSTASH_URL && UPSTASH_TOKEN) {
-    try {
-      const res = await fetch(`${UPSTASH_URL}/get/powerschedule_league_store`, {
-        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
-        cache: 'no-store',
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json?.result) {
-          const parsed = typeof json.result === 'string' ? JSON.parse(json.result) : json.result;
-          if (parsed?.leagues && Array.isArray(parsed.leagues) && parsed.leagues.length > 0) {
-            globalThis.__POWER_SCHEDULE_STORE__ = parsed;
-            return parsed;
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching from Upstash Cloud DB:', err);
-    }
-  }
-
-  // 2. In-memory global cache
-  if (globalThis.__POWER_SCHEDULE_STORE__) {
-    return globalThis.__POWER_SCHEDULE_STORE__;
-  }
-
-  // 3. Fallback to temp disk file
-  try {
-    if (fs.existsSync(TEMP_FILE_PATH)) {
-      const content = fs.readFileSync(TEMP_FILE_PATH, 'utf-8');
-      const parsed = JSON.parse(content);
-      if (parsed?.leagues && Array.isArray(parsed.leagues) && parsed.leagues.length > 0) {
-        globalThis.__POWER_SCHEDULE_STORE__ = parsed;
-        return parsed;
-      }
-    }
-  } catch (err) {
-    console.error('Error reading cloud store file:', err);
-  }
-
-  const defaultStore = {
-    leagues: initialLeaguesList,
-    activeId: initialLeaguesList[0].id,
-  };
-  globalThis.__POWER_SCHEDULE_STORE__ = defaultStore;
-  return defaultStore;
-}
-
-async function setStoreData(data: { leagues: LeagueSeason[]; activeId: string }) {
-  globalThis.__POWER_SCHEDULE_STORE__ = data;
-
-  // 1. Write to Upstash Redis / Cloud KV DB if credentials exist
-  if (UPSTASH_URL && UPSTASH_TOKEN) {
-    try {
-      await fetch(`${UPSTASH_URL}/set/powerschedule_league_store`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
-        body: JSON.stringify(data),
-      });
-    } catch (err) {
-      console.error('Error writing to Upstash Cloud DB:', err);
-    }
-  }
-
-  // 2. Write to temp file fallback
-  try {
-    fs.writeFileSync(TEMP_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error writing cloud store file:', err);
-  }
-}
+import { getStoreData, setStoreData, LeagueStoreData } from '@/lib/store';
+import { getSession } from '@/lib/auth';
 
 export async function GET() {
   const store = await getStoreData();
-  return NextResponse.json(store);
+  const session = await getSession();
+
+  const isScheduler = session?.role === 'scheduler';
+  const isCaptain = session?.role === 'team_rep';
+  const sessionTeamId = session?.teamId;
+
+  // Sanitize all league data before sending to client
+  const sanitizedLeagues: LeagueSeason[] = store.leagues.map((league) => {
+    // 1. NEVER expose master adminPasscode to public or team captains
+    const cleanLeague: LeagueSeason = {
+      ...league,
+      adminPasscode: isScheduler ? league.adminPasscode : undefined,
+    };
+
+    // 2. Sanitize teams: protect access PINs and contact PII
+    cleanLeague.teams = league.teams.map((team) => {
+      const isOwnTeam = isCaptain && sessionTeamId === team.id;
+      const canViewContact = isScheduler || isCaptain;
+
+      const cleanTeam: Team = {
+        ...team,
+        // Only scheduler or the team's own authenticated captain sees their PIN
+        accessPin: isScheduler || isOwnTeam ? team.accessPin : undefined,
+        // Protect captain personal phone and email from unauthenticated public scrapers
+        captainEmail: canViewContact ? team.captainEmail : '',
+        captainPhone: canViewContact ? team.captainPhone : '',
+      };
+
+      return cleanTeam;
+    });
+
+    return cleanLeague;
+  });
+
+  return NextResponse.json({
+    leagues: sanitizedLeagues,
+    activeId: store.activeId,
+    version: store.version,
+    updatedAt: store.updatedAt,
+    session: session
+      ? { role: session.role, teamId: session.teamId, leagueId: session.leagueId }
+      : { role: 'public' },
+  });
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { leagues, activeId, action } = body;
+    const session = await getSession();
 
-    // Reset action to clear all test/mock data
+    // Restrict full league state mutation strictly to authenticated Administrators (schedulers)
+    if (!session || session.role !== 'scheduler') {
+      return NextResponse.json(
+        { error: 'Forbidden: Only administrators can modify full league state.' },
+        { status: 403 }
+      );
+    }
+
+    const rawBody = await request.json();
+    const { updateLeaguesRequestSchema } = await import('@/lib/validations/leagueSchemas');
+    const parseResult = updateLeaguesRequestSchema.safeParse(rawBody);
+
+    if (!parseResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation error: ' + parseResult.error.issues.map((i) => i.message).join(', '),
+          issues: parseResult.error.issues,
+        },
+        { status: 400 }
+      );
+    }
+
+    const { leagues, activeId, action, version } = parseResult.data;
+    const currentStore = await getStoreData();
+
+    // Optimistic Concurrency Control check
+    if (version !== undefined && version !== currentStore.version) {
+      return NextResponse.json(
+        {
+          error: 'Conflict: The league configuration has been updated by another session. Please refresh.',
+          currentVersion: currentStore.version,
+        },
+        { status: 409 }
+      );
+    }
+
+    // Reset action strictly reserved for Admin (scheduler)
     if (action === 'RESET_TO_CLEAN') {
-      const cleanStore = {
+      const cleanStore: LeagueStoreData = {
         leagues: initialLeaguesList,
         activeId: initialLeaguesList[0].id,
       };
       await setStoreData(cleanStore);
-      return NextResponse.json({ success: true, message: 'Reset to clean initial state', store: cleanStore });
+      return NextResponse.json({
+        success: true,
+        message: 'Reset to clean initial state',
+        store: cleanStore,
+        version: cleanStore.version,
+      });
     }
 
-    if (!Array.isArray(leagues) || leagues.length === 0) {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    // Preserve master adminPasscodes and team PINs from current store if stripped in client payload
+    const currentPasscodeMap = new Map<string, string | undefined>(
+      currentStore.leagues.map((l) => [l.id, l.adminPasscode])
+    );
+    const currentPinMap = new Map<string, string | undefined>();
+    currentStore.leagues.forEach((l) => {
+      l.teams.forEach((t: Team) => currentPinMap.set(t.id, t.accessPin));
+    });
+
+    if (!leagues || !Array.isArray(leagues)) {
+      return NextResponse.json({ error: 'Leagues array is required.' }, { status: 400 });
     }
 
-    const updatedStore = { leagues, activeId: activeId || leagues[0].id };
+    const preservedLeagues: LeagueSeason[] = leagues.map((l) => ({
+      ...l,
+      adminPasscode: l.adminPasscode || currentPasscodeMap.get(l.id) || 'admin123',
+      teams: l.teams.map((t: Team) => ({
+        ...t,
+        accessPin: t.accessPin || currentPinMap.get(t.id) || '1234',
+      })),
+    }));
+
+    const updatedStore: LeagueStoreData = { leagues: preservedLeagues, activeId: activeId || preservedLeagues[0].id };
     await setStoreData(updatedStore);
 
-    return NextResponse.json({ success: true, leaguesCount: leagues.length });
+    return NextResponse.json({
+      success: true,
+      leaguesCount: preservedLeagues.length,
+      version: updatedStore.version,
+    });
   } catch (err) {
     console.error('Failed to update cloud storage API', err);
     return NextResponse.json({ error: 'Failed to update cloud storage' }, { status: 500 });

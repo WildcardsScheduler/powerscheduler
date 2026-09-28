@@ -171,6 +171,29 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
   const awayTeamBefore = beforeReport.teamMetrics.find((m) => m.teamId === awayTeamId);
   const awayTeamAfter = afterReport.teamMetrics.find((m) => m.teamId === awayTeamId);
 
+  // Conflict Detection: Double-booking court at same date & time slot
+  const courtConflictMatch = allMatches.find(
+    (m) =>
+      m.id !== draftMatch.id &&
+      m.date === date &&
+      (m.subLocationId === subLocationId || m.courtId === subLocationId) &&
+      m.startTime === startTime
+  );
+
+  // Conflict Detection: Team already playing at same date & time slot
+  const teamConflictMatch = allMatches.find(
+    (m) =>
+      m.id !== draftMatch.id &&
+      m.date === date &&
+      m.startTime === startTime &&
+      (m.homeTeamId === homeTeamId ||
+        m.awayTeamId === homeTeamId ||
+        m.homeTeamId === awayTeamId ||
+        m.awayTeamId === awayTeamId)
+  );
+
+  const [conflictError, setConflictError] = useState('');
+
   // Check for same-day conflict / double header alert
   const homeOtherMatchesOnDate = afterMatches.filter(
     (m) => m.date === date && (m.homeTeamId === homeTeamId || m.awayTeamId === homeTeamId)
@@ -181,10 +204,23 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setConflictError('');
+
     if (!homeTeamId || !awayTeamId || homeTeamId === awayTeamId) {
-      alert('Home team and Away team must be different teams.');
+      setConflictError('Home team and Away team must be different teams.');
       return;
     }
+
+    if (courtConflictMatch) {
+      setConflictError(`Court Conflict: Selected court is already booked at ${startTime} on ${date}.`);
+      return;
+    }
+
+    if (teamConflictMatch) {
+      setConflictError(`Team Conflict: One of the selected teams is already playing at ${startTime} on ${date}.`);
+      return;
+    }
+
     onSaveMatch(draftMatch);
     onClose();
   };

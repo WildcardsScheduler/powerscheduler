@@ -34,41 +34,25 @@ export default function Home() {
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   const [isCloudSynced, setIsCloudSynced] = useState(false);
+  const [serverVersion, setServerVersion] = useState<number>(1);
 
-  // Helper to repair potential orphaned divisionIds and ensure adminPasscode consistency
+  // Helper to repair potential orphaned divisionIds
   const repairLeaguesData = (data: LeagueSeason[]) => {
-    let activePasscode = 'admin123';
-    if (typeof window !== 'undefined') {
-      const localStored = localStorage.getItem('powerschedule_admin_passcode');
-      if (localStored && localStored.trim()) {
-        activePasscode = localStored.trim();
-      }
-    }
-    const foundFromData = data.find((l) => l.adminPasscode)?.adminPasscode;
-    if (foundFromData && foundFromData.trim()) {
-      activePasscode = foundFromData.trim();
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('powerschedule_admin_passcode', activePasscode);
-        } catch {}
-      }
-    }
-
     return data.map((l) => {
-      const cleanLeague = { ...l, adminPasscode: activePasscode };
-      if (!cleanLeague.divisions || cleanLeague.divisions.length === 0) return cleanLeague;
-      const validDivisionIds = new Set(cleanLeague.divisions.map((d) => d.id));
-      const fallbackDivId = cleanLeague.divisions[0].id;
-      const anyOrphaned = cleanLeague.teams.some((t) => !validDivisionIds.has(t.divisionId));
-      if (!anyOrphaned) return cleanLeague;
+      if (!l.divisions || l.divisions.length === 0) return l;
+      const validDivisionIds = new Set(l.divisions.map((d) => d.id));
+      const fallbackDivId = l.divisions[0].id;
+      const anyOrphaned = l.teams.some((t) => !validDivisionIds.has(t.divisionId));
+      if (!anyOrphaned) return l;
       return {
-        ...cleanLeague,
-        teams: cleanLeague.teams.map((t) =>
+        ...l,
+        teams: l.teams.map((t) =>
           validDivisionIds.has(t.divisionId) ? t : { ...t, divisionId: fallbackDivId }
         ),
       };
     });
   };
+
   const isDefaultInitialData = (data: LeagueSeason[]) => {
     if (!data || data.length === 0) return true;
     if (data.length !== initialLeaguesList.length) return false;
@@ -143,6 +127,9 @@ export default function Home() {
             const repaired = repairLeaguesData(data.leagues);
             if (isMounted) {
               setLeagues(repaired);
+              if (typeof data.version === 'number') {
+                setServerVersion(data.version);
+              }
               const defaultSavedId = localStorage.getItem('powerschedule_default_league_id');
               if (defaultSavedId && repaired.some((l: LeagueSeason) => l.id === defaultSavedId)) {
                 setActiveLeagueId(defaultSavedId);
@@ -188,70 +175,58 @@ export default function Home() {
   const [authLeagueId, setAuthLeagueId] = useState<string | null>(null);
   const [authTeamId, setAuthTeamId] = useState<string | null>(null);
 
-  // Hydrate auth role and check direct Captain URL query parameters once when loaded
+  // Hydrate auth role from secure server session
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const savedRole = localStorage.getItem('powerschedule_auth_role') as UserRole;
-      const savedLeagueId = localStorage.getItem('powerschedule_auth_league_id');
-      const savedTeamId = localStorage.getItem('powerschedule_auth_team_id');
-      
-      if (savedRole === 'scheduler') {
-        setAuthRole('scheduler');
-      } else if (savedRole === 'team_rep' && savedTeamId && savedLeagueId) {
-        setAuthRole('team_rep');
-        setAuthLeagueId(savedLeagueId);
-        setAuthTeamId(savedTeamId);
-      } else {
-        setAuthRole('public');
-      }
-
-      // Check URL parameters for direct Captain PIN share links
-      const params = new URLSearchParams(window.location.search);
-      const teamParam = params.get('team');
-      const pinParam = params.get('pin');
-      const leagueParam = params.get('league');
-      
-      if (teamParam && pinParam && leagues.length > 0) {
-        const targetLeague = leagueParam
-          ? leagues.find((l) => l.id === leagueParam) || leagues[0]
-          : leagues.find((l) => l.teams.some((t) => t.id === teamParam)) || leagues[0];
-        const matchedTeam = targetLeague?.teams.find((t) => t.id === teamParam);
-        if (matchedTeam && (matchedTeam.accessPin || '1234') === pinParam) {
-          setAuthRole('team_rep');
-          setAuthLeagueId(targetLeague.id);
-          setAuthTeamId(matchedTeam.id);
-          setActiveLeagueId(targetLeague.id);
-          setSelectedTeamId(matchedTeam.id);
-          localStorage.setItem('powerschedule_auth_role', 'team_rep');
-          localStorage.setItem('powerschedule_auth_league_id', targetLeague.id);
-          localStorage.setItem('powerschedule_auth_team_id', matchedTeam.id);
+    let isMounted = true;
+    const checkServerSession = async () => {
+      try {
+        const res = await fetch('/api/auth/session');
+        if (res.ok) {
+          const session = await res.json();
+          if (isMounted) {
+            if (session.authenticated && (session.role === 'scheduler' || session.role === 'team_rep')) {
+              setAuthRole(session.role);
+              if (session.role === 'team_rep' && session.teamId && session.leagueId) {
+                setAuthLeagueId(session.leagueId);
+                setAuthTeamId(session.teamId);
+                setActiveLeagueId(session.leagueId);
+                setSelectedTeamId(session.teamId);
+              }
+            } else {
+              setAuthRole('public');
+              setAuthLeagueId(null);
+              setAuthTeamId(null);
+            }
+          }
         }
+      } catch (err) {
+        console.warn('Session verification error:', err);
       }
-    } catch (err) {
-      console.warn('Failed to read auth params', err);
-    }
+    };
+
+    checkServerSession();
+    return () => {
+      isMounted = false;
+    };
   }, [isLoaded]);
 
   const handleLoginSuccess = (role: 'scheduler' | 'team_rep', teamId?: string, leagueId?: string) => {
     setAuthRole(role);
-    localStorage.setItem('powerschedule_auth_role', role);
     if (role === 'team_rep' && teamId && leagueId) {
       setAuthLeagueId(leagueId);
       setAuthTeamId(teamId);
       setActiveLeagueId(leagueId);
       setSelectedTeamId(teamId);
-      localStorage.setItem('powerschedule_auth_league_id', leagueId);
-      localStorage.setItem('powerschedule_auth_team_id', teamId);
     } else if (role === 'scheduler') {
       setAuthLeagueId(null);
       setAuthTeamId(null);
-      localStorage.removeItem('powerschedule_auth_league_id');
-      localStorage.removeItem('powerschedule_auth_team_id');
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {}
     setAuthRole('public');
     setAuthLeagueId(null);
     setAuthTeamId(null);
@@ -288,6 +263,9 @@ export default function Home() {
               }
               return repaired;
             });
+            if (typeof data.version === 'number') {
+              setServerVersion(data.version);
+            }
             setIsCloudSynced(true);
           }
         }
@@ -311,18 +289,36 @@ export default function Home() {
         localStorage.setItem('powerschedule_leagues_backup', JSON.stringify(leagues));
       }
 
-      // Post updates to online cloud store
-      fetch('/api/leagues', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leagues, activeId: activeLeagueId }),
-      }).then(() => setIsCloudSynced(true)).catch((err) => {
-        console.warn('Cloud sync post warning:', err);
-      });
+      // Restrict full league tree write to authenticated administrators
+      if (authRole === 'scheduler') {
+        fetch('/api/leagues', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ leagues, activeId: activeLeagueId, version: serverVersion }),
+        })
+          .then(async (res) => {
+            if (res.ok) {
+              const data = await res.json();
+              if (typeof data?.version === 'number') setServerVersion(data.version);
+              setIsCloudSynced(true);
+            } else if (res.status === 409) {
+              console.warn('Schedule was concurrently updated; re-fetching latest state.');
+              const fresh = await fetch('/api/leagues', { cache: 'no-store' });
+              if (fresh.ok) {
+                const freshData = await fresh.json();
+                if (freshData?.leagues) setLeagues(repairLeaguesData(freshData.leagues));
+                if (typeof freshData?.version === 'number') setServerVersion(freshData.version);
+              }
+            }
+          })
+          .catch((err) => {
+            console.warn('Cloud sync post warning:', err);
+          });
+      }
     } catch (err) {
       console.error('Failed to save state', err);
     }
-  }, [leagues, activeLeagueId, isLoaded]);
+  }, [leagues, activeLeagueId, isLoaded, authRole, serverVersion]);
 
   const league = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
 
@@ -719,6 +715,18 @@ export default function Home() {
         t.id === teamId ? { ...t, accessPin: cleanPin } : t
       ),
     }));
+    fetch(`/api/teams/${encodeURIComponent(teamId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessPin: cleanPin, version: serverVersion }),
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.version === 'number') setServerVersion(data.version);
+        }
+      })
+      .catch((err) => console.warn('Failed to sync team PIN to server:', err));
   };
 
   const handleDeleteTeam = (teamId: string) => {
@@ -866,16 +874,43 @@ export default function Home() {
   };
 
   // Handle Score Save
-  const handleSaveMatchScore = (matchId: string, scores: SetScore[], winnerId: string) => {
+  // Handle Score Save via Scoped API
+  const handleSaveMatchScore = async (matchId: string, scores: SetScore[], winnerId: string) => {
+    // Optimistic UI update
     updateActiveLeague((prev) => ({
       ...prev,
       matches: prev.matches.map((m) =>
         m.id === matchId ? { ...m, scores, winnerId, status: 'Completed' as const } : m
       ),
     }));
+
+    try {
+      const res = await fetch(`/api/matches/${encodeURIComponent(matchId)}/score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scores, winnerId, version: serverVersion }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.version === 'number') setServerVersion(data.version);
+      } else if (res.status === 409) {
+        console.warn('Match score conflict: re-fetching latest schedule.');
+        const fresh = await fetch('/api/leagues', { cache: 'no-store' });
+        if (fresh.ok) {
+          const freshData = await fresh.json();
+          if (freshData?.leagues) setLeagues(repairLeaguesData(freshData.leagues));
+          if (typeof freshData?.version === 'number') setServerVersion(freshData.version);
+        }
+      } else {
+        const err = await res.json();
+        console.warn('Failed to persist match score:', err.error);
+      }
+    } catch (e) {
+      console.warn('Network error saving match score:', e);
+    }
   };
 
-  // Manual Match Edit & Reschedule Handlers
+  // Manual Match Edit & Reschedule Handlers via Scoped API
   const handleEditMatch = (match: Match) => {
     setEditingMatch(match);
     setIsMatchEditorOpen(true);
@@ -886,9 +921,11 @@ export default function Home() {
     setIsMatchEditorOpen(true);
   };
 
-  const handleSaveMatch = (savedMatch: Match) => {
+  const handleSaveMatch = async (savedMatch: Match) => {
+    const exists = league.matches.some((m) => m.id === savedMatch.id);
+
+    // Optimistic UI update
     updateActiveLeague((prev) => {
-      const exists = prev.matches.some((m) => m.id === savedMatch.id);
       let updatedMatches: Match[];
       if (exists) {
         updatedMatches = prev.matches.map((m) => (m.id === savedMatch.id ? savedMatch : m));
@@ -902,15 +939,59 @@ export default function Home() {
     });
     setIsMatchEditorOpen(false);
     setEditingMatch(null);
+
+    try {
+      let res: Response;
+      if (exists) {
+        res = await fetch(`/api/matches/${encodeURIComponent(savedMatch.id)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...savedMatch, version: serverVersion }),
+        });
+      } else {
+        res = await fetch('/api/matches', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ leagueId: activeLeagueId, match: savedMatch, version: serverVersion }),
+        });
+      }
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.version === 'number') setServerVersion(data.version);
+      } else if (res.status === 409) {
+        console.warn('Schedule conflict on match save: re-fetching latest schedule.');
+        const fresh = await fetch('/api/leagues', { cache: 'no-store' });
+        if (fresh.ok) {
+          const freshData = await fresh.json();
+          if (freshData?.leagues) setLeagues(repairLeaguesData(freshData.leagues));
+          if (typeof freshData?.version === 'number') setServerVersion(freshData.version);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to persist match edit:', e);
+    }
   };
 
-  const handleDeleteMatch = (matchId: string) => {
+  const handleDeleteMatch = async (matchId: string) => {
+    // Optimistic UI update
     updateActiveLeague((prev) => ({
       ...prev,
       matches: prev.matches.filter((m) => m.id !== matchId),
     }));
     setIsMatchEditorOpen(false);
     setEditingMatch(null);
+
+    try {
+      const res = await fetch(`/api/matches/${encodeURIComponent(matchId)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.version === 'number') setServerVersion(data.version);
+      }
+    } catch (e) {
+      console.warn('Failed to delete match on server:', e);
+    }
   };
 
   // Handle New Generated Schedule Apply
@@ -921,22 +1002,34 @@ export default function Home() {
     }));
   };
 
-  // Handle RSVP status update
+  // Handle RSVP status update with server sync to /api/teams/[id]
   const handleUpdateRsvp = (teamId: string, playerId: string, status: 'Going' | 'Maybe' | 'Out') => {
-    updateActiveLeague((prev) => ({
-      ...prev,
-      teams: prev.teams.map((team) => {
-        if (team.id === teamId) {
-          return {
-            ...team,
-            roster: team.roster.map((player) =>
-              player.id === playerId ? { ...player, rsvpStatus: status } : player
-            ),
-          };
-        }
-        return team;
-      }),
-    }));
+    updateActiveLeague((prev) => {
+      const targetTeam = prev.teams.find((t) => t.id === teamId);
+      if (targetTeam) {
+        const updatedRoster = targetTeam.roster.map((player) =>
+          player.id === playerId ? { ...player, rsvpStatus: status } : player
+        );
+        fetch(`/api/teams/${encodeURIComponent(teamId)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roster: updatedRoster, version: serverVersion }),
+        })
+          .then(async (res) => {
+            if (res.ok) {
+              const data = await res.json();
+              if (typeof data.version === 'number') setServerVersion(data.version);
+            }
+          })
+          .catch((err) => console.warn('Failed to sync RSVP to server:', err));
+
+        return {
+          ...prev,
+          teams: prev.teams.map((t) => (t.id === teamId ? { ...t, roster: updatedRoster } : t)),
+        };
+      }
+      return prev;
+    });
   };
 
   const activeHomeTeam = activeScoreMatch

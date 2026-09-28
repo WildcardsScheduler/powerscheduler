@@ -155,8 +155,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
     if (typeof window === 'undefined') return;
     const origin = window.location.origin;
     const pathname = window.location.pathname;
-    const currentPin = activeTeam.accessPin || '1234';
-    const directUrl = `${origin}${pathname}?team=${activeTeam.id}&pin=${encodeURIComponent(currentPin)}`;
+    const directUrl = `${origin}${pathname}?team=${activeTeam.id}`;
     navigator.clipboard.writeText(directUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);

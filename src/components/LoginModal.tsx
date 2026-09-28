@@ -73,57 +73,79 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleCaptainLogin = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleCaptainLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setTeamError('');
     setTeamSuccess('');
+    setIsSubmitting(true);
 
-    const targetTeam = targetLeague?.teams.find((t) => t.id === selectedTeamId);
-    if (!targetTeam) {
-      setTeamError('Please select a valid team.');
-      return;
-    }
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'captain',
+          leagueId: targetLeague.id,
+          teamId: selectedTeamId,
+          pin: captainPin.trim(),
+        }),
+      });
 
-    // Default PIN fallback if not explicitly defined on team is "1234"
-    const validPin = targetTeam.accessPin || '1234';
+      const data = await res.json();
+      if (!res.ok) {
+        setTeamError(data.error || 'Invalid 4-digit PIN for selected team.');
+        setIsSubmitting(false);
+        return;
+      }
 
-    if (captainPin.trim() === validPin) {
-      setTeamSuccess(`Welcome back, ${targetTeam.name}! Access Granted.`);
+      setTeamSuccess(data.message || `Welcome! Access Granted.`);
       onSelectLeague(targetLeague.id);
       setTimeout(() => {
-        onLoginSuccess('team_rep', targetTeam.id, targetLeague.id);
+        onLoginSuccess('team_rep', selectedTeamId, targetLeague.id);
         onClose();
+        setIsSubmitting(false);
       }, 500);
-    } else {
-      setTeamError(`Incorrect 4-digit PIN for ${targetTeam.name}. (Default: 1234)`);
+    } catch {
+      setTeamError('Unable to connect to authentication service.');
+      setIsSubmitting(false);
     }
   };
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAdminError('');
     setAdminSuccess('');
+    setIsSubmitting(true);
 
-    // Check universal master admin passcode across localStorage and all leagues
-    let storedPasscode: string | null = null;
-    if (typeof window !== 'undefined') {
-      storedPasscode = localStorage.getItem('powerschedule_admin_passcode');
-    }
-    const universalPasscode =
-      (storedPasscode && storedPasscode.trim()) ||
-      leagues.find((l) => l.adminPasscode)?.adminPasscode ||
-      targetLeague?.adminPasscode ||
-      'admin123';
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'admin',
+          passcode: adminPasscode.trim(),
+        }),
+      });
 
-    if (adminPasscode.trim() === universalPasscode.trim()) {
+      const data = await res.json();
+      if (!res.ok) {
+        setAdminError(data.error || 'Invalid Admin Passcode.');
+        setIsSubmitting(false);
+        return;
+      }
+
       setAdminSuccess('Administrator Authorized. Access Granted.');
       onSelectLeague(targetLeague.id);
       setTimeout(() => {
         onLoginSuccess('scheduler', undefined, targetLeague.id);
         onClose();
+        setIsSubmitting(false);
       }, 500);
-    } else {
-      setAdminError('Invalid Admin Passcode. Please try again.');
+    } catch {
+      setAdminError('Unable to connect to authentication service.');
+      setIsSubmitting(false);
     }
   };
 
