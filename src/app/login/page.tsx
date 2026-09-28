@@ -1,17 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LeagueSeason } from '@/types/league';
 import { KeyRound, ShieldCheck, UserCheck, AlertCircle, CheckCircle2, Eye, EyeOff, ArrowLeft, Volleyball } from 'lucide-react';
 
-function LoginContent() {
+export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const requestedTab = searchParams.get('tab') === 'admin' ? 'admin' : 'team';
 
-  const [activeTab, setActiveTab] = useState<'team' | 'admin'>(requestedTab);
+  const [activeTab, setActiveTab] = useState<'team' | 'admin'>('team');
   const [leagues, setLeagues] = useState<LeagueSeason[]>([]);
   const [selectedLeagueId, setSelectedLeagueId] = useState<string>('');
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
@@ -29,6 +27,10 @@ function LoginContent() {
 
   useEffect(() => {
     let isMounted = true;
+    if (typeof window !== 'undefined') {
+      const tabParam = new URLSearchParams(window.location.search).get('tab');
+      if (tabParam === 'admin') setActiveTab('admin');
+    }
     fetch('/api/leagues', { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -398,19 +400,5 @@ function LoginContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
-          <div className="h-6 w-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      }
-    >
-      <LoginContent />
-    </Suspense>
   );
 }
