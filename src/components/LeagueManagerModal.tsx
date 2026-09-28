@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { LeagueSeason, SportType, MatchRules, ThirdSetRule, DEFAULT_MATCH_RULES } from '@/types/league';
+import { LeagueSeason, SportType, MatchRules, ThirdSetRule, StandingsPointsSystem, DEFAULT_MATCH_RULES } from '@/types/league';
 import { X, Trophy, Plus, Calendar, Users, Building2, Layers, Edit3, Trash2, CheckCircle2, Sparkles, Check, Settings2, KeyRound, Eye, EyeOff } from 'lucide-react';
 
 interface LeagueManagerModalProps {
@@ -96,6 +96,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [pointsPerDecidingSet, setPointsPerDecidingSet] = useState<number>(15);
   const [thirdSetRule, setThirdSetRule] = useState<ThirdSetRule>('guaranteed_all');
   const [capRule, setCapRule] = useState<MatchRules['capRule']>('Win by 2 (Uncapped)');
+  const [standingsPointsSystem, setStandingsPointsSystem] = useState<StandingsPointsSystem>('fivb_3pt');
   const [excludeThirdSetPointsFromDiff, setExcludeThirdSetPointsFromDiff] = useState<boolean>(true);
   const [publicFairnessReport, setPublicFairnessReport] = useState<boolean>(true);
 
@@ -113,6 +114,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   const [editPointsPerDecidingSet, setEditPointsPerDecidingSet] = useState<number>(15);
   const [editThirdSetRule, setEditThirdSetRule] = useState<ThirdSetRule>('guaranteed_all');
   const [editCapRule, setEditCapRule] = useState<MatchRules['capRule']>('Win by 2 (Uncapped)');
+  const [editStandingsPointsSystem, setEditStandingsPointsSystem] = useState<StandingsPointsSystem>('fivb_3pt');
   const [editExcludeThirdSetPointsFromDiff, setEditExcludeThirdSetPointsFromDiff] = useState<boolean>(true);
 
   if (!isOpen) return null;
@@ -129,6 +131,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
       winByTwo: true,
       capRule,
       excludeThirdSetPointsFromDiff,
+      standingsPointsSystem,
     };
 
     onCreateLeague(
@@ -162,6 +165,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
     setEditPointsPerDecidingSet(rules.pointsPerDecidingSet);
     setEditThirdSetRule(rules.thirdSetRule);
     setEditCapRule(rules.capRule);
+    setEditStandingsPointsSystem(rules.standingsPointsSystem || 'fivb_3pt');
     setEditExcludeThirdSetPointsFromDiff(rules.excludeThirdSetPointsFromDiff ?? true);
   };
 
@@ -175,6 +179,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
       winByTwo: true,
       capRule: editCapRule,
       excludeThirdSetPointsFromDiff: editExcludeThirdSetPointsFromDiff,
+      standingsPointsSystem: editStandingsPointsSystem,
     };
 
     onUpdateLeague(
@@ -431,7 +436,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Deciding / 3rd Set Requirement</label>
                       <select
@@ -455,6 +460,20 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                         <option value="Win by 2 (Uncapped)">Win by 2 (Uncapped)</option>
                         <option value="Cap at +2 (e.g. 27/17)">Cap at +2 (e.g. 27/17)</option>
                         <option value="Hard Cap at Target (25/15)">Hard Cap at Target Points</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Standings Points System</label>
+                      <select
+                        value={standingsPointsSystem}
+                        onChange={(e) => setStandingsPointsSystem(e.target.value as StandingsPointsSystem)}
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-2.5 py-1.5 text-xs font-semibold"
+                      >
+                        <option value="fivb_3pt">FIVB 3-Point (3 pts sweep, 2-1 split)</option>
+                        <option value="one_pt_per_set">1 Point per Set Won</option>
+                        <option value="win_loss_2pt">Match Win/Loss (2 pts Win, 0 Loss)</option>
+                        <option value="win_loss_3pt">Match Win/Loss (3 pts Win, 0 Loss)</option>
                       </select>
                     </div>
                   </div>
@@ -652,6 +671,20 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                               <option value="Hard Cap at Target (25/15)">Hard Cap (25/15)</option>
                             </select>
                           </div>
+                        </div>
+
+                        <div className="pt-1">
+                          <label className="text-[10px] text-slate-500 dark:text-slate-400 block">Standings Points System</label>
+                          <select
+                            value={editStandingsPointsSystem}
+                            onChange={(e) => setEditStandingsPointsSystem(e.target.value as StandingsPointsSystem)}
+                            className="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-[11px] rounded px-2 py-1 border border-slate-200 dark:border-slate-800"
+                          >
+                            <option value="fivb_3pt">FIVB 3-Point (3 pts sweep, 2-1 split)</option>
+                            <option value="one_pt_per_set">1 Point per Set Won</option>
+                            <option value="win_loss_2pt">Match Win/Loss (2 pts Win, 0 Loss)</option>
+                            <option value="win_loss_3pt">Match Win/Loss (3 pts Win, 0 Loss)</option>
+                          </select>
                         </div>
 
                         <div className="pt-1 space-y-1.5">

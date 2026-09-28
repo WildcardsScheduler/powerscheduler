@@ -31,6 +31,23 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
       : `${leagueName} — ${division.name} Standings`
     : `${division.name} Standings`;
 
+  const activeRules = division.matchRules || matchRules;
+  const pointsSystem = activeRules?.standingsPointsSystem || 'fivb_3pt';
+
+  const scoringBadgeMap: Record<string, string> = {
+    fivb_3pt: 'FIVB 3-Pt Scoring',
+    one_pt_per_set: '1 Pt / Set Won',
+    win_loss_2pt: '2 Pts / Win',
+    win_loss_3pt: '3 Pts / Win',
+  };
+
+  const scoringDescMap: Record<string, string> = {
+    fivb_3pt: 'FIVB 3-Pt (3-0 sweep = 3 pts / 0 pts, 2-1 split = 2 pts / 1 pt)',
+    one_pt_per_set: '1 Point per set won',
+    win_loss_2pt: 'Match Win = 2 pts, Loss = 0 pts',
+    win_loss_3pt: 'Match Win = 3 pts, Loss = 0 pts',
+  };
+
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors duration-150">
       {/* Header Info */}
@@ -52,6 +69,9 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
               <Users className="h-3 w-3" /> Min {division.minFemalesOnCourt} F on Court
             </span>
           )}
+          <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-medium">
+            {scoringBadgeMap[pointsSystem] || scoringBadgeMap.fivb_3pt}
+          </span>
           <span className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-full font-medium">
             {division.capRule}
           </span>
@@ -150,17 +170,21 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
         </table>
       </div>
 
-      {/* Tie-breaker Rule Footer Note */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 dark:text-slate-500 pt-2 border-t border-slate-200 dark:border-slate-800/60 gap-1">
-        <div className="flex items-center space-x-1.5">
-          <Info className="h-3.5 w-3.5 shrink-0" />
+      {/* Tie-breaker & Scoring Rule Footer Note */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 dark:text-slate-500 pt-2 border-t border-slate-200 dark:border-slate-800/60 gap-1.5">
+        <div className="flex items-center space-x-1.5 flex-wrap">
+          <Info className="h-3.5 w-3.5 shrink-0 text-slate-400" />
           <span>
-            Tie-breaker order: <strong className="text-slate-700 dark:text-slate-400">Points → Match Wins → Set Ratio → Point Differential → Points For</strong>
+            Standings scoring: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{scoringDescMap[pointsSystem] || scoringDescMap.fivb_3pt}</strong>
+          </span>
+          <span className="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
+          <span>
+            Tie-breakers: <strong className="text-slate-700 dark:text-slate-400">Pts → Wins → Set Ratio → +/- Diff → PF</strong>
           </span>
         </div>
         {(division.matchRules?.excludeThirdSetPointsFromDiff ?? matchRules?.excludeThirdSetPointsFromDiff ?? true) && (
-          <span className="text-amber-600 dark:text-amber-400/80 italic font-medium">
-            * Point Differential (+/-) counts regulation sets (1 & 2) only
+          <span className="text-amber-600 dark:text-amber-400/80 italic font-medium whitespace-nowrap">
+            * Point Diff (+/-) counts regulation sets only
           </span>
         )}
       </div>

@@ -110,16 +110,48 @@ export function calculateStandings(
     away.setsWon += awaySets;
     away.setsLost += homeSets;
 
+    const pointsSystem = matchRules?.standingsPointsSystem || 'fivb_3pt';
+
     if (m.winnerId === m.homeTeamId) {
       home.wins += 1;
       away.losses += 1;
-      home.points += homeSets === 2 && awaySets === 0 ? 3 : 2;
-      away.points += awaySets === 1 ? 1 : 0;
+
+      if (pointsSystem === 'one_pt_per_set') {
+        home.points += homeSets;
+        away.points += awaySets;
+      } else if (pointsSystem === 'win_loss_2pt') {
+        home.points += 2;
+        away.points += 0;
+      } else if (pointsSystem === 'win_loss_3pt') {
+        home.points += 3;
+        away.points += 0;
+      } else {
+        // 'fivb_3pt' (Default):
+        // Shutout/sweep: 3 pts to winner, 0 to loser
+        // Deciding set win: 2 pts to winner, 1 bonus pt to loser
+        const isSweep = awaySets === 0;
+        home.points += isSweep ? 3 : 2;
+        away.points += isSweep ? 0 : 1;
+      }
     } else if (m.winnerId === m.awayTeamId) {
       away.wins += 1;
       home.losses += 1;
-      away.points += awaySets === 2 && homeSets === 0 ? 3 : 2;
-      home.points += homeSets === 1 ? 1 : 0;
+
+      if (pointsSystem === 'one_pt_per_set') {
+        away.points += awaySets;
+        home.points += homeSets;
+      } else if (pointsSystem === 'win_loss_2pt') {
+        away.points += 2;
+        home.points += 0;
+      } else if (pointsSystem === 'win_loss_3pt') {
+        away.points += 3;
+        home.points += 0;
+      } else {
+        // 'fivb_3pt' (Default):
+        const isSweep = homeSets === 0;
+        away.points += isSweep ? 3 : 2;
+        home.points += isSweep ? 0 : 1;
+      }
     }
   });
 

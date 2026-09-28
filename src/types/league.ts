@@ -8,6 +8,12 @@ export type SetFormat =
 
 export type ThirdSetRule = 'guaranteed_all' | 'play_if_tied' | 'timed_sets';
 
+export type StandingsPointsSystem = 
+  | 'fivb_3pt'       // 3 pts for sweep/shutout, 2-1 split for deciding sets
+  | 'one_pt_per_set' // 1 point per set won (every set won counts)
+  | 'win_loss_2pt'   // 2 pts for match win, 0 for loss
+  | 'win_loss_3pt';  // 3 pts for match win, 0 for loss
+
 export interface MatchRules {
   totalSets: number; // e.g. 3, 5, 2
   pointsPerSet: number; // e.g. 25, 21, 15
@@ -16,6 +22,7 @@ export interface MatchRules {
   winByTwo: boolean;
   capRule: 'Win by 2 (Uncapped)' | 'Cap at +2 (e.g. 27/17)' | 'Hard Cap at Target (25/15)';
   excludeThirdSetPointsFromDiff?: boolean; // If true, +/- point differential only counts first 2 sets
+  standingsPointsSystem?: StandingsPointsSystem; // System used to award standings table points
 }
 
 export const DEFAULT_MATCH_RULES: MatchRules = {
@@ -26,6 +33,7 @@ export const DEFAULT_MATCH_RULES: MatchRules = {
   winByTwo: true,
   capRule: 'Win by 2 (Uncapped)',
   excludeThirdSetPointsFromDiff: true,
+  standingsPointsSystem: 'fivb_3pt',
 };
 
 export interface Division {
