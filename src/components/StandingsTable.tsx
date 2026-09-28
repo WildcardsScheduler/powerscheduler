@@ -49,30 +49,30 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors duration-150">
+    <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-2xl p-4 sm:p-6 shadow-xs space-y-4 transition-colors duration-150">
       {/* Header Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#e5e7eb] dark:border-[#1c1f24]">
         <div>
           <div className="flex items-center space-x-2">
-            <Trophy className="h-5 w-5 text-amber-500 dark:text-amber-400" />
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">{titleText}</h3>
+            <Trophy className="h-5 w-5 text-[#242424] dark:text-[#a0aaba]" />
+            <h3 className="text-lg font-bold text-[#242424] dark:text-white tracking-tight">{titleText}</h3>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Format: <span className="text-slate-800 dark:text-slate-200 font-medium">{setFormatText}</span>
+          <p className="text-xs text-slate-500 dark:text-[#8b96aa] mt-1">
+            Format: <span className="text-[#242424] dark:text-slate-200 font-medium">{setFormatText}</span>
           </p>
         </div>
 
         {/* Division Rules Tags */}
         <div className="flex flex-wrap gap-1.5 text-xs">
           {division.minFemalesOnCourt && (
-            <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full flex items-center gap-1 font-medium">
+            <span className="bg-slate-100 text-[#242424] dark:bg-[#1c1f24] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943] px-2 py-0.5 rounded-full flex items-center gap-1 font-medium">
               <Users className="h-3 w-3" /> Min {division.minFemalesOnCourt} F on Court
             </span>
           )}
-          <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-medium">
+          <span className="bg-slate-100 text-[#242424] dark:bg-[#1c1f24] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943] px-2 py-0.5 rounded-full font-medium">
             {scoringBadgeMap[pointsSystem] || scoringBadgeMap.fivb_3pt}
           </span>
-          <span className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-full font-medium">
+          <span className="bg-slate-100 text-[#242424] dark:bg-[#1c1f24] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943] px-2 py-0.5 rounded-full font-medium">
             {division.capRule}
           </span>
         </div>
@@ -81,7 +81,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
       {/* Standings Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs sm:text-sm text-slate-700 dark:text-slate-300">
-          <thead className="bg-slate-50 dark:bg-slate-950/80 uppercase text-[11px] text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+          <thead className="bg-slate-50 dark:bg-[#0e1012] uppercase text-[11px] text-slate-500 dark:text-[#8b96aa] font-semibold border-b border-[#e5e7eb] dark:border-[#1c1f24]">
             <tr>
               <th className="py-3 px-2 w-8 text-center">#</th>
               <th className="py-3 px-2">Team</th>
@@ -91,10 +91,10 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
               <th className="py-3 px-2 text-center">Sets (W-L)</th>
               <th className="py-3 px-2 text-center hidden sm:table-cell">Set Ratio</th>
               <th className="py-3 px-2 text-center hidden md:table-cell">Pt Diff</th>
-              <th className="py-3 px-2 text-right font-bold text-amber-600 dark:text-amber-400">PTS</th>
+              <th className="py-3 px-2 text-right font-bold text-[#101010] dark:text-[#007afc]" title="League Points (Earned from match & set outcomes)">LP</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 font-medium">
+          <tbody className="divide-y divide-[#e5e7eb] dark:divide-[#1c1f24] font-medium">
             {standings.length === 0 ? (
               <tr>
                 <td colSpan={9} className="py-8 text-center text-slate-500 italic">
@@ -105,7 +105,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
               standings.map((team) => (
                 <tr
                   key={team.teamId}
-                  className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
+                  className="hover:bg-slate-50 dark:hover:bg-[#1c1f24]/50 transition-colors group"
                 >
                   <td className="py-3 px-2 text-center">
                     {team.rank === 1 ? (
@@ -132,7 +132,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
                         style={{ backgroundColor: team.badgeColor }}
                       />
                       <span
-                        className="font-semibold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate text-xs sm:text-sm"
+                        className="font-semibold text-[#242424] dark:text-white group-hover:text-[#101010] dark:group-hover:text-white transition-colors truncate text-xs sm:text-sm"
                         title={team.teamName}
                       >
                         {team.teamName}
@@ -159,7 +159,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
                   </td>
 
                   <td className="py-3 px-2 text-right">
-                    <span className="text-sm sm:text-base font-extrabold text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-400/10 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-amber-500/20 dark:border-amber-400/20">
+                    <span className="text-sm sm:text-base font-extrabold text-[#101010] dark:text-white bg-slate-100 dark:bg-[#1c1f24] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-[#e5e7eb] dark:border-[#333943] shadow-xs">
                       {team.points}
                     </span>
                   </td>
@@ -171,7 +171,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
       </div>
 
       {/* Tie-breaker & Scoring Rule Footer Note */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 dark:text-slate-500 pt-2 border-t border-slate-200 dark:border-slate-800/60 gap-1.5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-500 dark:text-slate-500 pt-2 border-t border-[#e5e7eb] dark:border-[#1c1f24] gap-1.5">
         <div className="flex items-center space-x-1.5 flex-wrap">
           <Info className="h-3.5 w-3.5 shrink-0 text-slate-400" />
           <span>
@@ -179,11 +179,11 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
           </span>
           <span className="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
           <span>
-            Tie-breakers: <strong className="text-slate-700 dark:text-slate-400">Pts → Wins → Set Ratio → +/- Diff → PF</strong>
+            Tie-breakers: <strong className="text-slate-700 dark:text-slate-300 font-semibold">LP → Wins → Set Ratio → +/- Diff → PF</strong>
           </span>
         </div>
         {(division.matchRules?.excludeThirdSetPointsFromDiff ?? matchRules?.excludeThirdSetPointsFromDiff ?? true) && (
-          <span className="text-amber-600 dark:text-amber-400/80 italic font-medium whitespace-nowrap">
+          <span className="text-slate-600 dark:text-[#a0aaba] italic font-medium whitespace-nowrap">
             * Point Diff (+/-) counts regulation sets only
           </span>
         )}
