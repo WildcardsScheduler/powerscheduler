@@ -102,16 +102,16 @@ export const LocationManagerModal: React.FC<LocationManagerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            <div className="p-2 rounded-xl bg-slate-100 dark:bg-[#1c1f24] text-[#242424] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943]">
               <Building2 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Locations & Sub-Locations Manager</h3>
+              <h3 className="text-base font-bold text-[#242424] dark:text-white">Locations & Sub-Locations Manager</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">Configure Primary Facilities and Court/Gym Sub-locations</p>
             </div>
           </div>
@@ -134,7 +134,7 @@ export const LocationManagerModal: React.FC<LocationManagerModalProps> = ({
             {!showAddLocationForm && (
               <button
                 onClick={() => setShowAddLocationForm(true)}
-                className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center space-x-1 shadow-md shadow-amber-500/20 transition-all"
+                className="px-3 py-1.5 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs flex items-center space-x-1 shadow-xs transition-all"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add Primary Location</span>
@@ -186,7 +186,7 @@ export const LocationManagerModal: React.FC<LocationManagerModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs rounded-xl shadow-md hover:brightness-110 transition-all"
+                className="w-full py-2 bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs rounded-xl shadow-xs transition-all"
               >
                 Save Location
               </button>

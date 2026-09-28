@@ -81,14 +81,14 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     });
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm dark:shadow-xl space-y-5 transition-colors duration-150">
+    <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-2xl p-4 sm:p-6 shadow-xs space-y-5 transition-colors duration-150">
       
       {/* Filters Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#e5e7eb] dark:border-[#1c1f24]">
         <div className="flex items-center justify-between w-full md:w-auto gap-3">
           <div className="flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-rose-500 dark:text-rose-400" />
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">League Match Schedule</h3>
+            <Calendar className="h-5 w-5 text-[#242424] dark:text-[#a0aaba]" />
+            <h3 className="text-lg font-bold text-[#242424] dark:text-white tracking-tight">League Match Schedule</h3>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -96,7 +96,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
               <button
                 type="button"
                 onClick={onOpenFairnessReport}
-                className="px-3 py-1.5 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-700 dark:text-violet-400 border border-violet-500/30 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm"
+                className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-[#242424] border border-[#e5e7eb] dark:bg-[#1c1f24] dark:hover:bg-[#23262d] dark:text-[#a0aaba] dark:hover:text-white dark:border-[#333943] text-xs font-bold flex items-center space-x-1.5 transition-all shadow-xs"
               >
                 <Scale className="h-4 w-4" />
                 <span>Fairness Report</span>
@@ -107,7 +107,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
               <button
                 type="button"
                 onClick={onAddMatch}
-                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-slate-950 font-black text-xs flex items-center space-x-1.5 shadow-md shadow-emerald-500/20 transition-all"
+                className="px-3 py-1.5 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-black text-xs flex items-center space-x-1.5 shadow-xs transition-all"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add Match</span>
@@ -117,7 +117,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             <button
               type="button"
               onClick={() => setIsPrintModalOpen(true)}
-              className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center space-x-1.5 transition-all shadow-sm"
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-[#242424] border border-[#e5e7eb] dark:bg-[#1c1f24] dark:hover:bg-[#23262d] dark:text-[#a0aaba] dark:hover:text-white dark:border-[#333943] text-xs font-bold flex items-center space-x-1.5 transition-all shadow-xs"
             >
               <Printer className="h-4 w-4" />
               <span>Print Schedules</span>
@@ -160,14 +160,14 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     onClick={() => setSelectedWeek(week)}
                     className={`flex flex-col items-center px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all leading-tight ${
                       selectedWeek === week
-                        ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
-                        : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+                        ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#1c1f24] text-slate-600 dark:text-[#a0aaba] hover:text-[#242424] dark:hover:text-white dark:hover:bg-[#23262d] border border-[#e5e7eb] dark:border-[#333943]'
                     }`}
                   >
                     <span>Wk {week}</span>
                     {label && (
                       <span className={`text-[10px] font-normal mt-0.5 ${
-                        selectedWeek === week ? 'text-rose-100' : 'text-slate-500'
+                        selectedWeek === week ? 'text-slate-300 dark:text-slate-200' : 'text-slate-500 dark:text-[#8b96aa]'
                       }`}>
                         {label}
                       </span>
@@ -204,18 +204,18 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             return (
               <div
                 key={match.id}
-                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-4 space-y-3 hover:border-slate-300 dark:hover:border-slate-700 transition-all group relative overflow-hidden shadow-sm"
+                className="bg-slate-50 dark:bg-[#0e1012] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-2xl p-4 space-y-3 hover:border-slate-300 dark:hover:border-[#333943] transition-all group relative overflow-hidden shadow-xs"
               >
                 {/* Status & Location Bar Top */}
-                <div className="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <div className="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-[#a0aaba]">
                   <div className="flex items-center space-x-1.5 shrink-0">
-                    <Clock className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
+                    <Clock className="h-3.5 w-3.5 text-slate-600 dark:text-[#a0aaba]" />
                     <span className="font-medium text-slate-700 dark:text-slate-300">{formatTimeRange(match.startTime, match.endTime)}</span>
                   </div>
 
                   {/* Primary Location + Sub-location Name */}
-                  <div className="flex items-center space-x-1 text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-800 min-w-0 max-w-[55%] shadow-xs">
-                    <Building2 className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
+                  <div className="flex items-center space-x-1 text-slate-600 dark:text-[#a0aaba] bg-white dark:bg-[#15171b] px-2 py-0.5 rounded-lg border border-[#e5e7eb] dark:border-[#1c1f24] min-w-0 max-w-[55%] shadow-xs">
+                    <Building2 className="h-3.5 w-3.5 text-[#242424] dark:text-[#a0aaba] shrink-0" />
                     <span
                       className="font-bold text-slate-800 dark:text-slate-200 truncate"
                       title={
@@ -343,26 +343,26 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                           <button
                             type="button"
                             onClick={() => onEditMatch(match)}
-                            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-amber-700 dark:text-amber-300 font-medium text-xs transition-colors border border-amber-500/30 hover:border-amber-500/50 shadow-xs"
+                            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-[#242424] dark:text-[#a0aaba] font-medium text-xs transition-colors border border-[#e5e7eb] dark:border-[#333943] shadow-xs"
                             title="Edit & Reschedule Match Fixture"
                           >
-                            <Wrench className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
+                            <Wrench className="h-3.5 w-3.5 text-[#242424] dark:text-[#a0aaba]" />
                             <span>Edit Game</span>
                           </button>
                         )}
 
                         <button
                           onClick={() => onOpenScorekeeper(match)}
-                          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-semibold text-xs transition-colors border border-slate-300 dark:border-slate-700 shadow-xs"
+                          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-semibold text-xs transition-colors shadow-xs"
                         >
                           {match.status === 'Completed' ? (
                             <>
-                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                               <span>Edit Score</span>
                             </>
                           ) : (
                             <>
-                              <Edit3 className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                              <Edit3 className="h-3.5 w-3.5 text-white" />
                               <span>Record Score</span>
                             </>
                           )}

@@ -96,17 +96,17 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl my-6 flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200 transition-colors duration-150">
+      <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl my-6 flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200 transition-colors duration-150">
         
         {/* Header */}
-        <div className="p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
+        <div className="p-5 bg-slate-50 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c1f24] text-[#242424] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943]">
               <Scale className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                <h3 className="text-base font-extrabold text-[#242424] dark:text-white">
                   Schedule Fairness & Equity Audit Report
                 </h3>
                 <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
@@ -155,7 +155,7 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
         </div>
 
         {/* Division Selector & Tabs Bar */}
-        <div className="p-4 bg-slate-100/70 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="p-4 bg-slate-100/70 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex flex-wrap items-center justify-between gap-3 shrink-0">
           
           {/* Division Selector */}
           {divisions.length > 1 ? (
@@ -167,8 +167,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                   onClick={() => setActiveDivId(d.id)}
                   className={`px-3 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                     activeDivId === d.id
-                      ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 shadow-md font-black'
-                      : 'bg-white hover:bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 shadow-xs'
+                      ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white shadow-xs font-black'
+                      : 'bg-white hover:bg-slate-50 dark:bg-[#1c1f24] text-slate-600 dark:text-[#a0aaba] hover:text-[#242424] dark:hover:text-white border border-[#e5e7eb] dark:border-[#333943] shadow-xs'
                   }`}
                 >
                   {d.name}
@@ -182,13 +182,13 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
           )}
 
           {/* Sub Tabs */}
-          <div className="flex items-center space-x-1.5 bg-white dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center space-x-1.5 bg-white dark:bg-[#1c1f24] p-1 rounded-xl border border-[#e5e7eb] dark:border-[#333943] shadow-xs">
             <button
               onClick={() => setActiveTab('matrix')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                 activeTab === 'matrix'
-                  ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white font-black shadow-xs'
+                  : 'text-slate-600 dark:text-[#a0aaba] hover:text-[#242424] dark:hover:text-white'
               }`}
             >
               Time Slots & Court Matrix
@@ -197,8 +197,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
               onClick={() => setActiveTab('h2h')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                 activeTab === 'h2h'
-                  ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white font-black shadow-xs'
+                  : 'text-slate-600 dark:text-[#a0aaba] hover:text-[#242424] dark:hover:text-white'
               }`}
             >
               Head-to-Head Opponent Grid

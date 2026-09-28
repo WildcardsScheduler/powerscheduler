@@ -254,13 +254,13 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
         </div>
 
         {/* Tab Switcher Pills */}
-        <div className="flex items-center flex-wrap gap-1.5 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 w-full md:w-auto">
+        <div className="flex items-center flex-wrap gap-1.5 bg-white dark:bg-[#15171b] p-1.5 rounded-2xl border border-slate-200 dark:border-[#1c1f24] w-full md:w-auto shadow-xs">
           <button
             onClick={() => setActiveTab('overview')}
             className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
               activeTab === 'overview'
-                ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 shadow-md font-black'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1c1f24]'
             }`}
           >
             <Calendar className="h-4 w-4" />
@@ -271,13 +271,13 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             onClick={() => setActiveTab('directory')}
             className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
               activeTab === 'directory'
-                ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 shadow-md font-black'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1c1f24]'
             }`}
           >
             <BookUser className="h-4 w-4" />
             <span>Captains Directory</span>
-            <span className="bg-slate-200 dark:bg-slate-800 text-amber-700 dark:text-amber-400 text-[10px] px-1.5 py-0.5 rounded-full font-mono">
+            <span className="bg-slate-200 dark:bg-[#23262d] text-slate-800 dark:text-white text-[10px] px-1.5 py-0.5 rounded-full font-mono">
               {teams.length}
             </span>
           </button>
@@ -286,8 +286,8 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             onClick={() => setActiveTab('rules')}
             className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
               activeTab === 'rules'
-                ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 shadow-md font-black'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white shadow-xs font-bold'
+                : 'text-slate-600 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1c1f24]'
             }`}
           >
             <BookOpen className="h-4 w-4" />
@@ -330,19 +330,19 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
         <div className="space-y-6 animate-in fade-in duration-200">
           
           {/* Privacy & Info Banner */}
-          <div className="bg-gradient-to-r from-white via-amber-50/50 to-white dark:from-slate-900 dark:via-amber-950/20 dark:to-slate-900 border border-amber-500/30 rounded-3xl p-5 shadow-sm dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white dark:bg-[#15171b] border border-slate-200 dark:border-[#1c1f24] rounded-3xl p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start space-x-3">
-              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+              <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c1f24] text-slate-700 dark:text-[#a0aaba] border border-slate-200 dark:border-[#333943] shrink-0">
                 <Lock className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Private Captains Contact Directory</h3>
-                  <span className="bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
+                  <h3 className="text-base font-extrabold text-[#101010] dark:text-[#ffffff]">Private Captains Contact Directory</h3>
+                  <span className="bg-slate-100 dark:bg-[#1c1f24] text-slate-700 dark:text-[#a0aaba] text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200 dark:border-[#333943]">
                     Captains & Admins Only
                   </span>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                <p className="text-xs text-slate-600 dark:text-[#8b96aa] mt-1">
                   Use this directory to contact opposing captains for match coordination, notifications, or emergency updates. This data is hidden from public visitors.
                 </p>
               </div>
@@ -350,7 +350,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
 
             <button
               onClick={() => handleCopyAllEmails(filteredTeams)}
-              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-800 text-amber-700 dark:text-amber-400 hover:text-slate-900 dark:hover:text-white border border-amber-500/30 font-bold text-xs flex items-center space-x-2 transition-all shrink-0 shadow-sm"
+              className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#333943] font-bold text-xs flex items-center space-x-2 transition-all shrink-0 shadow-xs"
             >
               {copiedAll ? (
                 <>
@@ -414,10 +414,10 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                 return (
                   <div
                     key={team.id}
-                    className={`bg-white dark:bg-slate-900 border rounded-3xl p-5 shadow-sm dark:shadow-xl transition-all space-y-4 relative overflow-hidden ${
+                    className={`bg-white dark:bg-[#15171b] border rounded-3xl p-5 shadow-xs transition-all space-y-4 relative overflow-hidden ${
                       isCurrentTeam
-                        ? 'border-amber-500/50 bg-gradient-to-b from-amber-50/30 to-white dark:from-slate-900 dark:to-amber-950/10 ring-1 ring-amber-500/30'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                        ? 'border-slate-400 dark:border-[#007afc] ring-1 ring-slate-400 dark:ring-[#007afc]'
+                        : 'border-slate-200 dark:border-[#1c1f24] hover:border-slate-300 dark:hover:border-[#333943]'
                     }`}
                   >
                     {/* Top Team Header */}
@@ -544,22 +544,22 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
         <>
           {/* Next Match & Ref Duty Highlight Card */}
           {nextMatch ? (
-            <div className="relative overflow-hidden bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-2xl space-y-4">
+            <div className="relative overflow-hidden bg-white dark:bg-[#15171b] border border-slate-200 dark:border-[#1c1f24] rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
-                <span className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                <span className="bg-slate-100 dark:bg-[#1c1f24] text-slate-800 dark:text-white border border-slate-200 dark:border-[#333943] text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">
                   Next Upcoming Fixture
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Week #{nextMatch.weekNumber}</span>
+                <span className="text-xs text-slate-500 dark:text-[#8b96aa] font-mono">Week #{nextMatch.weekNumber}</span>
               </div>
 
               {/* If Team is assigned to Officiate (Ref Duty) */}
               {isRefDutyNext && (
-                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-1">
-                  <div className="flex items-center space-x-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
-                    <ShieldAlert className="h-5 w-5 shrink-0" />
+                <div className="p-4 bg-slate-50 dark:bg-[#1c1f24] border border-slate-200 dark:border-[#333943] rounded-2xl space-y-1">
+                  <div className="flex items-center space-x-2 text-[#101010] dark:text-[#ffffff] font-bold text-sm">
+                    <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0" />
                     <span>Ref Duty Mandatory Alert!</span>
                   </div>
-                  <p className="text-xs text-amber-900 dark:text-amber-200/90">
+                  <p className="text-xs text-slate-600 dark:text-[#a0aaba]">
                     Your team <strong className="text-slate-900 dark:text-white">{activeTeam.name}</strong> is assigned to work/officiate this match! Please provide 1 Up-ref, 1 Down-ref, 1 Scorekeeper, and 2 Line judges.
                   </p>
                 </div>
@@ -569,30 +569,30 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 
                 {/* Left: Time & Location */}
-                <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center space-x-3 text-slate-700 dark:text-slate-300 text-sm">
-                    <Calendar className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0" />
+                <div className="space-y-3 bg-slate-50 dark:bg-[#0e1012] p-4 rounded-2xl border border-slate-200 dark:border-[#1c1f24]">
+                  <div className="flex items-center space-x-3 text-slate-700 dark:text-[#a0aaba] text-sm">
+                    <Calendar className="h-4 w-4 text-slate-500 dark:text-[#8b96aa] shrink-0" />
                     <span className="font-semibold">{nextMatch.date}</span>
                   </div>
-                  <div className="flex items-center space-x-3 text-slate-700 dark:text-slate-300 text-sm">
-                    <Clock className="h-4 w-4 text-rose-500 dark:text-rose-400 shrink-0" />
+                  <div className="flex items-center space-x-3 text-slate-700 dark:text-[#a0aaba] text-sm">
+                    <Clock className="h-4 w-4 text-slate-500 dark:text-[#8b96aa] shrink-0" />
                     <span className="font-semibold font-mono">{formatTimeRange(nextMatch.startTime, nextMatch.endTime)}</span>
                   </div>
-                  <div className="flex items-start space-x-3 text-slate-700 dark:text-slate-300 text-sm">
-                    <MapPin className="h-4 w-4 text-violet-500 dark:text-violet-400 shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-3 text-slate-700 dark:text-[#a0aaba] text-sm">
+                    <MapPin className="h-4 w-4 text-slate-500 dark:text-[#8b96aa] shrink-0 mt-0.5" />
                     <div>
                       <span className="font-bold text-slate-900 dark:text-white block">
                         {primaryLoc?.name || 'Main Facility'} • {subLoc?.name || 'Court 1'}
                       </span>
                       {primaryLoc?.address && (
-                        <span className="text-xs text-slate-500 dark:text-slate-400 block">{primaryLoc.address}</span>
+                        <span className="text-xs text-slate-500 dark:text-[#8b96aa] block">{primaryLoc.address}</span>
                       )}
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Opponent / Teams Involved */}
-                <div className="bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                <div className="bg-slate-50 dark:bg-[#0e1012] p-4 rounded-2xl border border-slate-200 dark:border-[#1c1f24] flex flex-col justify-between">
                   {isPlayingNext ? (
                     <div>
                       <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1">
@@ -605,7 +605,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                         />
                         <span className="text-base font-bold text-slate-900 dark:text-white">{opponentTeam?.name || 'TBD Opponent'}</span>
                       </div>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 block mt-1">
+                      <span className="text-xs text-slate-500 dark:text-[#8b96aa] block mt-1">
                         {nextMatch.homeTeamId === activeTeam.id ? 'Home Match' : 'Away Match'}
                       </span>
                     </div>
@@ -624,7 +624,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                   <div className="pt-3">
                     <button
                       onClick={() => onOpenScorekeeper(nextMatch)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black text-xs shadow-md shadow-rose-500/20 flex items-center justify-center space-x-2 transition-all"
+                      className="w-full py-2.5 px-4 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs shadow-xs flex items-center justify-center space-x-2 transition-all"
                     >
                       <Edit3 className="h-4 w-4" />
                       <span>{nextMatch.status === 'Completed' ? 'View / Edit Score' : 'Open Scorekeeper'}</span>
@@ -759,20 +759,20 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
           </div>
 
           {/* Captain Access & PIN Security Banner Card */}
-          <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4">
+          <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#333943] rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center space-x-3">
-                <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c1f24] text-[#242424] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943] shrink-0">
                   <KeyRound className="h-5 w-5" />
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">
-                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Captain Access PIN & Security</h3>
-                    <span className="bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-500/30">
+                    <h3 className="text-base font-extrabold text-[#242424] dark:text-white">Captain Access PIN & Security</h3>
+                    <span className="bg-slate-100 dark:bg-[#1c1f24] text-[#242424] dark:text-[#a0aaba] text-[10px] font-black px-2 py-0.5 rounded-full border border-[#e5e7eb] dark:border-[#333943]">
                       Private
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                  <p className="text-xs text-slate-600 dark:text-[#a0aaba] mt-0.5">
                     Your 4-digit PIN authenticates your team captain portal and scorekeeper access for <strong className="text-slate-900 dark:text-white">{activeTeam.name}</strong>.
                   </p>
                 </div>
@@ -964,14 +964,14 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
         <div className="space-y-6 animate-in fade-in duration-200">
           
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-white via-amber-50/50 to-white dark:from-slate-900 dark:via-amber-950/20 dark:to-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-3xl p-5 shadow-sm dark:shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start space-x-3">
-              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+              <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c1f24] text-[#242424] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943] shrink-0">
                 <BookOpen className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Official League Rules & Guidelines</h3>
+                  <h3 className="text-base font-extrabold text-[#242424] dark:text-white">Official League Rules & Guidelines</h3>
                   <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
                     Captain & Player Reference
                   </span>

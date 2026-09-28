@@ -169,16 +169,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 transition-colors duration-150">
+      <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 transition-colors duration-150">
         
         {/* Header */}
-        <div className="p-6 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-6 bg-slate-50 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c1f24] text-[#242424] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943]">
               <KeyRound className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Access Portal</h3>
+              <h3 className="text-lg font-black text-[#242424] dark:text-white tracking-tight">Access Portal</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">Sign in for Scorekeeping & Management</p>
             </div>
           </div>
@@ -191,7 +191,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         </div>
 
         {/* Role Selector Tabs */}
-        <div className="p-4 bg-slate-100 dark:bg-slate-950/50 border-b border-slate-200 dark:border-slate-800 flex">
+        <div className="p-4 bg-slate-100 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex">
           <button
             type="button"
             onClick={() => {
@@ -201,8 +201,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             }}
             className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 transition-all ${
               activeTab === 'team'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
+                ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white shadow-xs'
+                : 'text-slate-600 dark:text-[#8b96aa] hover:text-[#242424] dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#1c1f24]'
             }`}
           >
             <UserCheck className="h-4 w-4" />
@@ -218,8 +218,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             }}
             className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-2 transition-all ${
               activeTab === 'admin'
-                ? 'bg-violet-600 text-white shadow-md shadow-violet-600/20'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
+                ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white shadow-xs'
+                : 'text-slate-600 dark:text-[#8b96aa] hover:text-[#242424] dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#1c1f24]'
             }`}
           >
             <ShieldCheck className="h-4 w-4" />
@@ -372,7 +372,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-md shadow-amber-500/20 transition-all flex items-center justify-center space-x-2"
+                    className="w-full py-3 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] font-black text-sm shadow-xs transition-all flex items-center justify-center space-x-2"
                   >
                     <UserCheck className="h-4 w-4" />
                     <span>Log In as Team Captain</span>
@@ -430,7 +430,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-sm shadow-md shadow-violet-600/20 transition-all flex items-center justify-center space-x-2"
+                className="w-full py-3 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] font-black text-sm shadow-xs transition-all flex items-center justify-center space-x-2"
               >
                 <ShieldCheck className="h-4 w-4" />
                 <span>Log In as Administrator</span>

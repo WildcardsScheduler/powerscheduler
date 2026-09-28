@@ -147,16 +147,16 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            <div className="p-2 rounded-xl bg-slate-100 dark:bg-[#1c1f24] text-[#242424] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943]">
               <Trophy className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Court-side Scorekeeper</h3>
+              <h3 className="text-base font-bold text-[#242424] dark:text-white">Court-side Scorekeeper</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Week {match.weekNumber} • {formatTime(match.startTime)} • {division?.name || 'League Match'}
               </p>
@@ -316,9 +316,9 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
 
           {/* Match Outcome Summary */}
           {calculatedWinnerId && (
-            <div className="p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-xl text-center">
-              <span className="text-xs text-slate-600 dark:text-slate-400">Projected Match Winner: </span>
-              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 ml-1">
+            <div className="p-3 bg-slate-100 dark:bg-[#1c1f24] border border-[#e5e7eb] dark:border-[#333943] rounded-xl text-center">
+              <span className="text-xs text-slate-600 dark:text-[#a0aaba]">Projected Match Winner: </span>
+              <span className="text-sm font-bold text-[#101010] dark:text-[#007afc] ml-1">
                 {calculatedWinnerId === homeTeam.id ? homeTeam.name : awayTeam.name} ({homeSetsWon}-{awaySetsWon})
               </span>
             </div>
@@ -327,17 +327,17 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center space-x-3">
+        <div className="p-4 bg-slate-50 dark:bg-[#0e1012] border-t border-[#e5e7eb] dark:border-[#1c1f24] flex items-center space-x-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+            className="flex-1 py-3 rounded-xl border border-[#e5e7eb] dark:border-[#333943] text-[#242424] dark:text-[#a0aaba] font-semibold text-xs hover:bg-slate-100 dark:hover:bg-[#1c1f24] transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!calculatedWinnerId || !canEdit}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs shadow-lg shadow-teal-500/20 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center space-x-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-3 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs shadow-xs active:scale-98 transition-all flex items-center justify-center space-x-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <CheckCircle className="h-4 w-4" />
             <span>Verify & Save Match Score</span>

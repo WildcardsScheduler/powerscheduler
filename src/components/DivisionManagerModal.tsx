@@ -82,16 +82,16 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
+            <div className="p-2 rounded-xl bg-slate-100 dark:bg-[#1c1f24] text-[#242424] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943]">
               <Layers className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Division & Team Assignment Manager</h3>
+              <h3 className="text-base font-bold text-[#242424] dark:text-white">Division & Team Assignment Manager</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">Configure single vs multi-division structure & assign team tiers</p>
             </div>
           </div>
@@ -161,7 +161,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                 {!showAddForm && (
                   <button
                     onClick={() => setShowAddForm(true)}
-                    className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs flex items-center space-x-1 transition-all shadow-sm"
+                    className="px-3 py-1.5 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs flex items-center space-x-1 transition-all shadow-xs"
                   >
                     <Plus className="h-4 w-4" />
                     <span>+ Add Division</span>
@@ -232,7 +232,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
 
                   <button
                     type="submit"
-                    className="w-full py-2 bg-gradient-to-r from-violet-600 to-amber-500 text-white font-bold text-xs rounded-xl shadow-md hover:brightness-110"
+                    className="w-full py-2 bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs rounded-xl shadow-xs transition-all"
                   >
                     Save New Division
                   </button>

@@ -264,8 +264,8 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                 onClick={handleSavePasscode}
                 className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 ${
                   passcodeSaved
-                    ? 'bg-emerald-500 text-white dark:text-slate-950 shadow-md shadow-emerald-500/20 font-black'
-                    : 'bg-gradient-to-r from-rose-500 to-amber-500 hover:brightness-110 text-white dark:text-slate-950 font-black shadow-md shadow-rose-500/20'
+                    ? 'bg-emerald-600 text-white shadow-xs font-black'
+                    : 'bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-black shadow-xs'
                 }`}
               >
                 {passcodeSaved ? <><Check className="h-4 w-4" /> Saved Everywhere!</> : 'Save Passcode'}
@@ -287,7 +287,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
             {!showCreateForm && (
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:brightness-110 text-white dark:text-slate-950 font-bold text-xs flex items-center space-x-1 shadow-md shadow-rose-500/20 transition-all"
+                className="px-3 py-1.5 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs flex items-center space-x-1 shadow-xs transition-all"
               >
                 <Plus className="h-4 w-4" />
                 <span>Create New League</span>
@@ -529,7 +529,7 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white dark:text-slate-950 font-bold text-xs rounded-xl shadow-md hover:brightness-110 transition-all"
+                className="w-full py-2.5 bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs rounded-xl shadow-xs transition-all"
               >
                 Create League Season
               </button>

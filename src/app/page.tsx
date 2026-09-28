@@ -1014,20 +1014,20 @@ export default function Home() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-150">
+      <div className="min-h-screen bg-[#f4f4f4] dark:bg-[#0e1012] flex flex-col items-center justify-center p-6 text-slate-900 dark:text-white font-sans transition-colors duration-150">
         <div className="relative flex items-center justify-center mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 animate-pulse flex items-center justify-center shadow-lg shadow-rose-500/20">
+          <div className="w-12 h-12 rounded-2xl bg-[#101010] dark:bg-[#007afc] animate-pulse flex items-center justify-center shadow-md">
             <Trophy className="w-6 h-6 text-white" />
           </div>
         </div>
         <h2 className="text-base font-semibold text-slate-800 dark:text-slate-200 tracking-tight">PowerSchedule</h2>
-        <p className="text-xs text-slate-500 mt-1 animate-pulse">Loading league data...</p>
+        <p className="text-xs text-slate-500 dark:text-[#8b96aa] mt-1 animate-pulse">Loading league data...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-rose-500 selection:text-white font-sans pb-16 transition-colors duration-150">
+    <div className="min-h-screen bg-[#f4f4f4] dark:bg-[#0e1012] text-slate-900 dark:text-[#a0aaba] selection:bg-[#101010] dark:selection:bg-[#007afc] selection:text-white font-sans pb-16 transition-colors duration-150">
       
       {/* Dynamic Top Navbar with Multi-League Support */}
       <Navbar
@@ -1118,8 +1118,8 @@ export default function Home() {
                 onClick={() => setSelectedDivisionId(div.id)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                   effectiveDivisionId === div.id
-                    ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-md shadow-rose-500/20'
-                    : 'bg-white hover:bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 shadow-xs'
+                    ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white shadow-xs'
+                    : 'bg-white hover:bg-slate-100 dark:bg-[#15171b] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white dark:hover:bg-[#1c1f24] border border-slate-200 dark:border-[#333943] shadow-xs'
                 }`}
               >
                 {div.name}

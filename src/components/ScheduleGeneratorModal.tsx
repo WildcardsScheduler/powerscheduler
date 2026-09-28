@@ -973,7 +973,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 <button
                   type="button"
                   onClick={handleGeneratePreview}
-                  className="w-full py-3.5 bg-gradient-to-r from-rose-500 via-amber-500 to-violet-600 hover:brightness-110 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-xl transition-all flex items-center justify-center space-x-2 tracking-wide"
+                  className="w-full py-3.5 bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] font-extrabold text-xs sm:text-sm rounded-2xl shadow-xs transition-all flex items-center justify-center space-x-2 tracking-wide"
                 >
                   <Sparkles className="h-4 w-4" />
                   <span>Generate Schedule & View Fairness Report</span>
@@ -1052,7 +1052,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 </div>
                 <div className="h-3 w-full bg-slate-200 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800">
                   <div
-                    className="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-500 rounded-full"
+                    className="h-full bg-[#101010] dark:bg-[#007afc] transition-all duration-500 rounded-full"
                     style={{ width: `${Math.min(100, generatedReport.slotUtilizationPercentage)}%` }}
                   />
                 </div>
@@ -1487,7 +1487,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
             {generatedMatches && (
               <button
                 onClick={handleConfirmAndApply}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs shadow-lg flex items-center space-x-1.5 transition-all tracking-wider"
+                className="px-6 py-2.5 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-black text-xs shadow-xs flex items-center space-x-1.5 transition-all tracking-wider"
               >
                 <Check className="h-4 w-4 stroke-[3]" />
                 <span>Confirm & Apply Schedule to League</span>
