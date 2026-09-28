@@ -38,8 +38,7 @@ function AdminContent() {
 
       setAdminSuccess('Administrator Authorized. Redirecting to Management Dashboard...');
       setTimeout(() => {
-        router.push('/');
-        router.refresh();
+        window.location.href = '/';
       }, 400);
     } catch {
       setAdminError('Unable to connect to authentication service.');

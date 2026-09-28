@@ -89,8 +89,7 @@ export default function LoginPage() {
 
       setTeamSuccess(data.message || 'Access Granted. Redirecting...');
       setTimeout(() => {
-        router.push('/');
-        router.refresh();
+        window.location.href = '/';
       }, 400);
     } catch {
       setTeamError('Unable to connect to authentication service.');
@@ -123,8 +122,7 @@ export default function LoginPage() {
 
       setAdminSuccess('Administrator Authorized. Redirecting...');
       setTimeout(() => {
-        router.push('/');
-        router.refresh();
+        window.location.href = '/';
       }, 400);
     } catch {
       setAdminError('Unable to connect to authentication service.');

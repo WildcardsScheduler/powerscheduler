@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Volleyball, ShieldCheck, UserCheck, Trophy, Globe, LogIn, LogOut, Lock, BookOpen, Download, Sun, Moon } from 'lucide-react';
 import { LeagueSeason } from '@/types/league';
 import { useTheme } from '@/context/ThemeContext';
@@ -21,7 +22,7 @@ interface NavbarProps {
   onOpenLeagueManager: () => void;
   onOpenRulesModal?: () => void;
   onOpenInstallModal?: () => void;
-  onOpenLoginModal: () => void;
+  onOpenLoginModal?: () => void;
   onLogout: () => void;
 }
 
@@ -111,13 +112,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </button>
                 </div>
               )}
-              <button
-                onClick={onOpenLoginModal}
-                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black text-[11px] sm:text-xs shadow-md shadow-rose-500/20 flex items-center space-x-1 sm:space-x-1.5 transition-all shrink-0"
+              <Link
+                href="/login"
+                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black text-[11px] sm:text-xs shadow-md shadow-rose-500/20 flex items-center space-x-1 sm:space-x-1.5 transition-all shrink-0 cursor-pointer"
               >
                 <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>Team / Admin Login</span>
-              </button>
+              </Link>
             </div>
           ) : currentRole === 'team_rep' ? (
             <div className="flex items-center space-x-2">
