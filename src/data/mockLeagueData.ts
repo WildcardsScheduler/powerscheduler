@@ -87,16 +87,42 @@ export function calculateStandings(
     home.played += 1;
     away.played += 1;
 
+    // Evaluate regulation sets (sets 1 & 2)
+    const set1 = m.scores.find((s) => s.setNumber === 1) || m.scores[0];
+    const set2 = m.scores.find((s) => s.setNumber === 2) || m.scores[1];
+
+    let homeRegSets = 0;
+    let awayRegSets = 0;
+    if (set1) {
+      if (set1.homeScore > set1.awayScore) homeRegSets += 1;
+      else if (set1.awayScore > set1.homeScore) awayRegSets += 1;
+    }
+    if (set2) {
+      if (set2.homeScore > set2.awayScore) homeRegSets += 1;
+      else if (set2.awayScore > set2.homeScore) awayRegSets += 1;
+    }
+
+    // A regulation sweep occurs if a team won both of the first 2 sets (2-0 sweep)
+    const isRegulationSweep = homeRegSets === 2 || awayRegSets === 2;
+    const sweepWinnerId = homeRegSets === 2 ? m.homeTeamId : awayRegSets === 2 ? m.awayTeamId : null;
+
     let homeSets = 0;
     let awaySets = 0;
 
     m.scores.forEach((s) => {
-      // Set wins count for all sets
+      const isThirdSet = s.setNumber === 3;
+
+      // If a team already swept 2-0 in regulation, any 3rd set played is an unofficial dead rubber:
+      // It does NOT count towards official sets won/lost, nor towards +/- point differential!
+      if (isRegulationSweep && isThirdSet) {
+        return;
+      }
+
+      // Count official set score
       if (s.homeScore > s.awayScore) homeSets += 1;
       else if (s.awayScore > s.homeScore) awaySets += 1;
 
-      // Exclude 3rd set scores from +/- point totals if option enabled
-      const isThirdSet = s.setNumber === 3;
+      // Exclude 3rd set scores from +/- point totals if option enabled or if it was a dead rubber
       if (!excludeThirdSet || !isThirdSet) {
         home.pointsFor += s.homeScore;
         home.pointsAgainst += s.awayScore;
@@ -111,8 +137,9 @@ export function calculateStandings(
     away.setsLost += homeSets;
 
     const pointsSystem = matchRules?.standingsPointsSystem || 'fivb_3pt';
+    const effectiveWinnerId = isRegulationSweep && sweepWinnerId ? sweepWinnerId : m.winnerId;
 
-    if (m.winnerId === m.homeTeamId) {
+    if (effectiveWinnerId === m.homeTeamId) {
       home.wins += 1;
       away.losses += 1;
 
@@ -127,13 +154,13 @@ export function calculateStandings(
         away.points += 0;
       } else {
         // 'fivb_3pt' (Default):
-        // Shutout/sweep: 3 pts to winner, 0 to loser
-        // Deciding set win: 2 pts to winner, 1 bonus pt to loser
-        const isSweep = awaySets === 0;
+        // Sweep (2-0 regulation sweep or 0 sets conceded): 3 pts to winner, 0 to loser
+        // Third-set decider (tied 1-1 after 2 sets): 2 pts to winner, 1 bonus pt to loser
+        const isSweep = isRegulationSweep || awaySets === 0;
         home.points += isSweep ? 3 : 2;
         away.points += isSweep ? 0 : 1;
       }
-    } else if (m.winnerId === m.awayTeamId) {
+    } else if (effectiveWinnerId === m.awayTeamId) {
       away.wins += 1;
       home.losses += 1;
 
@@ -148,7 +175,7 @@ export function calculateStandings(
         home.points += 0;
       } else {
         // 'fivb_3pt' (Default):
-        const isSweep = homeSets === 0;
+        const isSweep = isRegulationSweep || homeSets === 0;
         away.points += isSweep ? 3 : 2;
         home.points += isSweep ? 0 : 1;
       }

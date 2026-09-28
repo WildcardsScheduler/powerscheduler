@@ -42,7 +42,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
   };
 
   const scoringDescMap: Record<string, string> = {
-    fivb_3pt: 'FIVB 3-Pt (3-0 sweep = 3 pts / 0 pts, 2-1 split = 2 pts / 1 pt)',
+    fivb_3pt: 'FIVB 3-Pt (Sweep = 3 pts / 0 pts, 3rd-set decider = 2 pts / 1 pt)',
     one_pt_per_set: '1 Point per set won',
     win_loss_2pt: 'Match Win = 2 pts, Loss = 0 pts',
     win_loss_3pt: 'Match Win = 3 pts, Loss = 0 pts',
