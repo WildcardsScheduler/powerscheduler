@@ -30,6 +30,7 @@ export default function Home() {
   const [activeLeagueId, setActiveLeagueId] = useState<string>(initialLeaguesList[0].id);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginModalTab, setLoginModalTab] = useState<'team' | 'admin'>('team');
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
@@ -68,62 +69,32 @@ export default function Home() {
     });
   };
 
-  // Load state from online cloud API on mount (re-hydrate from localStorage or backup if server reset after deployment)
+  // Listen for direct URL query params (e.g. ?login=admin, ?login=team, or ?admin=true)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const loginParam = params.get('login');
+      const adminParam = params.get('admin');
+      if (loginParam === 'admin' || adminParam === 'true') {
+        setLoginModalTab('admin');
+        setIsLoginModalOpen(true);
+      } else if (loginParam === 'team' || loginParam === 'true') {
+        setLoginModalTab('team');
+        setIsLoginModalOpen(true);
+      }
+    }
+  }, []);
+
+  // Load state from online cloud API on mount (Cloud is the authoritative single source of truth)
   useEffect(() => {
     let isMounted = true;
 
     const fetchCloudData = async () => {
-      let savedLeagues: LeagueSeason[] | null = null;
-      let savedActiveId: string | null = null;
-
-      try {
-        const rawSaved = localStorage.getItem('powerschedule_leagues');
-        const backupSaved = localStorage.getItem('powerschedule_leagues_backup');
-        const defaultSavedId = localStorage.getItem('powerschedule_default_league_id');
-        savedActiveId = defaultSavedId || localStorage.getItem('powerschedule_active_league_id');
-
-        let primary = rawSaved ? JSON.parse(rawSaved) : null;
-        let backup = backupSaved ? JSON.parse(backupSaved) : null;
-
-        // If primary is default template, but backup contains custom user data, restore backup!
-        if ((!primary || isDefaultInitialData(primary)) && backup && !isDefaultInitialData(backup)) {
-          savedLeagues = backup;
-        } else {
-          savedLeagues = primary || backup;
-        }
-      } catch (err) {
-        console.warn('Failed to read local storage backup', err);
-      }
-
       try {
         const res = await fetch('/api/leagues', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (data?.leagues && Array.isArray(data.leagues) && data.leagues.length > 0) {
-            const serverIsDefault = isDefaultInitialData(data.leagues);
-            const clientHasCustom = savedLeagues && savedLeagues.length > 0 && !isDefaultInitialData(savedLeagues);
-
-            // If server reset to default on deployment, but client/backup has custom data, re-hydrate server!
-            if (serverIsDefault && clientHasCustom && savedLeagues) {
-              const repaired = repairLeaguesData(savedLeagues);
-              if (isMounted) {
-                setLeagues(repaired);
-                if (savedActiveId && repaired.some((l) => l.id === savedActiveId)) {
-                  setActiveLeagueId(savedActiveId);
-                } else {
-                  setActiveLeagueId(repaired[0].id);
-                }
-                setIsCloudSynced(true);
-              }
-              // Immediately sync client's custom data back to server
-              fetch('/api/leagues', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ leagues: repaired, activeId: savedActiveId || repaired[0].id }),
-              }).catch(() => {});
-              return;
-            }
-
             const repaired = repairLeaguesData(data.leagues);
             if (isMounted) {
               setLeagues(repaired);
@@ -140,25 +111,36 @@ export default function Home() {
               }
               setIsCloudSynced(true);
             }
+            // Update offline cache
+            try {
+              localStorage.setItem('powerschedule_leagues', JSON.stringify(repaired));
+            } catch {}
             return;
           }
         }
       } catch (err) {
-        console.warn('Could not fetch online cloud data, falling back to local storage', err);
+        console.warn('Could not fetch online cloud data, falling back to local storage cache', err);
       }
 
-      // Offline / Local Storage Fallback
-      if (savedLeagues && savedLeagues.length > 0 && isMounted) {
-        const repaired = repairLeaguesData(savedLeagues);
-        setLeagues(repaired);
-        const defaultSavedId = localStorage.getItem('powerschedule_default_league_id');
-        if (defaultSavedId && repaired.some((l: LeagueSeason) => l.id === defaultSavedId)) {
-          setActiveLeagueId(defaultSavedId);
-        } else if (savedActiveId && repaired.some((l: LeagueSeason) => l.id === savedActiveId)) {
-          setActiveLeagueId(savedActiveId);
-        } else {
-          setActiveLeagueId(repaired[0].id);
+      // Offline / Local Storage Fallback only when cloud network is unreachable
+      try {
+        const rawSaved = localStorage.getItem('powerschedule_leagues');
+        if (rawSaved) {
+          const offlineData = JSON.parse(rawSaved);
+          if (offlineData && Array.isArray(offlineData) && offlineData.length > 0 && isMounted) {
+            const repaired = repairLeaguesData(offlineData);
+            setLeagues(repaired);
+            const defaultSavedId = localStorage.getItem('powerschedule_default_league_id');
+            if (defaultSavedId && repaired.some((l: LeagueSeason) => l.id === defaultSavedId)) {
+              setActiveLeagueId(defaultSavedId);
+            } else {
+              setActiveLeagueId(repaired[0].id);
+            }
+            setIsCloudSynced(false);
+          }
         }
+      } catch (err) {
+        console.warn('Failed to parse offline local storage cache', err);
       }
     };
 
@@ -244,20 +226,8 @@ export default function Home() {
         if (res.ok) {
           const data = await res.json();
           if (data?.leagues && Array.isArray(data.leagues) && data.leagues.length > 0) {
-            const serverIsDefault = isDefaultInitialData(data.leagues);
-
+            const repaired = repairLeaguesData(data.leagues);
             setLeagues((currentLeagues) => {
-              const currentIsCustom = currentLeagues.length > 0 && !isDefaultInitialData(currentLeagues);
-              // If server is showing default initial template, but client has custom data, re-hydrate server!
-              if (serverIsDefault && currentIsCustom) {
-                fetch('/api/leagues', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ leagues: currentLeagues, activeId: activeLeagueId }),
-                }).catch(() => {});
-                return currentLeagues;
-              }
-              const repaired = repairLeaguesData(data.leagues);
               if (JSON.stringify(repaired) === JSON.stringify(currentLeagues)) {
                 return currentLeagues;
               }
@@ -267,6 +237,9 @@ export default function Home() {
               setServerVersion(data.version);
             }
             setIsCloudSynced(true);
+            try {
+              localStorage.setItem('powerschedule_leagues', JSON.stringify(repaired));
+            } catch {}
           }
         }
       } catch {
@@ -275,19 +248,14 @@ export default function Home() {
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [isLoaded, activeLeagueId]);
+  }, [isLoaded]);
 
-  // Persist state to online cloud API and local storage whenever leagues or active league changes
+  // Persist state to online cloud API whenever leagues or active league changes (Scheduler Only)
   useEffect(() => {
     if (!isLoaded) return;
     try {
       localStorage.setItem('powerschedule_leagues', JSON.stringify(leagues));
       localStorage.setItem('powerschedule_active_league_id', activeLeagueId);
-
-      // Save to permanent backup key whenever custom data exists
-      if (!isDefaultInitialData(leagues)) {
-        localStorage.setItem('powerschedule_leagues_backup', JSON.stringify(leagues));
-      }
 
       // Restrict full league tree write to authenticated administrators
       if (authRole === 'scheduler') {
@@ -1076,7 +1044,10 @@ export default function Home() {
         onOpenLeagueManager={() => setIsLeagueManagerOpen(true)}
         onOpenRulesModal={() => setIsRulesModalOpen(true)}
         onOpenInstallModal={() => setIsInstallModalOpen(true)}
-        onOpenLoginModal={() => setIsLoginModalOpen(true)}
+        onOpenLoginModal={() => {
+          setLoginModalTab('team');
+          setIsLoginModalOpen(true);
+        }}
         onLogout={handleLogout}
       />
 
@@ -1297,6 +1268,7 @@ export default function Home() {
         authRole={authRole}
         authTeamName={authTeam?.name}
         authLeagueName={authLeague?.name}
+        initialTab={loginModalTab}
         onSelectLeague={handleSelectLeague}
         onLoginSuccess={handleLoginSuccess}
       />

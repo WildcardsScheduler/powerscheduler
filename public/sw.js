@@ -1,7 +1,9 @@
-const CACHE_NAME = 'powerschedule-pwa-v1';
+const CACHE_NAME = 'powerschedule-pwa-v2';
 
 const STATIC_ASSETS = [
   '/',
+  '/login',
+  '/admin',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',

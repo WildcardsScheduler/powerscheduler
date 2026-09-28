@@ -12,6 +12,7 @@ interface LoginModalProps {
   authRole?: 'public' | 'team_rep' | 'scheduler';
   authTeamName?: string;
   authLeagueName?: string;
+  initialTab?: 'team' | 'admin';
   onSelectLeague: (id: string) => void;
   onLoginSuccess: (role: 'scheduler' | 'team_rep', teamId?: string, leagueId?: string) => void;
 }
@@ -24,16 +25,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   authRole,
   authTeamName,
   authLeagueName,
+  initialTab = 'team',
   onSelectLeague,
   onLoginSuccess,
 }) => {
-  const [activeTab, setActiveTab] = useState<'team' | 'admin'>('team');
+  const [activeTab, setActiveTab] = useState<'team' | 'admin'>(initialTab);
   const [selectedLeagueId, setSelectedLeagueId] = useState<string>(activeLeagueId);
   
-  const targetLeague = leagues.find((l) => l.id === selectedLeagueId) || leagues[0];
+  const targetLeague = leagues?.find((l) => l.id === selectedLeagueId) || leagues?.[0];
 
   // Team Captain Form State
-  const [selectedTeamId, setSelectedTeamId] = useState<string>(targetLeague?.teams[0]?.id || '');
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(targetLeague?.teams?.[0]?.id || '');
   const [captainPin, setCaptainPin] = useState<string>('');
   const [showCaptainPin, setShowCaptainPin] = useState<boolean>(false);
   const [teamError, setTeamError] = useState<string>('');
@@ -48,10 +50,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   // Update team selection ONLY when modal opens
   React.useEffect(() => {
     if (isOpen) {
+      if (initialTab) {
+        setActiveTab(initialTab);
+      }
       setSelectedLeagueId(activeLeagueId);
-      const currL = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
-      if (currL && currL.teams.length > 0) {
+      const currL = leagues?.find((l) => l.id === activeLeagueId) || leagues?.[0];
+      if (currL && currL.teams && currL.teams.length > 0) {
         setSelectedTeamId(currL.teams[0].id);
+      } else {
+        setSelectedTeamId('');
       }
       setCaptainPin('');
       setAdminPasscode('');
@@ -60,16 +67,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       setTeamSuccess('');
       setAdminSuccess('');
     }
-  }, [isOpen]);
+  }, [isOpen, initialTab, activeLeagueId, leagues]);
 
   // Ensure selected team is valid if targetLeague changes
   React.useEffect(() => {
-    if (isOpen && targetLeague && targetLeague.teams.length > 0) {
+    if (isOpen && targetLeague && targetLeague.teams && targetLeague.teams.length > 0) {
       if (!targetLeague.teams.some((t) => t.id === selectedTeamId)) {
         setSelectedTeamId(targetLeague.teams[0].id);
       }
+    } else if (isOpen) {
+      setSelectedTeamId('');
     }
-  }, [isOpen, selectedLeagueId, targetLeague]);
+  }, [isOpen, selectedLeagueId, targetLeague, selectedTeamId]);
 
   if (!isOpen) return null;
 
@@ -80,6 +89,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setTeamError('');
     setTeamSuccess('');
     setIsSubmitting(true);
+
+    if (!targetLeague || !selectedTeamId) {
+      setTeamError('Please select a valid team.');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -137,9 +152,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       }
 
       setAdminSuccess('Administrator Authorized. Access Granted.');
-      onSelectLeague(targetLeague.id);
+      const targetId = targetLeague?.id || activeLeagueId || (leagues?.[0]?.id ?? '');
+      if (targetId) {
+        onSelectLeague(targetId);
+      }
       setTimeout(() => {
-        onLoginSuccess('scheduler', undefined, targetLeague.id);
+        onLoginSuccess('scheduler', undefined, targetId);
         onClose();
         setIsSubmitting(false);
       }, 500);
@@ -259,80 +277,108 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </div>
               )}
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Select Your Team</label>
-                <select
-                  value={selectedTeamId}
-                  onChange={(e) => {
-                    setSelectedTeamId(e.target.value);
-                    setCaptainPin('');
-                    setTeamError('');
-                    setTeamSuccess('');
-                  }}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
-                >
-                  {targetLeague?.teams.map((t) => (
-                    <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                  4-Digit Captain PIN
-                </label>
-                <div className="relative">
-                  <input
-                    id="captain-team-access-pin"
-                    name="captain-team-access-pin"
-                    type={showCaptainPin ? 'text' : 'password'}
-                    maxLength={10}
-                    autoComplete="new-password"
-                    data-lpignore="true"
-                    data-1p-ignore="true"
-                    data-form-type="other"
-                    placeholder="Enter team PIN (e.g. 1234)"
-                    value={captainPin}
-                    onChange={(e) => setCaptainPin(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono tracking-wider text-amber-600 dark:text-amber-400 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
-                    required
-                  />
+              {(!targetLeague?.teams || targetLeague.teams.length === 0) ? (
+                <div className="p-4 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3 text-center">
+                  <div className="mx-auto w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                    <UserCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">No Teams Registered Yet</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      This league season has no teams configured yet. Log in as League Admin to set up teams and generate matches.
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setShowCaptainPin(!showCaptainPin)}
-                    className="absolute right-3.5 top-3 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    onClick={() => {
+                      setActiveTab('admin');
+                      setTeamError('');
+                      setAdminError('');
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-md shadow-violet-600/20 transition-all flex items-center justify-center space-x-2"
                   >
-                    {showCaptainPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>Switch to League Admin Sign In</span>
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-500 italic">
-                  Default PIN for teams is <strong className="text-slate-700 dark:text-slate-400">1234</strong> (or custom configured PIN).
-                </p>
-              </div>
+              ) : (
+                <>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Select Your Team</label>
+                    <select
+                      value={selectedTeamId}
+                      onChange={(e) => {
+                        setSelectedTeamId(e.target.value);
+                        setCaptainPin('');
+                        setTeamError('');
+                        setTeamSuccess('');
+                      }}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+                    >
+                      {targetLeague.teams.map((t) => (
+                        <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {teamError && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center space-x-2 text-xs text-rose-600 dark:text-rose-400 font-semibold">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{teamError}</span>
-                </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                      4-Digit Captain PIN
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="captain-team-access-pin"
+                        name="captain-team-access-pin"
+                        type={showCaptainPin ? 'text' : 'password'}
+                        maxLength={10}
+                        autoComplete="new-password"
+                        data-lpignore="true"
+                        data-1p-ignore="true"
+                        data-form-type="other"
+                        placeholder="Enter team PIN (e.g. 1234)"
+                        value={captainPin}
+                        onChange={(e) => setCaptainPin(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-sm font-mono tracking-wider text-amber-600 dark:text-amber-400 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCaptainPin(!showCaptainPin)}
+                        className="absolute right-3.5 top-3 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                      >
+                        {showCaptainPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-slate-500 italic">
+                      Default PIN for teams is <strong className="text-slate-700 dark:text-slate-400">1234</strong> (or custom configured PIN).
+                    </p>
+                  </div>
+
+                  {teamError && (
+                    <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center space-x-2 text-xs text-rose-600 dark:text-rose-400 font-semibold">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>{teamError}</span>
+                    </div>
+                  )}
+
+                  {teamSuccess && (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      <span>{teamSuccess}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-md shadow-amber-500/20 transition-all flex items-center justify-center space-x-2"
+                  >
+                    <UserCheck className="h-4 w-4" />
+                    <span>Log In as Team Captain</span>
+                  </button>
+                </>
               )}
-
-              {teamSuccess && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center space-x-2 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  <span>{teamSuccess}</span>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-md shadow-amber-500/20 transition-all flex items-center justify-center space-x-2"
-              >
-                <UserCheck className="h-4 w-4" />
-                <span>Log In as Team Captain</span>
-              </button>
             </form>
           ) : (
             <form onSubmit={handleAdminLogin} className="space-y-4">
