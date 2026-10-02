@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { loadTs } from './helpers/loadTs.mjs';
 
 // Runs the real scheduling code from src/utils
-const { generateVolleyballSchedule, buildWeekNumbers, slotKey } = loadTs('src/utils/schedulerEngine.ts');
+const { generateVolleyballSchedule, buildWeekNumbers, slotKey, courtTimeKey } = loadTs('src/utils/schedulerEngine.ts');
 const { timeRangesOverlap } = loadTs('src/utils/formatUtils.ts');
 
 const makeTeams = (n) =>
@@ -100,6 +100,35 @@ describe('Schedule generator', () => {
     const spaced = quickRematches(generate({ ...options, spaceOutOpponents: true }).matches, 2);
     const unspaced = quickRematches(generate({ ...options, spaceOutOpponents: false }).matches, 2);
     assert.ok(spaced < unspaced, `spaced=${spaced} should be less than unspaced=${unspaced}`);
+  });
+});
+
+describe('Court availability by night', () => {
+  const tuesdayCourt2Late = courtTimeKey('c2', 'Tuesday', '20:30');
+
+  test('never schedules on a switched-off court time, but still uses the other court', () => {
+    const { matches } = generate({ teams: makeTeams(10), unavailableCourtTimes: [tuesdayCourt2Late] });
+    assert.equal(matches.filter((m) => m.courtId === 'c2' && m.startTime === '20:30').length, 0);
+    assert.ok(matches.some((m) => m.courtId === 'c1' && m.startTime === '20:30'), 'Court 1 still has an 8:30 game');
+  });
+
+  test('applies only to the chosen night of the week', () => {
+    const { matches } = generate({
+      teams: makeTeams(10),
+      daysOfWeek: ['Tuesday', 'Thursday'],
+      unavailableCourtTimes: [tuesdayCourt2Late],
+    });
+    const late = matches.filter((m) => m.courtId === 'c2' && m.startTime === '20:30');
+    const dayOf = (date) => new Date(date + 'T00:00:00').getDay(); // 2 = Tuesday, 4 = Thursday
+    assert.equal(late.filter((m) => dayOf(m.date) === 2).length, 0, 'no Tuesday games in the blocked slot');
+    assert.ok(late.some((m) => dayOf(m.date) === 4), 'Thursday can still use Court 2 at 8:30');
+  });
+
+  test('capacity in the report excludes switched-off court times', () => {
+    const full = generate({ teams: makeTeams(10) }).report.totalSlotsAvailable;
+    const reduced = generate({ teams: makeTeams(10), unavailableCourtTimes: [tuesdayCourt2Late] }).report.totalSlotsAvailable;
+    const nights = new Set(generate({ teams: makeTeams(10) }).matches.map((m) => m.date)).size;
+    assert.equal(full - reduced, nights, 'one fewer slot per Tuesday');
   });
 });
 

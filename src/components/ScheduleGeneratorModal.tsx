@@ -37,6 +37,8 @@ import {
   Printer
 } from 'lucide-react';
 import { PrintScheduleModal } from './PrintScheduleModal';
+import { OpponentTimeline } from './OpponentTimeline';
+import { CourtAvailabilityPanel } from './CourtAvailabilityPanel';
 
 interface ScheduleGeneratorModalProps {
   divisions: Division[];
@@ -87,6 +89,9 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
   // Courts / Playing Surfaces confirmation state
   const [selectedCourtIds, setSelectedCourtIds] = useState<string[]>(() => courts.map((c) => c.id));
+
+  // Optional: court times switched off on particular nights (courtTimeKey format)
+  const [unavailableCourtTimes, setUnavailableCourtTimes] = useState<string[]>([]);
 
   const activeCourts = useMemo(() => {
     return courts.filter((c) => selectedCourtIds.includes(c.id));
@@ -240,6 +245,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
       divisionId: selectedDivisionId,
       teams: divisionTeams,
       courts: activeCourts,
+      unavailableCourtTimes,
       startDate,
       endDate,
       occupiedSlots: existingMatches
@@ -604,6 +610,20 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       );
                     })}
                   </div>
+                )}
+
+                {activeCourts.length > 0 && (
+                  <CourtAvailabilityPanel
+                    courts={activeCourts}
+                    days={selectedDays}
+                    timeSlots={timeSlots}
+                    unavailable={unavailableCourtTimes}
+                    onChange={(next) => {
+                      setUnavailableCourtTimes(next);
+                      setGeneratedMatches(null);
+                      setGeneratedReport(null);
+                    }}
+                  />
                 )}
               </div>
 
@@ -1338,6 +1358,9 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Opponent Timeline: week-by-week opponents, flags quick rematches before applying */}
+              {generatedMatches && <OpponentTimeline teams={divisionTeams} matches={generatedMatches} />}
 
               {/* Priority Rules Compliance Checklist */}
               <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">

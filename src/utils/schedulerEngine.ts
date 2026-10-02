@@ -7,6 +7,7 @@ export interface ScheduleGeneratorOptions {
   startDate: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD (inclusive). When set, every valid date in the range is scheduled and weeksCount is ignored.
   occupiedSlots?: string[]; // Court bookings to avoid (e.g. other divisions), keyed with slotKey(date, startTime, courtId)
+  unavailableCourtTimes?: string[]; // Court times that can't be used on a given night, keyed with courtTimeKey(courtId, day, startTime)
   startTime?: string; // e.g. "18:30" (legacy fallback)
   matchDurationMinutes: number; // 60
   timeSlotsPerNight?: number; // legacy fallback
@@ -85,6 +86,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     startDate,
     endDate,
     occupiedSlots = [],
+    unavailableCourtTimes = [],
     startTime = '18:30',
     matchDurationMinutes = 60,
     timeSlotsPerNight = 3,
@@ -161,7 +163,12 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
 
   // Court/time bookings made by other divisions on the same courts
   const occupied = new Set(occupiedSlots);
+  // Court times switched off for a given night of the week (e.g. Court 2 has no 8:30 slot on Tuesdays)
+  const unavailable = new Set(unavailableCourtTimes);
+  const isCourtOpen = (date: string, slotStart: string, courtId: string) =>
+    !unavailable.has(courtTimeKey(courtId, dayOfWeekOf(date), slotStart));
   const isCourtFree = (date: string, slotStart: string, courtId: string) =>
+    isCourtOpen(date, slotStart, courtId) &&
     !occupied.has(slotKey(date, slotStart, courtId)) &&
     !matches.some((m) => m.date === date && m.startTime === slotStart && m.courtId === courtId);
 
@@ -614,16 +621,15 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   }
 
   // Compile Comprehensive Schedule Fairness & Completeness Report
-  let slotsBookedElsewhere = 0;
+  // Capacity counts only court times that are open and not booked by another division
+  let totalSlotsAvailable = 0;
   playingDates.forEach((d) =>
     effectiveTimeSlots.forEach((t) =>
       courts.forEach((c) => {
-        if (occupied.has(slotKey(d, t, c.id))) slotsBookedElsewhere++;
+        if (isCourtOpen(d, t, c.id) && !occupied.has(slotKey(d, t, c.id))) totalSlotsAvailable++;
       })
     )
   );
-  const totalSlotsAvailable =
-    playingDates.length * effectiveTimeSlots.length * courts.length - slotsBookedElsewhere;
   const totalSlotsFilled = matches.length;
   const slotUtilizationPercentage =
     totalSlotsAvailable > 0 ? Math.round((totalSlotsFilled / totalSlotsAvailable) * 100) : 100;
@@ -915,6 +921,16 @@ export function calculateScheduleFairnessReport(
     officialOpponentMatrix,
     exhibitionOpponentMatrix,
   };
+}
+
+/** Key for a court time that is unavailable on a given night of the week. */
+export function courtTimeKey(courtId: string, day: DayOfWeek, startTime: string): string {
+  return `${courtId}|${day}|${startTime}`;
+}
+
+const DAY_NAMES: DayOfWeek[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+function dayOfWeekOf(date: string): DayOfWeek {
+  return DAY_NAMES[new Date(date + 'T00:00:00').getDay()];
 }
 
 export function slotKey(date: string, startTime: string, courtId: string): string {
