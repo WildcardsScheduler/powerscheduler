@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Division, Team, SetFormat } from '@/types/league';
 import { X, Layers, Plus, Edit3, Trash2, Users, ArrowRightLeft, Check } from 'lucide-react';
+import { TeamCountInput } from './TeamCountInput';
 
 interface DivisionManagerModalProps {
   divisions: Division[];
@@ -216,17 +217,12 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Max Teams</label>
-                      <select
+                      <TeamCountInput
                         value={newMaxTeams}
-                        onChange={(e) => setNewMaxTeams(Number(e.target.value))}
+                        onChange={setNewMaxTeams}
+                        ariaLabel="Division max teams"
                         className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs shadow-sm"
-                      >
-                        <option value={4}>4 Teams</option>
-                        <option value={6}>6 Teams</option>
-                        <option value={8}>8 Teams</option>
-                        <option value={12}>12 Teams</option>
-                        <option value={16}>16 Teams</option>
-                      </select>
+                      />
                     </div>
                   </div>
 
@@ -269,17 +265,15 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                               <option value="Women">Women</option>
                               <option value="Reverse Co-Ed">Reverse Co-Ed</option>
                             </select>
-                            <select
-                              value={editMaxTeams}
-                              onChange={(e) => setEditMaxTeams(Number(e.target.value))}
-                              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs rounded-lg px-2.5 py-1.5"
-                            >
-                              <option value={4}>4 Max</option>
-                              <option value={6}>6 Max</option>
-                              <option value={8}>8 Max</option>
-                              <option value={12}>12 Max</option>
-                              <option value={16}>16 Max</option>
-                            </select>
+                            <label className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                              <span className="shrink-0">Max teams</span>
+                              <TeamCountInput
+                                value={editMaxTeams}
+                                onChange={setEditMaxTeams}
+                                ariaLabel="Division max teams"
+                                className="w-full min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs rounded-lg px-2.5 py-1.5"
+                              />
+                            </label>
                           </div>
                           <div className="flex items-center space-x-2 pt-1">
                             <button

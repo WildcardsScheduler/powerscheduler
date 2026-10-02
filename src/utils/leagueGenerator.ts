@@ -237,7 +237,7 @@ export function createSampleLeague(
     ];
   }
 
-  // Large Pool of Team Names per Sport to Fill Any Division Capacity (4 to 32 Teams)
+  // Large Pool of Team Names per Sport to Fill Any Division Capacity (names are numbered once the pool runs out)
   const teamNamePools: Record<string, string[]> = {
     Volleyball: [
       'Apex Spikers', 'Net Ninjas', 'Block & Roll', 'Ace Attackers',
@@ -285,7 +285,10 @@ export function createSampleLeague(
     const divTeams: Team[] = [];
     for (let i = 0; i < targetCount; i++) {
       const nameIndex = (divIndex * 16 + i) % pool.length;
-      const tName = pool[nameIndex] || `Team ${i + 1}`;
+      // Once the name pool runs out, number the repeats so every team name stays unique
+      const nameRound = Math.floor((divIndex * 16 + i) / pool.length);
+      const baseName = pool[nameIndex] || `Team ${i + 1}`;
+      const tName = nameRound > 0 ? `${baseName} ${nameRound + 1}` : baseName;
       const teamId = `team-${timestamp}-d${divIndex}-${i + 1}`;
 
       const newTeam: Team = {

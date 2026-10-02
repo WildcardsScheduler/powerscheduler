@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { LeagueSeason, SportType, MatchRules, ThirdSetRule, StandingsPointsSystem, DEFAULT_MATCH_RULES } from '@/types/league';
 import { X, Trophy, Plus, Calendar, Users, Building2, Layers, Edit3, Trash2, CheckCircle2, Check, Settings2 } from 'lucide-react';
+import { TeamCountInput } from './TeamCountInput';
 
 interface LeagueManagerModalProps {
   leagues: LeagueSeason[];
@@ -251,18 +252,12 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
 
                   <div>
                     <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">League Capacity (Max Teams)</label>
-                    <select
+                    <TeamCountInput
                       value={maxTeams}
-                      onChange={(e) => setMaxTeams(Number(e.target.value))}
+                      onChange={setMaxTeams}
+                      ariaLabel="League capacity (max teams)"
                       className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs shadow-sm"
-                    >
-                      <option value={4}>4 Teams</option>
-                      <option value={8}>8 Teams</option>
-                      <option value={12}>12 Teams</option>
-                      <option value={16}>16 Teams</option>
-                      <option value={24}>24 Teams</option>
-                      <option value={32}>32 Teams</option>
-                    </select>
+                    />
                   </div>
                 </div>
 
@@ -482,18 +477,15 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                           <option value="Soccer">Soccer</option>
                         </select>
 
-                        <select
-                          value={editMaxTeams}
-                          onChange={(e) => setEditMaxTeams(Number(e.target.value))}
-                          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs rounded-lg px-3 py-1.5 shadow-sm"
-                        >
-                          <option value={4}>4 Teams Cap</option>
-                          <option value={8}>8 Teams Cap</option>
-                          <option value={12}>12 Teams Cap</option>
-                          <option value={16}>16 Teams Cap</option>
-                          <option value={24}>24 Teams Cap</option>
-                          <option value={32}>32 Teams Cap</option>
-                        </select>
+                        <label className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                          <span className="shrink-0">Max teams</span>
+                          <TeamCountInput
+                            value={editMaxTeams}
+                            onChange={setEditMaxTeams}
+                            ariaLabel="League capacity (max teams)"
+                            className="w-full min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs rounded-lg px-3 py-1.5 shadow-sm"
+                          />
+                        </label>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
