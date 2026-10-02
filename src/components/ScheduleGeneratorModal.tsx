@@ -1081,7 +1081,9 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   <Sparkles className="h-4 w-4" />
                   <span>
                     {isGenerating
-                      ? `Finding the best schedule… ${Math.round((progress.done / progress.total) * 100)}%`
+                      ? progress.done >= progress.total
+                        ? 'Fine-tuning the best schedules…'
+                        : `Finding the best schedule… ${Math.round((progress.done / progress.total) * 100)}%`
                       : 'Generate Schedule & View Fairness Report'}
                   </span>
                 </button>

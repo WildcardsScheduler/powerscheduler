@@ -26,6 +26,7 @@ export interface ScheduleGeneratorOptions {
   extraGames?: ExtraGamesMode; // What to do with games beyond the even official count (default: keep as Exhibition)
   emptySlotPreference?: EmptySlotPreference; // Which time slot is left empty on nights that aren't full (default: no preference)
   spaceOutOpponents?: boolean;
+  noSameNightRematches?: boolean; // Never pair two teams that already played each other that night (default: on)
   ensureEqualGames?: boolean;
   fairnessTimeSlots?: boolean;
   fairnessCourts?: boolean;
@@ -122,6 +123,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     extraGames = 'exhibition',
     emptySlotPreference = 'none',
     spaceOutOpponents = true,
+    noSameNightRematches = true,
     ensureEqualGames = true,
     fairnessTimeSlots = true,
     fairnessCourts = true,
@@ -243,6 +245,13 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   // Lower is better: balance head-to-head counts first; a same-night rematch outweighs one extra meeting
   const opponentScore = (a: string, b: string) =>
     (headToHeadCounts.get(a)?.get(b) || 0) * headToHeadWeight + recencyPenalty(a, b) * spacingWeight;
+  // True when the two teams already have a game against each other on this date
+  const metOnDate = (date: string, a: string, b: string) =>
+    matches.some(
+      (m) => m.date === date && ((m.homeTeamId === a && m.awayTeamId === b) || (m.homeTeamId === b && m.awayTeamId === a))
+    );
+  const sameNightBlocked = (date: string, a: string, b: string) => noSameNightRematches && metOnDate(date, a, b);
+
   const recordMeeting = (home: string, away: string) => {
     incrementMapCount(headToHeadCounts.get(home)!, away);
     incrementMapCount(headToHeadCounts.get(away)!, home);
@@ -425,6 +434,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
                   // Find eligible double-header team
                   const eligibleOpponents = teamIds.filter((id) => {
                     if (id === uTeam || teamsBusyInSlot.has(id)) return false;
+                    if (sameNightBlocked(dateStr, uTeam, id)) return false;
                     return isTeamEligibleForSlotOnDate(
                       id,
                       slotIdx,
@@ -528,6 +538,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
                 for (let j = i + 1; j < eligibleCandidates.length; j++) {
                   const c1 = eligibleCandidates[i];
                   const c2 = eligibleCandidates[j];
+                  if (sameNightBlocked(dateStr, c1, c2)) continue;
 
                   const pairScore = opponentScore(c1, c2);
                   const gamesSum = (teamGameCounts.get(c1) || 0) + (teamGameCounts.get(c2) || 0);

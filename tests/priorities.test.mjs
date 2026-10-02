@@ -39,7 +39,7 @@ describe('Scheduler priorities', () => {
   });
 
   test('a higher-ranked rule always outweighs lower-ranked ones', () => {
-    const base = { equalGames: 0, weeklyPlay: 0, spacing: 0, timeSlots: 0, courts: 0, homeAway: 0, refDuty: 0 };
+    const base = { sameNight: 0, equalGames: 0, weeklyPlay: 0, opponents: 0, spacing: 0, timeSlots: 0, courts: 0, homeAway: 0, refDuty: 0 };
     const betterSpacing = { ...base, spacing: 1, timeSlots: 9 };
     const betterSlots = { ...base, spacing: 2, timeSlots: 0 };
     assert.ok(P.compareSchedules(betterSpacing, betterSlots, ranked('spacing', 'timeSlots')) < 0);
@@ -47,7 +47,7 @@ describe('Scheduler priorities', () => {
   });
 
   test('a schedule that meets every must-rule beats one that does not, whatever the ranking', () => {
-    const base = { equalGames: 0, weeklyPlay: 0, spacing: 0, timeSlots: 0, courts: 0, homeAway: 0, refDuty: 0 };
+    const base = { sameNight: 0, equalGames: 0, weeklyPlay: 0, opponents: 0, spacing: 0, timeSlots: 0, courts: 0, homeAway: 0, refDuty: 0 };
     const priorities = [{ id: 'timeSlots', mode: 'ranked' }, { id: 'homeAway', mode: 'must' }, ...ranked().slice(2)];
     const meetsMust = { ...base, timeSlots: 5, homeAway: 1 };
     const breaksMust = { ...base, timeSlots: 0, homeAway: 3 };
@@ -109,8 +109,30 @@ describe('Scheduler priorities', () => {
   test('a new rule is added to older saved rankings in its default position', () => {
     const saved = [{ id: 'weeklyPlay', mode: 'must' }, { id: 'spacing', mode: 'ranked' }, { id: 'equalGames', mode: 'ranked' }];
     const ids = P.normalizePriorities(saved).map((p) => p.id);
-    assert.equal(ids[0], 'weeklyPlay');
-    assert.equal(ids[1], 'opponents');
+    // New rules slot in next to their neighbours from the default order; saved rules keep their order
+    assert.deepEqual(ids.slice(0, 3), ['sameNight', 'weeklyPlay', 'opponents']);
+    assert.ok(ids.indexOf('spacing') < ids.indexOf('equalGames'));
+  });
+
+  test('no team plays the same opponent twice in one night (on by default as a must-rule)', async () => {
+    for (const teamCount of [6, 8, 9]) {
+      const opts = { ...baseOptions(teamCount), fillAllTimeslots: true };
+      const { result, broken } = await P.optimizeSchedule(opts, P.DEFAULT_PRIORITIES, 40);
+      const seen = new Set();
+      for (const m of result.matches) {
+        const key = m.date + '|' + [m.homeTeamId, m.awayTeamId].sort().join('|');
+        assert.ok(!seen.has(key), teamCount + ' teams: same-night rematch ' + key);
+        seen.add(key);
+      }
+      assert.ok(!broken.includes('sameNight'));
+    }
+  });
+
+  test('turning the same-night rule off lets the engine use those rematches to fill slots', () => {
+    const opts = { ...baseOptions(6), fillAllTimeslots: true };
+    const withRule = generateVolleyballSchedule(opts).matches.length;
+    const withoutRule = generateVolleyballSchedule({ ...opts, noSameNightRematches: false }).matches.length;
+    assert.ok(withoutRule >= withRule);
   });
 
   test('turning a rule off switches that behaviour off in the engine', () => {

@@ -15,6 +15,7 @@ import {
  */
 
 export type PriorityRuleId =
+  | 'sameNight'
   | 'weeklyPlay'
   | 'equalGames'
   | 'opponents'
@@ -56,6 +57,14 @@ export const PRIORITY_RULES: Record<PriorityRuleId, PriorityRuleInfo> = {
     mustMeans: 'No team ever sits out a league night',
     mustLimit: 0,
     describe: (n) => (n === 0 ? 'No team sits out a night' : `${n} team-night${n === 1 ? '' : 's'} without a game`),
+  },
+  sameNight: {
+    label: 'No rematches on the same night',
+    description: 'A team never plays the same opponent twice in one night.',
+    mustMeans: 'No team plays the same opponent twice in one night',
+    mustLimit: 0,
+    describe: (n) =>
+      n === 0 ? 'No same-night rematches' : `${n} same-night rematch${n === 1 ? '' : 'es'}`,
   },
   opponents: {
     label: 'Balance opponents',
@@ -104,6 +113,7 @@ export const PRIORITY_RULES: Record<PriorityRuleId, PriorityRuleInfo> = {
 
 /** Matches today's generator behaviour: every rule on, nothing mandatory. */
 export const DEFAULT_PRIORITIES: SchedulerPriority[] = [
+  { id: 'sameNight', mode: 'must' },
   { id: 'equalGames', mode: 'ranked' },
   { id: 'weeklyPlay', mode: 'ranked' },
   { id: 'opponents', mode: 'ranked' },
@@ -142,6 +152,7 @@ export function engineFlagsFor(priorities: SchedulerPriority[]) {
     guaranteeWeeklyPlay: isOn('weeklyPlay'),
     ensureEqualGames: isOn('equalGames'),
     spaceOutOpponents: isOn('spacing'),
+    noSameNightRematches: isOn('sameNight'),
     fairnessTimeSlots: isOn('timeSlots'),
     fairnessCourts: isOn('courts'),
   };
@@ -205,6 +216,15 @@ export function scoreSchedule(matches: Match[], teamIds: string[], timeSlots: st
     ...teamIds.map((t) => spread(teamIds.filter((o) => o !== t).map((o) => meetings.get(pairOf(t, o)) || 0)))
   );
 
+  // Games that repeat a pairing already played that night
+  const pairsByNight = new Set<string>();
+  let sameNightRematches = 0;
+  matches.forEach((m) => {
+    const key = `${m.date}|${pairOf(m.homeTeamId, m.awayTeamId)}`;
+    if (pairsByNight.has(key)) sameNightRematches++;
+    pairsByNight.add(key);
+  });
+
   // Same opponents meeting again within 2 weeks
   let rematches = 0;
   const lastWeek = new Map<string, number>();
@@ -245,6 +265,7 @@ export function scoreSchedule(matches: Match[], teamIds: string[], timeSlots: st
     fine,
     equalGames: spread(teamIds.map((t) => official.get(t)!)),
     weeklyPlay: sitOuts,
+    sameNight: sameNightRematches,
     opponents: opponentSpread,
     spacing: rematches,
     timeSlots: worstSpread(slotCounts, timeSlots),
@@ -316,6 +337,8 @@ function weightsFor(priorities: SchedulerPriority[], jitter: () => number): Sche
 }
 
 export const DEFAULT_ATTEMPTS = 300;
+/** Time allowed for polishing the shortlisted schedules with opponent swaps */
+const POLISH_BUDGET_MS = 2500;
 
 /**
  * Tries `attempts` variations of the schedule and returns the best one for these priorities.
@@ -345,7 +368,7 @@ export async function optimizeSchedule(
   let bestScores = evaluate(bestResult);
 
   // Keep the few best candidates: a slightly worse start can polish into a better finish
-  const SHORTLIST = 5;
+  const SHORTLIST = 40;
   const shortlist: { result: GeneratedScheduleResult; scores: RuleScores }[] = [{ result: bestResult, scores: bestScores }];
   const consider = (result: GeneratedScheduleResult, scores: RuleScores) => {
     shortlist.push({ result, scores });
@@ -367,14 +390,20 @@ export async function optimizeSchedule(
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
 
-  // Polish each shortlisted schedule by swapping opponents between games at the same time; keep the best
-  shortlist.forEach((candidate, index) => {
+  // Polish the shortlisted schedules (most promising first) by swapping opponents between games at
+  // the same time, and keep the best. Stops when the time budget runs out so phones aren't kept waiting.
+  const polishStart = Date.now();
+  for (let index = 0; index < shortlist.length; index++) {
+    if (index > 0 && Date.now() - polishStart > POLISH_BUDGET_MS) break;
+    const candidate = shortlist[index];
     const polished = improveBySwappingOpponents(candidate.result.matches, candidate.scores, evaluate, priorities);
     if (index === 0 || compareSchedules(polished.scores, bestScores, priorities) < 0) {
       bestResult = { ...candidate.result, matches: polished.matches };
       bestScores = polished.scores;
     }
-  });
+    onProgress?.(attempts, attempts);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 
   // Swaps change who plays whom, so rebuild the report from the final games (capacity figures are unchanged)
   const rebuilt = calculateScheduleFairnessReport(options.teams, bestResult.matches, options.courts, timeSlots);
