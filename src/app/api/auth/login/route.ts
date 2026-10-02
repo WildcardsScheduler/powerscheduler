@@ -46,10 +46,22 @@ export async function POST(request: Request) {
       ];
       if (await isLoginBlocked(limits)) return tooManyAttempts();
 
-      const store = await getStoreData();
+      // In production the passcode comes ONLY from the ADMIN_PASSCODE environment variable.
+      // (Falling back to a passcode stored in league data let an old passcode keep working
+      // when the variable was empty.) Local development keeps the old fallbacks.
       const serverPasscode = (process.env.ADMIN_PASSCODE || '').trim();
-      const storedPasscode = store.leagues.find((l) => l.adminPasscode)?.adminPasscode?.trim();
-      const validPasscode = serverPasscode || storedPasscode || 'admin123';
+      let validPasscode = serverPasscode;
+      if (!validPasscode) {
+        if (process.env.NODE_ENV === 'production') {
+          console.error('Admin login refused: ADMIN_PASSCODE is not set (or is empty) in this environment.');
+          return NextResponse.json(
+            { error: 'Admin login is not configured on the server (ADMIN_PASSCODE is missing).' },
+            { status: 503 }
+          );
+        }
+        const store = await getStoreData();
+        validPasscode = store.leagues.find((l) => l.adminPasscode)?.adminPasscode?.trim() || 'admin123';
+      }
 
       if (!passcode || !safeEqual(passcode.trim(), validPasscode)) {
         await recordLoginFailure(limits);
