@@ -103,6 +103,66 @@ describe('Schedule generator', () => {
   });
 });
 
+describe('Extra games beyond an even count', () => {
+  const gamesPerTeam = (matches) => {
+    const counts = new Map();
+    matches.forEach((m) => [m.homeTeamId, m.awayTeamId].forEach((t) => counts.set(t, (counts.get(t) || 0) + 1)));
+    return counts;
+  };
+
+  test('"Don\'t schedule them" leaves only games that give every team the same count, with no exhibitions', () => {
+    for (const n of [5, 6, 7, 9, 10]) {
+      const { matches } = generate({ teams: makeTeams(n), blackoutDates: [], extraGames: 'none' });
+      assert.equal(matches.filter((m) => m.isExhibition).length, 0, `${n} teams: no exhibitions`);
+      const counts = new Set(gamesPerTeam(matches).values());
+      assert.equal(counts.size, 1, `${n} teams: games per team ${[...counts].join('/')}`);
+    }
+  });
+
+  test('every team gets as many even games as the busiest-possible schedule allows', () => {
+    // With 7 teams the fewest games any team has is 14, and 7 x 14 is even, so 14 each is reachable
+    const opts = { teams: makeTeams(7), blackoutDates: [] };
+    const all = generate(opts).matches;
+    const fewest = Math.min(...gamesPerTeam(all).values());
+    const evenOnly = generate({ ...opts, extraGames: 'none' }).matches;
+    assert.equal([...gamesPerTeam(evenOnly).values()][0], fewest);
+  });
+
+  test('keeping extras as Exhibition still gives every team the same number of official games', () => {
+    const { matches } = generate({ teams: makeTeams(7), blackoutDates: [] });
+    const official = gamesPerTeam(matches.filter((m) => !m.isExhibition));
+    assert.equal(new Set(official.values()).size, 1);
+    assert.ok(matches.some((m) => m.isExhibition), 'the extra games are kept as exhibitions');
+  });
+});
+
+describe('Which time slot stays empty', () => {
+  const lateGames = (matches, slot) => matches.filter((m) => m.startTime === slot).length;
+  const options = { teams: makeTeams(7), blackoutDates: [], extraGames: 'none' };
+
+  test('"Latest" moves games out of the late slot, "Earliest" out of the early slot', () => {
+    const none = generate({ ...options, emptySlotPreference: 'none' }).matches;
+    const latest = generate({ ...options, emptySlotPreference: 'latest' }).matches;
+    const earliest = generate({ ...options, emptySlotPreference: 'earliest' }).matches;
+    assert.ok(lateGames(latest, '20:30') < lateGames(none, '20:30'), 'fewer 8:30 games');
+    assert.ok(lateGames(earliest, '18:30') < lateGames(none, '18:30'), 'fewer 6:30 games');
+    assert.equal(latest.length, none.length, 'no games are added or lost');
+  });
+
+  test('moving games never double-books a court or a team', () => {
+    for (const pref of ['latest', 'earliest', '19:30']) {
+      const { matches } = generate({ ...options, emptySlotPreference: pref });
+      const seen = new Set();
+      for (const m of matches) {
+        for (const key of [`${m.date}|${m.startTime}|${m.courtId}`, ...[m.homeTeamId, m.awayTeamId, m.workTeamId].filter(Boolean).map((t) => `${m.date}|${m.startTime}|${t}`)]) {
+          assert.ok(!seen.has(key), `${pref}: clash ${key}`);
+          seen.add(key);
+        }
+      }
+    }
+  });
+});
+
 describe('Court availability by night', () => {
   const tuesdayCourt2Late = courtTimeKey('c2', 'Tuesday', '20:30');
 

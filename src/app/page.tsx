@@ -1255,6 +1255,10 @@ export default function Home() {
         defaultEndDate={league.endDate}
         priorities={league.schedulerPriorities as SchedulerPriority[] | undefined}
         onSavePriorities={(schedulerPriorities) => updateActiveLeague((prev) => ({ ...prev, schedulerPriorities }))}
+        extraGames={league.scheduleExtraGames}
+        onSaveExtraGames={(scheduleExtraGames) => updateActiveLeague((prev) => ({ ...prev, scheduleExtraGames }))}
+        emptySlot={league.scheduleEmptySlot}
+        onSaveEmptySlot={(scheduleEmptySlot) => updateActiveLeague((prev) => ({ ...prev, scheduleEmptySlot }))}
       />
 
       {/* Locations & Sub-locations Manager Modal */}

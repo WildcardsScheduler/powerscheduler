@@ -23,6 +23,8 @@ export interface ScheduleGeneratorOptions {
   fillAllTimeslots?: boolean; // Fill 100% available slots via double headers
   guaranteeWeeklyPlay?: boolean; // Guarantee every team plays each league night (no bye / sit-out weeks)
   markDoubleHeadersAsExhibition?: boolean; // Flag extra double-header capacity filler games as Exhibition
+  extraGames?: ExtraGamesMode; // What to do with games beyond the even official count (default: keep as Exhibition)
+  emptySlotPreference?: EmptySlotPreference; // Which time slot is left empty on nights that aren't full (default: no preference)
   spaceOutOpponents?: boolean;
   ensureEqualGames?: boolean;
   fairnessTimeSlots?: boolean;
@@ -32,6 +34,12 @@ export interface ScheduleGeneratorOptions {
   seed?: number; // When set, team order, court order and ties are shuffled with this seed (same seed = same schedule)
   weights?: SchedulerWeights; // How strongly each balancing rule pulls when choosing slots and opponents
 }
+
+/** 'exhibition' keeps games beyond the even official count as Exhibition; 'none' leaves them out of the schedule. */
+export type ExtraGamesMode = 'exhibition' | 'none';
+
+/** Where empty court time goes on nights that aren't full: the latest slot, the earliest, a specific "HH:MM" slot, or anywhere. */
+export type EmptySlotPreference = 'latest' | 'earliest' | 'none' | string;
 
 export interface SchedulerWeights {
   timeSlots?: number; // default 10
@@ -110,6 +118,8 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     fillAllTimeslots = true,
     guaranteeWeeklyPlay = true,
     markDoubleHeadersAsExhibition = true,
+    extraGames = 'exhibition',
+    emptySlotPreference = 'none',
     spaceOutOpponents = true,
     ensureEqualGames = true,
     fairnessTimeSlots = true,
@@ -573,7 +583,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   }
 
   // Post-Processing: Equalize Official Standings Matches & Flag Extra Games as Exhibition
-  if (ensureEqualGames || markDoubleHeadersAsExhibition) {
+  if (ensureEqualGames || markDoubleHeadersAsExhibition || extraGames === 'none') {
     // 1. Calculate each team's total scheduled games count
     const teamTotalCounts = new Map<string, number>();
     teamIds.forEach((id) => teamTotalCounts.set(id, 0));
@@ -588,42 +598,39 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     let bestK = 0;
     let bestOfficialSet = new Set<string>();
 
+    // Prioritize regular season matches over slot fills / double headers
+    const sortedMatches = [...matches].sort((a, b) => {
+      const aIsFill = a.notes?.includes('Slot Fill') || a.notes?.includes('Double Header') ? 1 : 0;
+      const bIsFill = b.notes?.includes('Slot Fill') || b.notes?.includes('Double Header') ? 1 : 0;
+      if (aIsFill !== bIsFill) return aIsFill - bIsFill;
+      return a.weekNumber - b.weekNumber;
+    });
+
     for (let testK = minTotalGames; testK >= 1; testK--) {
-      const teamOfficialCount = new Map<string, number>();
-      teamIds.forEach((id) => teamOfficialCount.set(id, 0));
-      const currentOfficialMatches = new Set<string>();
-
-      // Prioritize regular season matches over slot fills / double headers
-      const sortedMatches = [...matches].sort((a, b) => {
-        const aIsFill = a.notes?.includes('Slot Fill') || a.notes?.includes('Double Header') ? 1 : 0;
-        const bIsFill = b.notes?.includes('Slot Fill') || b.notes?.includes('Double Header') ? 1 : 0;
-        if (aIsFill !== bIsFill) return aIsFill - bIsFill;
-        return a.weekNumber - b.weekNumber;
-      });
-
-      for (const m of sortedMatches) {
-        const hCount = teamOfficialCount.get(m.homeTeamId) || 0;
-        const aCount = teamOfficialCount.get(m.awayTeamId) || 0;
-
-        // ONLY mark as official if BOTH teams still need an official game to reach testK
-        if (hCount < testK && aCount < testK) {
-          teamOfficialCount.set(m.homeTeamId, hCount + 1);
-          teamOfficialCount.set(m.awayTeamId, aCount + 1);
-          currentOfficialMatches.add(m.id);
-        }
-      }
-
-      // Check if ALL teams reached EXACTLY testK official games
-      const allReached = teamIds.every((id) => (teamOfficialCount.get(id) || 0) === testK);
-      if (allReached) {
+      const officialSet = selectEqualOfficialGames(sortedMatches, teamIds, testK);
+      if (officialSet) {
         bestK = testK;
-        bestOfficialSet = currentOfficialMatches;
+        bestOfficialSet = officialSet;
         break;
       }
     }
 
     // Apply the official vs exhibition designation
-    if (bestK > 0) {
+    if (bestK > 0 && extraGames === 'none') {
+      // Only schedule the games that keep every team on exactly bestK games
+      const extraCount = matches.length - bestOfficialSet.size;
+      for (let i = matches.length - 1; i >= 0; i--) {
+        if (!bestOfficialSet.has(matches[i].id)) matches.splice(i, 1);
+      }
+      matches.forEach((m) => {
+        m.isExhibition = false;
+      });
+      if (extraCount > 0) {
+        warnings.push(
+          `No exhibition games: left out ${extraCount} extra game${extraCount === 1 ? '' : 's'} so every team plays exactly ${bestK}.`
+        );
+      }
+    } else if (bestK > 0) {
       matches.forEach((m) => {
         if (bestOfficialSet.has(m.id)) {
           m.isExhibition = false;
@@ -634,6 +641,24 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
           }
         }
       });
+    } else if (extraGames === 'none') {
+      warnings.push('No exhibition games: could not find an even number of games for every team, so all games were kept.');
+    }
+  }
+
+  // Move games out of the time slot the scheduler wants left empty on nights that aren't full
+  if (emptySlotPreference !== 'none') {
+    const moved = packNightsAwayFromEmptySlot(
+      matches,
+      effectiveTimeSlots,
+      orderedCourts,
+      emptySlotPreference,
+      (date, slot, courtId) => isCourtOpen(date, slot, courtId) && !occupied.has(slotKey(date, slot, courtId)),
+      matchDurationMinutes,
+      doubleHeaderMode
+    );
+    if (moved > 0) {
+      matches.sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
     }
   }
 
@@ -960,6 +985,150 @@ export function slotKey(date: string, startTime: string, courtId: string): strin
 }
 
 // Formats a Date as YYYY-MM-DD using local time (toISOString() would convert to UTC first)
+/**
+ * On each night, moves games into open court times so that the empty time is in the preferred slot
+ * (e.g. the late slot). A game only moves to an earlier-preferred position when neither team is
+ * already playing at that time and the double-header timing rule still holds. Returns games moved.
+ */
+function packNightsAwayFromEmptySlot(
+  matches: Match[],
+  timeSlots: string[],
+  courts: Court[],
+  preference: EmptySlotPreference,
+  isUsable: (date: string, slot: string, courtId: string) => boolean,
+  matchDurationMinutes: number,
+  doubleHeaderMode: 'back_to_back' | 'spaced'
+): number {
+  // Higher = should be left empty first
+  const emptyRank = (slot: string) => {
+    const idx = timeSlots.indexOf(slot);
+    if (preference === 'earliest') return timeSlots.length - idx;
+    if (preference === 'latest') return idx;
+    return slot === preference ? 1000 : idx; // a specific slot first, then the latest ones
+  };
+
+  let movedCount = 0;
+  const dates = Array.from(new Set(matches.map((m) => m.date)));
+  for (const date of dates) {
+    for (let guard = 0; guard < timeSlots.length * courts.length * 4; guard++) {
+      const night = matches.filter((m) => m.date === date);
+      const taken = new Set(night.map((m) => `${m.startTime}|${m.subLocationId || m.courtId}`));
+
+      // Empty, usable court times, the ones that should be filled first at the front
+      const empties: { slot: string; court: Court }[] = [];
+      timeSlots.forEach((slot) =>
+        courts.forEach((court) => {
+          if (!taken.has(`${slot}|${court.id}`) && isUsable(date, slot, court.id)) empties.push({ slot, court });
+        })
+      );
+      empties.sort((a, b) => emptyRank(a.slot) - emptyRank(b.slot));
+
+      let movedOne = false;
+      for (const target of empties) {
+        const targetIdx = timeSlots.indexOf(target.slot);
+        // Games sitting in slots that should be emptier than the target, most-preferred-empty first
+        const candidates = night
+          .filter((m) => timeSlots.includes(m.startTime) && emptyRank(m.startTime) > emptyRank(target.slot))
+          .sort((a, b) => emptyRank(b.startTime) - emptyRank(a.startTime));
+
+        const game = candidates.find((m) => {
+          const others = night.filter((x) => x.id !== m.id);
+          return [m.homeTeamId, m.awayTeamId].every((team) => {
+            if (others.some((x) => x.startTime === target.slot && (x.homeTeamId === team || x.awayTeamId === team))) return false;
+            return isTeamEligibleForSlotOnDate(team, targetIdx, others, timeSlots, doubleHeaderMode);
+          });
+        });
+
+        if (game) {
+          game.startTime = target.slot;
+          game.endTime = addMinutesToTimeString(target.slot, matchDurationMinutes);
+          game.courtId = target.court.id;
+          game.subLocationId = target.court.id;
+          game.locationId = target.court.locationId;
+          movedCount++;
+          movedOne = true;
+          break;
+        }
+      }
+      if (!movedOne) break;
+    }
+  }
+  return movedCount;
+}
+
+/**
+ * Picks matches so that every team has exactly `gamesPerTeam` of them, or returns null if it can't.
+ * Takes matches greedily in the given order, then fixes any shortfall by swapping games along
+ * alternating chains (add an unused game, drop a used one, add an unused one...), which raises the
+ * two teams at the chain's ends by one game each and leaves everyone in between unchanged.
+ */
+function selectEqualOfficialGames(ordered: Match[], teamIds: string[], gamesPerTeam: number): Set<string> | null {
+  if ((teamIds.length * gamesPerTeam) % 2 !== 0) return null; // every game counts for two teams
+  const used = new Set<string>();
+  const count = new Map<string, number>(teamIds.map((id) => [id, 0]));
+  const byTeam = new Map<string, Match[]>(teamIds.map((id) => [id, []]));
+  ordered.forEach((m) => {
+    byTeam.get(m.homeTeamId)?.push(m);
+    byTeam.get(m.awayTeamId)?.push(m);
+  });
+
+  for (const m of ordered) {
+    if ((count.get(m.homeTeamId) ?? gamesPerTeam) < gamesPerTeam && (count.get(m.awayTeamId) ?? gamesPerTeam) < gamesPerTeam) {
+      used.add(m.id);
+      count.set(m.homeTeamId, count.get(m.homeTeamId)! + 1);
+      count.set(m.awayTeamId, count.get(m.awayTeamId)! + 1);
+    }
+  }
+
+  const other = (m: Match, team: string) => (m.homeTeamId === team ? m.awayTeamId : m.homeTeamId);
+  const MAX_CHAIN = 11;
+
+  // Depth-first search for an alternating chain from a short team to another short team
+  const findChain = (start: string): Match[] | null => {
+    const path: Match[] = [];
+    const onPath = new Set<string>();
+    const explored = new Set<string>(); // each (team, step type) is expanded once, keeping the search fast
+    const visit = (team: string, wantUnused: boolean): boolean => {
+      if (path.length >= MAX_CHAIN) return false;
+      const state = `${team}|${wantUnused}`;
+      if (explored.has(state)) return false;
+      explored.add(state);
+      for (const m of byTeam.get(team) || []) {
+        if (onPath.has(m.id) || used.has(m.id) === wantUnused) continue;
+        const next = other(m, team);
+        path.push(m);
+        onPath.add(m.id);
+        // A chain must end on an "add" step at a team that is still short (and not the start, unless it needs 2)
+        if (wantUnused && (count.get(next) ?? gamesPerTeam) < gamesPerTeam && (next !== start || count.get(start)! <= gamesPerTeam - 2)) {
+          return true;
+        }
+        if (visit(next, !wantUnused)) return true;
+        path.pop();
+        onPath.delete(m.id);
+      }
+      return false;
+    };
+    return visit(start, true) ? path : null;
+  };
+
+  for (let guard = 0; guard < teamIds.length * gamesPerTeam; guard++) {
+    const short = teamIds.find((id) => count.get(id)! < gamesPerTeam);
+    if (!short) return used;
+    const chain = findChain(short);
+    if (!chain) return null;
+    // Flip the chain: unused games become used and vice versa
+    let team = short;
+    chain.forEach((m) => {
+      if (used.has(m.id)) used.delete(m.id);
+      else used.add(m.id);
+      team = other(m, team);
+    });
+    count.set(short, count.get(short)! + 1);
+    count.set(team, count.get(team)! + 1);
+  }
+  return teamIds.every((id) => count.get(id) === gamesPerTeam) ? used : null;
+}
+
 /** Small, fast seeded random number generator (returns 0 <= n < 1). */
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;

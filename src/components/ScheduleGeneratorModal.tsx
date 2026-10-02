@@ -6,7 +6,9 @@ import {
   generateValidDates,
   buildWeekNumbers,
   slotKey,
-  ScheduleFairnessReport
+  ScheduleFairnessReport,
+  ExtraGamesMode,
+  EmptySlotPreference,
 } from '@/utils/schedulerEngine';
 import {
   getCanadianHolidaysForDateRange,
@@ -63,6 +65,12 @@ interface ScheduleGeneratorModalProps {
   /** The league's saved priority ranking */
   priorities?: SchedulerPriority[];
   onSavePriorities?: (priorities: SchedulerPriority[]) => void;
+  /** The league's saved choice for games beyond an even count */
+  extraGames?: ExtraGamesMode;
+  onSaveExtraGames?: (mode: ExtraGamesMode) => void;
+  /** The league's saved choice for which time slot stays empty on nights that aren't full */
+  emptySlot?: EmptySlotPreference;
+  onSaveEmptySlot?: (preference: EmptySlotPreference) => void;
 }
 
 const ALL_DAYS: DayOfWeek[] = [
@@ -88,6 +96,10 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   defaultEndDate = '2026-11-24',
   priorities: savedPriorities,
   onSavePriorities,
+  extraGames: savedExtraGames,
+  onSaveExtraGames,
+  emptySlot: savedEmptySlot,
+  onSaveEmptySlot,
 }) => {
   const [selectedDivisionId, setSelectedDivisionId] = useState(divisions[0]?.id || '');
   // Generated State & View Navigation
@@ -160,7 +172,10 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   const [fillAllTimeslots, setFillAllTimeslots] = useState(true); // Default ON to maximize slot utilization
   const [enableDoubleHeaders, setEnableDoubleHeaders] = useState(false);
   const [doubleHeaderMode, setDoubleHeaderMode] = useState<'back_to_back' | 'spaced'>('back_to_back');
-  const [markDoubleHeadersAsExhibition, setMarkDoubleHeadersAsExhibition] = useState(true); // Default ON: Extra double headers marked as Exhibition
+  // Games beyond the even official count: keep them as Exhibition, or leave them out (saved with the league)
+  const [extraGames, setExtraGames] = useState<ExtraGamesMode>(savedExtraGames === 'none' ? 'none' : 'exhibition');
+  // Which time slot is left empty on nights that aren't full (saved with the league)
+  const [emptySlot, setEmptySlot] = useState<EmptySlotPreference>(savedEmptySlot || 'latest');
 
   // Rule ranking (most important first) and which rules are mandatory; saved with the league
   const [priorities, setPriorities] = useState<SchedulerPriority[]>(() => normalizePriorities(savedPriorities));
@@ -255,6 +270,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
   // Rules that can't apply with the current settings are treated as Off
   const notApplicable: Partial<Record<PriorityRuleId, string>> = {
+    ...(extraGames === 'none' ? { equalGames: 'Always met: extra games are not scheduled, so every team plays the same number.' } : {}),
     ...(assignWorkTeams ? {} : { refDuty: 'Not used: referees are not being assigned (self-reffed).' }),
     ...(activeCourts.length < 2 ? { courts: 'Not used: only one court is selected.' } : {}),
     ...(timeSlots.length < 2 ? { timeSlots: 'Not used: only one time slot per night.' } : {}),
@@ -299,7 +315,13 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
       enableDoubleHeaders,
       doubleHeaderMode,
       fillAllTimeslots,
-      markDoubleHeadersAsExhibition,
+      markDoubleHeadersAsExhibition: true,
+      extraGames,
+      // A specific time that's no longer in the slot list falls back to the latest slot
+      emptySlotPreference:
+        emptySlot === 'latest' || emptySlot === 'earliest' || emptySlot === 'none' || timeSlots.includes(emptySlot)
+          ? emptySlot
+          : 'latest',
     }, effectivePriorities, DEFAULT_ATTEMPTS, (done, total) => setProgress({ done, total }));
     setIsGenerating(false);
 
@@ -872,26 +894,85 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   </div>
                 </div>
 
-                {/* END-OF-SEASON EXHIBITION MATCHES TOGGLE */}
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30">
+                {/* EXTRA GAMES BEYOND AN EVEN COUNT */}
+                <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30 space-y-2.5">
                   <div className="space-y-0.5">
                     <span className="font-extrabold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
                       <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                      <span>Flag End-of-Season Extra Matches as Exhibition</span>
-                      <span className="bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-[10px] font-bold px-1.5 py-0.2 rounded">
-                        PRE-PLAYOFFS WARMUP
-                      </span>
+                      <span>Extra Games Beyond an Even Count</span>
                     </span>
                     <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                      Regular double headers count as Official Standings Matches until all teams reach equal league matches (e.g., 14 games = 2 round-robins). Extra matches at the end of the season before playoffs are flagged as Exhibition.
+                      Every team gets the same number of official games. When the courts and nights allow more games than
+                      that, choose what happens to the extras.
                     </p>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={markDoubleHeadersAsExhibition}
-                    onChange={(e) => setMarkDoubleHeadersAsExhibition(e.target.checked)}
-                    className="h-5 w-5 rounded accent-purple-500 cursor-pointer"
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {([
+                      { mode: 'exhibition', title: 'Schedule as Exhibition', text: "Extra games are played but don't count in standings." },
+                      { mode: 'none', title: "Don't schedule them", text: 'Only the games that give every team an even count.' },
+                    ] as const).map((option) => (
+                      <button
+                        key={option.mode}
+                        type="button"
+                        aria-pressed={extraGames === option.mode}
+                        onClick={() => {
+                          setExtraGames(option.mode);
+                          setGeneratedMatches(null);
+                          setGeneratedReport(null);
+                          setPriorityResult(null);
+                          onSaveExtraGames?.(option.mode);
+                        }}
+                        className={`text-left p-2.5 rounded-xl border transition-colors ${
+                          extraGames === option.mode
+                            ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                            : 'bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-purple-400'
+                        }`}
+                      >
+                        <span className="block text-xs font-bold">{option.title}</span>
+                        <span className={`block text-[11px] ${extraGames === option.mode ? 'text-purple-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                          {option.text}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* WHERE EMPTY COURT TIME GOES */}
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-2">
+                  <div className="space-y-0.5">
+                    <span className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                      <Clock className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                      <span>Empty Time Slots on Nights That Aren&apos;t Full</span>
+                    </span>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      When there are fewer games than court times, games are moved so this slot is the one left empty
+                      (as far as each team&apos;s other games allow).
+                    </p>
+                  </div>
+                  <select
+                    value={emptySlot === 'latest' || emptySlot === 'earliest' || emptySlot === 'none' || timeSlots.includes(emptySlot) ? emptySlot : 'latest'}
+                    onChange={(e) => {
+                      setEmptySlot(e.target.value);
+                      setGeneratedMatches(null);
+                      setGeneratedReport(null);
+                      setPriorityResult(null);
+                      onSaveEmptySlot?.(e.target.value);
+                    }}
+                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs font-semibold"
+                  >
+                    <option value="latest">
+                      Latest time slot{timeSlots.length > 0 ? ` (${formatTime([...timeSlots].sort()[timeSlots.length - 1])})` : ''}
+                    </option>
+                    <option value="earliest">
+                      Earliest time slot{timeSlots.length > 0 ? ` (${formatTime([...timeSlots].sort()[0])})` : ''}
+                    </option>
+                    {[...timeSlots].sort().slice(1, -1).map((slot) => (
+                      <option key={slot} value={slot}>
+                        {formatTime(slot)}
+                      </option>
+                    ))}
+                    <option value="none">No preference</option>
+                  </select>
                 </div>
 
                 {/* 2. DOUBLE HEADER PREFERENCES */}
