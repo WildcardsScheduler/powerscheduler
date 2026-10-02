@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { getStoreData, setStoreData } from '@/lib/store';
 import { createMatchRequestSchema } from '@/lib/validations/leagueSchemas';
 import { Match } from '@/types/league';
+import { timeRangesOverlap } from '@/utils/formatUtils';
 
 export async function POST(request: Request) {
   try {
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { leagueId, match, version } = parseResult.data;
+    const { leagueId, match } = parseResult.data;
 
     if (match.homeTeamId === match.awayTeamId) {
       return NextResponse.json(
@@ -38,16 +39,6 @@ export async function POST(request: Request) {
 
     const store = await getStoreData();
 
-    // Optimistic Concurrency Control check
-    if (version !== undefined && version !== store.version) {
-      return NextResponse.json(
-        {
-          error: 'Conflict: The schedule has been updated by another user. Please refresh.',
-          currentVersion: store.version,
-        },
-        { status: 409 }
-      );
-    }
 
     const league = store.leagues.find((l) => l.id === leagueId);
 
@@ -60,11 +51,11 @@ export async function POST(request: Request) {
       (m) =>
         m.date === match.date &&
         (m.subLocationId === match.subLocationId || m.courtId === match.subLocationId) &&
-        m.startTime === match.startTime
+        timeRangesOverlap(m.startTime, m.endTime, match.startTime, match.endTime)
     );
     if (courtConflict) {
       return NextResponse.json(
-        { error: `Conflict: Selected court is already booked at ${match.startTime} on ${match.date}.` },
+        { error: `Conflict: Selected court already has a match at ${courtConflict.startTime} on ${match.date}.` },
         { status: 409 }
       );
     }
@@ -73,7 +64,7 @@ export async function POST(request: Request) {
     const teamConflict = league.matches.find(
       (m) =>
         m.date === match.date &&
-        m.startTime === match.startTime &&
+        timeRangesOverlap(m.startTime, m.endTime, match.startTime, match.endTime) &&
         (m.homeTeamId === match.homeTeamId ||
           m.awayTeamId === match.homeTeamId ||
           m.homeTeamId === match.awayTeamId ||
@@ -81,7 +72,7 @@ export async function POST(request: Request) {
     );
     if (teamConflict) {
       return NextResponse.json(
-        { error: `Conflict: One of the teams is already scheduled at ${match.startTime} on ${match.date}.` },
+        { error: `Conflict: One of the teams is already scheduled at ${teamConflict.startTime} on ${match.date}.` },
         { status: 409 }
       );
     }

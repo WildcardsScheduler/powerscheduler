@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ShieldCheck, AlertCircle, CheckCircle2, Eye, EyeOff, ArrowLeft, UserCheck, Volleyball } from 'lucide-react';
 
 function AdminContent() {
@@ -38,7 +38,7 @@ function AdminContent() {
 
       setAdminSuccess('Administrator Authorized. Redirecting to Management Dashboard...');
       setTimeout(() => {
-        window.location.href = '/';
+        router.replace('/');
       }, 400);
     } catch {
       setAdminError('Unable to connect to authentication service.');

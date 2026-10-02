@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Match, Team, Location, Division } from '@/types/league';
-import { Printer, X, Calendar, User, FileText, Check, Layers, MapPin } from 'lucide-react';
+import { Printer, X, User, FileText, Layers } from 'lucide-react';
 import { formatTime, formatTimeRange } from '@/utils/formatUtils';
 
 interface PrintScheduleModalProps {
@@ -32,6 +32,8 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Only render on the client (the print view uses browser-only APIs)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -401,7 +403,7 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
         {/* Footer (Screen only) */}
         <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 no-print">
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Tip: Select "Save as PDF" in your browser print window to create a PDF file.
+            Tip: Select &quot;Save as PDF&quot; in your browser print window to create a PDF file.
           </p>
           <div className="flex items-center space-x-2">
             <button
@@ -509,8 +511,6 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
                 const isAway = m.awayTeamId === teamId;
                 const isRef = m.workTeamId === teamId;
 
-                const opponentId = isHome ? m.awayTeamId : isAway ? m.homeTeamId : '';
-                const opponentName = opponentId ? teamMap.get(opponentId)?.name || opponentId : '';
                 const locationLabel = getMatchLocationName(m);
 
                 return (

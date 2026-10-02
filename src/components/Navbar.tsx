@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Volleyball, ShieldCheck, UserCheck, Trophy, Globe, LogIn, LogOut, Lock, BookOpen, Download, Sun, Moon } from 'lucide-react';
+import { ShieldCheck, UserCheck, LogIn, LogOut, BookOpen, Sun, Moon } from 'lucide-react';
 import { LeagueSeason } from '@/types/league';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -27,24 +27,14 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  leagues,
-  activeLeagueId,
   currentRole,
   authRole,
-  authLeagueId,
-  authLeagueName,
   activeTeamName,
   authTeamName,
-  onRoleChange,
-  onSelectLeague,
-  onOpenLeagueManager,
   onOpenRulesModal,
-  onOpenInstallModal,
-  onOpenLoginModal,
   onLogout,
 }) => {
   const { resolvedTheme, toggleTheme } = useTheme();
-  const activeLeague = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
 
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-[#0e1012] backdrop-blur-md border-b border-slate-200 dark:border-[#1c1f24] text-slate-900 dark:text-white w-full overflow-x-hidden transition-colors duration-150">

@@ -97,6 +97,7 @@ export async function POST(request: Request) {
       const cleanStore: LeagueStoreData = {
         leagues: initialLeaguesList,
         activeId: initialLeaguesList[0].id,
+        version: currentStore.version, // setStoreData increments; versions must never go backwards
       };
       await setStoreData(cleanStore);
       return NextResponse.json({
@@ -129,7 +130,11 @@ export async function POST(request: Request) {
       })),
     }));
 
-    const updatedStore: LeagueStoreData = { leagues: preservedLeagues, activeId: activeId || preservedLeagues[0].id };
+    const updatedStore: LeagueStoreData = {
+      leagues: preservedLeagues,
+      activeId: activeId || preservedLeagues[0].id,
+      version: currentStore.version, // setStoreData increments; versions must never go backwards
+    };
     await setStoreData(updatedStore);
 
     return NextResponse.json({

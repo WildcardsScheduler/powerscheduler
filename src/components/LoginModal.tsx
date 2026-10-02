@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { LeagueSeason, Team } from '@/types/league';
-import { KeyRound, ShieldCheck, UserCheck, X, AlertCircle, Sparkles, CheckCircle2, Lock, Eye, EyeOff } from 'lucide-react';
+import { LeagueSeason } from '@/types/league';
+import { KeyRound, ShieldCheck, UserCheck, X, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -35,7 +35,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const targetLeague = leagues?.find((l) => l.id === selectedLeagueId) || leagues?.[0];
 
   // Team Captain Form State
-  const [selectedTeamId, setSelectedTeamId] = useState<string>(targetLeague?.teams?.[0]?.id || '');
+  const [chosenTeamId, setChosenTeamId] = useState<string>(targetLeague?.teams?.[0]?.id || '');
+  // Fall back to the league's first team if the chosen one isn't in the selected league
+  const selectedTeamId = targetLeague?.teams?.some((t) => t.id === chosenTeamId)
+    ? chosenTeamId
+    : targetLeague?.teams?.[0]?.id || '';
   const [captainPin, setCaptainPin] = useState<string>('');
   const [showCaptainPin, setShowCaptainPin] = useState<boolean>(false);
   const [teamError, setTeamError] = useState<string>('');
@@ -47,42 +51,29 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [adminError, setAdminError] = useState<string>('');
   const [adminSuccess, setAdminSuccess] = useState<string>('');
 
-  // Update team selection ONLY when modal opens
-  React.useEffect(() => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reset the form ONLY when the modal opens (not when background polling refreshes leagues).
+  // State is adjusted during render, per React's "reset state when a prop changes" pattern.
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
     if (isOpen) {
-      if (initialTab) {
-        setActiveTab(initialTab);
-      }
+      setActiveTab(initialTab);
       setSelectedLeagueId(activeLeagueId);
       const currL = leagues?.find((l) => l.id === activeLeagueId) || leagues?.[0];
-      if (currL && currL.teams && currL.teams.length > 0) {
-        setSelectedTeamId(currL.teams[0].id);
-      } else {
-        setSelectedTeamId('');
-      }
+      setChosenTeamId(currL?.teams?.[0]?.id || '');
       setCaptainPin('');
       setAdminPasscode('');
       setTeamError('');
       setAdminError('');
       setTeamSuccess('');
       setAdminSuccess('');
+      setIsSubmitting(false);
     }
-  }, [isOpen, initialTab, activeLeagueId, leagues]);
-
-  // Ensure selected team is valid if targetLeague changes
-  React.useEffect(() => {
-    if (isOpen && targetLeague && targetLeague.teams && targetLeague.teams.length > 0) {
-      if (!targetLeague.teams.some((t) => t.id === selectedTeamId)) {
-        setSelectedTeamId(targetLeague.teams[0].id);
-      }
-    } else if (isOpen) {
-      setSelectedTeamId('');
-    }
-  }, [isOpen, selectedLeagueId, targetLeague, selectedTeamId]);
+  }
 
   if (!isOpen) return null;
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCaptainLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -260,7 +251,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       onSelectLeague(newId);
                       const targetL = leagues.find((l) => l.id === newId);
                       if (targetL && targetL.teams.length > 0) {
-                        setSelectedTeamId(targetL.teams[0].id);
+                        setChosenTeamId(targetL.teams[0].id);
                       }
                       setCaptainPin('');
                       setTeamError('');
@@ -308,7 +299,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     <select
                       value={selectedTeamId}
                       onChange={(e) => {
-                        setSelectedTeamId(e.target.value);
+                        setChosenTeamId(e.target.value);
                         setCaptainPin('');
                         setTeamError('');
                         setTeamSuccess('');
@@ -372,7 +363,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] font-black text-sm shadow-xs transition-all flex items-center justify-center space-x-2"
+                    disabled={isSubmitting}
+                    className="w-full py-3 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] font-black text-sm shadow-xs transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <UserCheck className="h-4 w-4" />
                     <span>Log In as Team Captain</span>
@@ -430,7 +422,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] font-black text-sm shadow-xs transition-all flex items-center justify-center space-x-2"
+                    disabled={isSubmitting}
+                className="w-full py-3 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] font-black text-sm shadow-xs transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ShieldCheck className="h-4 w-4" />
                 <span>Log In as Administrator</span>

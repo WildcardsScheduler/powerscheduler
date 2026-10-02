@@ -1,10 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Match, Team, Location, Division, SubLocation, SetScore } from '@/types/league';
-import { X, Calendar, Clock, MapPin, Building2, ShieldAlert, ArrowLeftRight, Trash2, CheckCircle2, AlertTriangle, Scale, Plus, Check, Sun, Moon } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Match, Team, Location, Division, SubLocation } from '@/types/league';
+import { X, Calendar, Clock, MapPin, Building2, ShieldAlert, ArrowLeftRight, Trash2, AlertTriangle, Scale, Check } from 'lucide-react';
 import { calculateScheduleFairnessReport } from '@/utils/schedulerEngine';
-import { formatTime, formatTimeRange } from '@/utils/formatUtils';
+import { formatTime, formatTimeRange, timeRangesOverlap } from '@/utils/formatUtils';
+
+// Today's date as YYYY-MM-DD in the user's local time zone (toISOString() uses UTC,
+// which is already tomorrow during Canadian evenings).
+function todayLocalIso(): string {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
 
 const COMMON_TIMES = [
   '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -27,6 +36,26 @@ interface MatchEditorModalProps {
   onDeleteMatch?: (matchId: string) => void;
 }
 
+// Keeps recorded scores consistent when an admin edits the teams of a played match:
+// swapping home/away flips the set scores; replacing a team clears the result.
+function resolveScoresForTeams(
+  original: Match | null,
+  homeTeamId: string,
+  awayTeamId: string
+): Pick<Match, 'scores' | 'winnerId'> {
+  if (!original) return { scores: [], winnerId: undefined };
+  if (original.homeTeamId === homeTeamId && original.awayTeamId === awayTeamId) {
+    return { scores: original.scores || [], winnerId: original.winnerId };
+  }
+  if (original.homeTeamId === awayTeamId && original.awayTeamId === homeTeamId) {
+    return {
+      scores: (original.scores || []).map((s) => ({ ...s, homeScore: s.awayScore, awayScore: s.homeScore })),
+      winnerId: original.winnerId,
+    };
+  }
+  return { scores: [], winnerId: undefined };
+}
+
 export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
   isOpen,
   onClose,
@@ -39,67 +68,33 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
   onSaveMatch,
   onDeleteMatch,
 }) => {
-  // Form State
-  const [divisionId, setDivisionId] = useState<string>('');
-  const [weekNumber, setWeekNumber] = useState<number>(1);
-  const [date, setDate] = useState<string>('');
-  const [startTime, setStartTime] = useState<string>('18:30');
-  const [endTime, setEndTime] = useState<string>('19:30');
-  const [homeTeamId, setHomeTeamId] = useState<string>('');
-  const [awayTeamId, setAwayTeamId] = useState<string>('');
-  const [workTeamId, setWorkTeamId] = useState<string>('');
-  const [locationId, setLocationId] = useState<string>('');
-  const [subLocationId, setSubLocationId] = useState<string>('');
-  const [status, setStatus] = useState<Match['status']>('Scheduled');
-  const [isExhibition, setIsExhibition] = useState<boolean>(false);
-  const [notes, setNotes] = useState<string>('');
-
-  // Initial population ONLY on open transition or match switch (prevents background sync from wiping state)
-  const prevOpenRef = useRef(false);
-  const prevMatchIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    const isOpening = isOpen && !prevOpenRef.current;
-    const matchChanged = isOpen && match?.id !== prevMatchIdRef.current;
-
-    prevOpenRef.current = isOpen;
-    prevMatchIdRef.current = match?.id || null;
-
-    if (!isOpen) return;
-    if (!isOpening && !matchChanged) return;
-
-    if (match) {
-      setDivisionId(match.divisionId || selectedDivisionId || divisions[0]?.id || '');
-      setWeekNumber(match.weekNumber || 1);
-      setDate(match.date || new Date().toISOString().split('T')[0]);
-      setStartTime(match.startTime || '18:30');
-      setEndTime(match.endTime || '19:30');
-      setHomeTeamId(match.homeTeamId || '');
-      setAwayTeamId(match.awayTeamId || '');
-      setWorkTeamId(match.workTeamId || '');
-      setLocationId(match.locationId || locations[0]?.id || '');
-      setSubLocationId(match.subLocationId || match.courtId || '');
-      setStatus(match.status || 'Scheduled');
-      setIsExhibition(match.isExhibition || false);
-      setNotes(match.notes || '');
-    } else {
-      const activeDiv = selectedDivisionId || divisions[0]?.id || '';
-      const divTeams = teams.filter((t) => t.divisionId === activeDiv);
-      setDivisionId(activeDiv);
-      setWeekNumber(1);
-      setDate(new Date().toISOString().split('T')[0]);
-      setStartTime('18:30');
-      setEndTime('19:30');
-      setHomeTeamId(divTeams[0]?.id || teams[0]?.id || '');
-      setAwayTeamId(divTeams[1]?.id || teams[1]?.id || '');
-      setWorkTeamId('');
-      setLocationId(locations[0]?.id || '');
-      setSubLocationId(locations[0]?.subLocations[0]?.id || '1');
-      setStatus('Scheduled');
-      setIsExhibition(false);
-      setNotes('');
-    }
-  }, [isOpen, match?.id]);
+  // Form State. The parent mounts this modal fresh for each match it edits (keyed by match id),
+  // so initial values come straight from the match, and background polling can't wipe edits.
+  const newMatchDivisionId = selectedDivisionId || divisions[0]?.id || '';
+  const newMatchDivisionTeams = teams.filter((t) => t.divisionId === newMatchDivisionId);
+  const [newMatchId] = useState(() => `match-manual-${Date.now()}`);
+  const [divisionId] = useState<string>(
+    match ? match.divisionId || newMatchDivisionId : newMatchDivisionId
+  );
+  const [weekNumber, setWeekNumber] = useState<number>(match?.weekNumber || 1);
+  const [date, setDate] = useState<string>(() => match?.date || todayLocalIso());
+  const [startTime, setStartTime] = useState<string>(match?.startTime || '18:30');
+  const [endTime, setEndTime] = useState<string>(match?.endTime || '19:30');
+  const [homeTeamId, setHomeTeamId] = useState<string>(
+    match ? match.homeTeamId || '' : newMatchDivisionTeams[0]?.id || teams[0]?.id || ''
+  );
+  const [awayTeamId, setAwayTeamId] = useState<string>(
+    match ? match.awayTeamId || '' : newMatchDivisionTeams[1]?.id || teams[1]?.id || ''
+  );
+  const [workTeamId, setWorkTeamId] = useState<string>(match?.workTeamId || '');
+  const [locationId, setLocationId] = useState<string>(match?.locationId || locations[0]?.id || '');
+  const [subLocationId, setSubLocationId] = useState<string>(
+    match ? match.subLocationId || match.courtId || '' : locations[0]?.subLocations[0]?.id || ''
+  );
+  const [status, setStatus] = useState<Match['status']>(match?.status || 'Scheduled');
+  const [conflictError, setConflictError] = useState('');
+  const [isExhibition] = useState<boolean>(match?.isExhibition || false);
+  const [notes] = useState<string>(match?.notes || '');
 
   const currentDivTeams = useMemo(() => {
     if (divisions.length <= 1) return teams;
@@ -135,7 +130,7 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
 
   // Construct draft match object
   const draftMatch: Match = {
-    id: match?.id || `match-manual-${Date.now()}`,
+    id: match?.id || newMatchId,
     divisionId,
     weekNumber,
     date,
@@ -148,27 +143,22 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
     awayTeamId,
     workTeamId: workTeamId || undefined,
     status,
-    scores: match?.scores || [],
-    winnerId: match?.winnerId,
+    ...resolveScoresForTeams(match, homeTeamId, awayTeamId),
     isExhibition,
     notes,
   };
 
-  // Calculate live fairness metrics before and after this match edit
+  // Calculate live fairness metrics after this match edit
   const courtsList: SubLocation[] = locations.flatMap((l) => l.subLocations);
 
-  const beforeMatches = allMatches;
   const afterMatches = match
     ? allMatches.map((m) => (m.id === match.id ? draftMatch : m))
     : [...allMatches, draftMatch];
 
-  const beforeReport = calculateScheduleFairnessReport(currentDivTeams, beforeMatches, courtsList);
   const afterReport = calculateScheduleFairnessReport(currentDivTeams, afterMatches, courtsList);
 
-  const homeTeamBefore = beforeReport.teamMetrics.find((m) => m.teamId === homeTeamId);
   const homeTeamAfter = afterReport.teamMetrics.find((m) => m.teamId === homeTeamId);
 
-  const awayTeamBefore = beforeReport.teamMetrics.find((m) => m.teamId === awayTeamId);
   const awayTeamAfter = afterReport.teamMetrics.find((m) => m.teamId === awayTeamId);
 
   // Conflict Detection: Double-booking court at same date & time slot
@@ -177,22 +167,20 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
       m.id !== draftMatch.id &&
       m.date === date &&
       (m.subLocationId === subLocationId || m.courtId === subLocationId) &&
-      m.startTime === startTime
+      timeRangesOverlap(m.startTime, m.endTime, startTime, endTime)
   );
 
-  // Conflict Detection: Team already playing at same date & time slot
+  // Conflict Detection: Team already playing at an overlapping time
   const teamConflictMatch = allMatches.find(
     (m) =>
       m.id !== draftMatch.id &&
       m.date === date &&
-      m.startTime === startTime &&
+      timeRangesOverlap(m.startTime, m.endTime, startTime, endTime) &&
       (m.homeTeamId === homeTeamId ||
         m.awayTeamId === homeTeamId ||
         m.homeTeamId === awayTeamId ||
         m.awayTeamId === awayTeamId)
   );
-
-  const [conflictError, setConflictError] = useState('');
 
   // Check for same-day conflict / double header alert
   const homeOtherMatchesOnDate = afterMatches.filter(
@@ -212,12 +200,16 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
     }
 
     if (courtConflictMatch) {
-      setConflictError(`Court Conflict: Selected court is already booked at ${startTime} on ${date}.`);
+      setConflictError(
+        `Court Conflict: This court already has a match from ${formatTimeRange(courtConflictMatch.startTime, courtConflictMatch.endTime)} on ${date}.`
+      );
       return;
     }
 
     if (teamConflictMatch) {
-      setConflictError(`Team Conflict: One of the selected teams is already playing at ${startTime} on ${date}.`);
+      setConflictError(
+        `Team Conflict: One of the selected teams is already playing ${formatTimeRange(teamConflictMatch.startTime, teamConflictMatch.endTime)} on ${date}.`
+      );
       return;
     }
 
@@ -365,7 +357,7 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Status</label>
               <select
                 value={status}
-                onChange={(e) => setStatus(e.target.value as any)}
+                onChange={(e) => setStatus(e.target.value as Match['status'])}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
               >
                 <option value="Scheduled">Scheduled</option>
@@ -544,6 +536,19 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
               )}
             </div>
           </div>
+
+          {/* Conflict warning (live, and repeated if Save is pressed) */}
+          {(conflictError || courtConflictMatch || teamConflictMatch) && (
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-semibold text-rose-700 dark:text-rose-400 flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                {conflictError ||
+                  (courtConflictMatch
+                    ? `This court already has a match ${formatTimeRange(courtConflictMatch.startTime, courtConflictMatch.endTime)} on ${date}.`
+                    : `One of these teams is already playing ${formatTimeRange(teamConflictMatch!.startTime, teamConflictMatch!.endTime)} on ${date}.`)}
+              </span>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 gap-3">

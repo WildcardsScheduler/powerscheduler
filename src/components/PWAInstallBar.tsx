@@ -1,11 +1,17 @@
 'use client';
 
+import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
-import { Smartphone, Download, X, Sparkles, Apple } from 'lucide-react';
+import { Download, X, Sparkles } from 'lucide-react';
 
 interface PWAInstallBarProps {
   onOpenInstallModal: () => void;
 }
+
+// iOS Safari exposes navigator.standalone when launched from the home screen
+const isRunningStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches ||
+  (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
 export const PWAInstallBar: React.FC<PWAInstallBarProps> = ({ onOpenInstallModal }) => {
   const [isStandalone, setIsStandalone] = useState(false);
@@ -13,14 +19,12 @@ export const PWAInstallBar: React.FC<PWAInstallBarProps> = ({ onOpenInstallModal
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    // Browser-only value, read after hydration (reading it during render would mismatch the server HTML)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
-    if (typeof window === 'undefined') return;
 
     // Check if running as installed standalone app
-    const checkStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
-    setIsStandalone(checkStandalone);
+    setIsStandalone(isRunningStandalone());
 
     const dismissedSession = sessionStorage.getItem('powerschedule_pwa_banner_dismissed');
     if (dismissedSession === 'true') {
@@ -45,9 +49,11 @@ export const PWAInstallBar: React.FC<PWAInstallBarProps> = ({ onOpenInstallModal
         {/* Left App Description */}
         <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
           <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-white dark:bg-[#1c1f24] border border-[#e5e7eb] dark:border-[#333943] p-1 flex items-center justify-center shrink-0 shadow-xs">
-            <img
+            <Image
               src="/icons/icon-192x192.png"
               alt="App Icon"
+              width={36}
+              height={36}
               className="h-full w-full object-contain rounded-lg"
             />
           </div>

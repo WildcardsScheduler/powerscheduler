@@ -1,153 +1,68 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { loadTs } from './helpers/loadTs.mjs';
 
-// Core scoring algorithm matching src/data/mockLeagueData.ts
-function computePointsForMatch(m, pointsSystem = 'fivb_3pt') {
-  // Evaluate regulation sets (sets 1 & 2)
-  const set1 = m.scores.find((s) => s.setNumber === 1) || m.scores[0];
-  const set2 = m.scores.find((s) => s.setNumber === 2) || m.scores[1];
+// Runs the real standings code from src/data/mockLeagueData.ts
+const { calculateStandings } = loadTs('src/data/mockLeagueData.ts');
 
-  let homeRegSets = 0;
-  let awayRegSets = 0;
-  if (set1) {
-    if (set1.homeScore > set1.awayScore) homeRegSets += 1;
-    else if (set1.awayScore > set1.homeScore) awayRegSets += 1;
-  }
-  if (set2) {
-    if (set2.homeScore > set2.awayScore) homeRegSets += 1;
-    else if (set2.awayScore > set2.homeScore) awayRegSets += 1;
-  }
+const TEAMS = [
+  { id: 'team-a', name: 'Team A', divisionId: 'div', badgeColor: '#000', captainName: '', captainEmail: '', captainPhone: '', roster: [] },
+  { id: 'team-b', name: 'Team B', divisionId: 'div', badgeColor: '#fff', captainName: '', captainEmail: '', captainPhone: '', roster: [] },
+];
 
-  // A regulation sweep occurs if a team won both of the first 2 sets (2-0 sweep)
-  const isRegulationSweep = homeRegSets === 2 || awayRegSets === 2;
-  const sweepWinnerId = homeRegSets === 2 ? m.homeTeamId : awayRegSets === 2 ? m.awayTeamId : null;
-
-  let homeSets = 0;
-  let awaySets = 0;
-  let homePointsFor = 0;
-  let awayPointsFor = 0;
-
-  m.scores.forEach((s) => {
-    const isThirdSet = s.setNumber === 3;
-
-    // Dead rubber: If already swept 2-0 in regulation, Set 3 is unofficial
-    if (isRegulationSweep && isThirdSet) {
-      return;
-    }
-
-    if (s.homeScore > s.awayScore) homeSets += 1;
-    else if (s.awayScore > s.homeScore) awaySets += 1;
-
-    homePointsFor += s.homeScore;
-    awayPointsFor += s.awayScore;
-  });
-
-  let homePoints = 0;
-  let awayPoints = 0;
-  const effectiveWinnerId = isRegulationSweep && sweepWinnerId ? sweepWinnerId : m.winnerId;
-
-  if (effectiveWinnerId === m.homeTeamId) {
-    if (pointsSystem === 'one_pt_per_set') {
-      homePoints += homeSets;
-      awayPoints += awaySets;
-    } else if (pointsSystem === 'win_loss_2pt') {
-      homePoints += 2;
-      awayPoints += 0;
-    } else if (pointsSystem === 'win_loss_3pt') {
-      homePoints += 3;
-      awayPoints += 0;
-    } else {
-      // 'fivb_3pt' (Default):
-      const isSweep = isRegulationSweep || awaySets === 0;
-      homePoints += isSweep ? 3 : 2;
-      awayPoints += isSweep ? 0 : 1;
-    }
-  } else if (effectiveWinnerId === m.awayTeamId) {
-    if (pointsSystem === 'one_pt_per_set') {
-      awayPoints += awaySets;
-      homePoints += homeSets;
-    } else if (pointsSystem === 'win_loss_2pt') {
-      awayPoints += 2;
-      homePoints += 0;
-    } else if (pointsSystem === 'win_loss_3pt') {
-      awayPoints += 3;
-      homePoints += 0;
-    } else {
-      // 'fivb_3pt' (Default):
-      const isSweep = isRegulationSweep || homeSets === 0;
-      awayPoints += isSweep ? 3 : 2;
-      homePoints += isSweep ? 0 : 1;
-    }
-  }
-
-  return { homePoints, awayPoints, homeSets, awaySets, homePointsFor, awayPointsFor };
+function rules(pointsSystem, overrides = {}) {
+  return {
+    totalSets: 3,
+    pointsPerSet: 25,
+    pointsPerDecidingSet: 15,
+    thirdSetRule: 'guaranteed_all',
+    winByTwo: true,
+    capRule: 'Win by 2 (Uncapped)',
+    excludeThirdSetPointsFromDiff: true,
+    standingsPointsSystem: pointsSystem,
+    ...overrides,
+  };
 }
 
+/** Standings for a single completed match between Team A (home) and Team B (away). */
+function computePointsForMatch(m, pointsSystem = 'fivb_3pt', ruleOverrides = {}) {
+  const match = {
+    id: 'm1',
+    divisionId: 'div',
+    weekNumber: 1,
+    date: '2026-09-08',
+    startTime: '18:30',
+    endTime: '19:30',
+    subLocationId: 'court-1',
+    status: 'Completed',
+    ...m,
+  };
+  const standings = calculateStandings(TEAMS, [match], 'div', rules(pointsSystem, ruleOverrides));
+  const home = standings.find((s) => s.teamId === 'team-a');
+  const away = standings.find((s) => s.teamId === 'team-b');
+  return {
+    homePoints: home.points,
+    awayPoints: away.points,
+    homeSets: home.setsWon,
+    awaySets: away.setsWon,
+    homeWins: home.wins,
+    awayWins: away.wins,
+    homePointsFor: home.pointsFor,
+    awayPointsFor: away.pointsFor,
+    homeDiff: home.pointDiff,
+  };
+}
+
+const sets = (...pairs) => pairs.map(([homeScore, awayScore], i) => ({ setNumber: i + 1, homeScore, awayScore }));
+
 describe('Standings Points System Calculations', () => {
-  const sweepMatch = {
-    homeTeamId: 'team-a',
-    awayTeamId: 'team-b',
-    winnerId: 'team-a',
-    scores: [
-      { setNumber: 1, homeScore: 25, awayScore: 20 },
-      { setNumber: 2, homeScore: 25, awayScore: 18 },
-    ],
-  };
-
-  const sweep30Match = {
-    homeTeamId: 'team-a',
-    awayTeamId: 'team-b',
-    winnerId: 'team-a',
-    scores: [
-      { setNumber: 1, homeScore: 25, awayScore: 20 },
-      { setNumber: 2, homeScore: 25, awayScore: 18 },
-      { setNumber: 3, homeScore: 25, awayScore: 21 },
-    ],
-  };
-
-  // Match where Team A won 2-0 in regulation, then played a fun 3rd set that Team B won (13-15)
-  const sweepWithExhibition3rdSetMatch = {
-    homeTeamId: 'team-a',
-    awayTeamId: 'team-b',
-    winnerId: 'team-a',
-    scores: [
-      { setNumber: 1, homeScore: 25, awayScore: 20 },
-      { setNumber: 2, homeScore: 25, awayScore: 18 },
-      { setNumber: 3, homeScore: 13, awayScore: 15 },
-    ],
-  };
-
-  const splitMatch = {
-    homeTeamId: 'team-a',
-    awayTeamId: 'team-b',
-    winnerId: 'team-a',
-    scores: [
-      { setNumber: 1, homeScore: 25, awayScore: 20 },
-      { setNumber: 2, homeScore: 20, awayScore: 25 },
-      { setNumber: 3, homeScore: 15, awayScore: 13 },
-    ],
-  };
-
-  const awaySweepMatch = {
-    homeTeamId: 'team-a',
-    awayTeamId: 'team-b',
-    winnerId: 'team-b',
-    scores: [
-      { setNumber: 1, homeScore: 19, awayScore: 25 },
-      { setNumber: 2, homeScore: 21, awayScore: 25 },
-    ],
-  };
-
-  const awaySplitMatch = {
-    homeTeamId: 'team-a',
-    awayTeamId: 'team-b',
-    winnerId: 'team-b',
-    scores: [
-      { setNumber: 1, homeScore: 25, awayScore: 21 },
-      { setNumber: 2, homeScore: 20, awayScore: 25 },
-      { setNumber: 3, homeScore: 12, awayScore: 15 },
-    ],
-  };
+  const sweepMatch = { homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-a', scores: sets([25, 20], [25, 18]) };
+  const sweep30Match = { homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-a', scores: sets([25, 20], [25, 18], [25, 21]) };
+  // Team A won 2-0 in regulation, then Team B won a 3rd set (13-15)
+  const sweepThenLostSet3Match = { homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-a', scores: sets([25, 20], [25, 18], [13, 15]) };
+  const splitMatch = { homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-a', scores: sets([25, 20], [20, 25], [15, 13]) };
+  const awaySweepMatch = { homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-b', scores: sets([19, 25], [21, 25]) };
+  const awaySplitMatch = { homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-b', scores: sets([25, 21], [20, 25], [12, 15]) };
 
   describe('FIVB 3-Point System (Default)', () => {
     test('awards 3 pts to winner, 0 pts to loser on 2-0 sweep', () => {
@@ -162,18 +77,17 @@ describe('Standings Points System Calculations', () => {
       assert.equal(res.awayPoints, 0);
     });
 
-    test('awards 3 pts to winner and 0 to loser even if exhibition set 3 was played after 2-0 sweep', () => {
-      const res = computePointsForMatch(sweepWithExhibition3rdSetMatch, 'fivb_3pt');
-      assert.equal(res.homePoints, 3, 'Winner of 2-0 regulation sweep maintains 3 points');
-      assert.equal(res.awayPoints, 0, 'Loser does not get a bonus point from an unofficial 3rd set');
-      assert.equal(res.homeSets, 2, 'Official sets won is 2');
-      assert.equal(res.awaySets, 0, 'Official sets won is 0');
-      // Set 3 points (13-15) must NOT count toward point totals:
+    test('a 3rd set played after a 2-0 sweep does not count at all', () => {
+      const res = computePointsForMatch(sweepThenLostSet3Match, 'fivb_3pt');
+      assert.equal(res.homePoints, 3, 'Winner of 2-0 regulation sweep keeps 3 points');
+      assert.equal(res.awayPoints, 0, 'Loser gets no bonus point from the dead-rubber set');
+      assert.equal(res.homeSets, 2);
+      assert.equal(res.awaySets, 0);
       assert.equal(res.homePointsFor, 50, 'Home points only include sets 1 & 2 (25 + 25)');
       assert.equal(res.awayPointsFor, 38, 'Away points only include sets 1 & 2 (20 + 18)');
     });
 
-    test('awards 2 pts to winner, 1 pt to loser on 2-1 deciding set split (tied 1-1 after 2 sets)', () => {
+    test('awards 2 pts to winner, 1 pt to loser on 2-1 deciding set split', () => {
       const res = computePointsForMatch(splitMatch, 'fivb_3pt');
       assert.equal(res.homePoints, 2);
       assert.equal(res.awayPoints, 1);
@@ -206,6 +120,29 @@ describe('Standings Points System Calculations', () => {
       assert.equal(res.homePoints, 2);
       assert.equal(res.awayPoints, 1);
     });
+
+    test('a 3rd set after a 2-0 sweep counts for sets and points', () => {
+      const res = computePointsForMatch(sweepThenLostSet3Match, 'one_pt_per_set');
+      assert.equal(res.homeSets, 2);
+      assert.equal(res.awaySets, 1, 'Team B is credited with the set it won');
+      assert.equal(res.homePoints, 2);
+      assert.equal(res.awayPoints, 1, 'Team B earns 1 point for winning set 3');
+      assert.equal(res.homeWins, 1, 'Team A still wins the match');
+    });
+
+    test('a 3rd set after a 2-0 sweep never counts towards +/-, even with the option off', () => {
+      const res = computePointsForMatch(sweepThenLostSet3Match, 'one_pt_per_set', { excludeThirdSetPointsFromDiff: false });
+      assert.equal(res.homePointsFor, 50, 'Only sets 1 & 2 count (25 + 25)');
+      assert.equal(res.awayPointsFor, 38, 'Only sets 1 & 2 count (20 + 18)');
+      assert.equal(res.homeDiff, 12);
+    });
+
+    test('a deciding 3rd set after 1-1 follows the +/- option', () => {
+      const excluded = computePointsForMatch(splitMatch, 'one_pt_per_set');
+      assert.equal(excluded.homeDiff, 0, 'Option on: sets 1 & 2 only (45 - 45)');
+      const included = computePointsForMatch(splitMatch, 'one_pt_per_set', { excludeThirdSetPointsFromDiff: false });
+      assert.equal(included.homeDiff, 2, 'Option off: set 3 (15-13) included');
+    });
   });
 
   describe('Win/Loss 2-Pt (win_loss_2pt)', () => {
@@ -234,5 +171,45 @@ describe('Standings Points System Calculations', () => {
       assert.equal(res.homePoints, 3);
       assert.equal(res.awayPoints, 0);
     });
+  });
+
+  describe('Best-of-5 matches', () => {
+    test('a 2-0 lead is not treated as a sweep: the 3-2 comeback winner gets the win', () => {
+      const comeback = {
+        homeTeamId: 'team-a',
+        awayTeamId: 'team-b',
+        winnerId: 'team-b',
+        scores: sets([25, 20], [25, 20], [20, 25], [20, 25], [10, 15]),
+      };
+      const res = computePointsForMatch(comeback, 'fivb_3pt', { totalSets: 5 });
+      assert.equal(res.awayWins, 1);
+      assert.equal(res.homeWins, 0);
+      assert.equal(res.awaySets, 3);
+      assert.equal(res.homeSets, 2);
+      assert.equal(res.awayPoints, 2);
+      assert.equal(res.homePoints, 1);
+    });
+  });
+});
+
+describe('Standings filtering and ranking', () => {
+  test('ignores exhibition, postponed and scheduled matches', () => {
+    const base = { homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-a', scores: sets([25, 20], [25, 18]) };
+    const ignored = [
+      { ...base, id: 'x1', status: 'Completed', isExhibition: true },
+      { ...base, id: 'x2', status: 'Postponed' },
+      { ...base, id: 'x3', status: 'Scheduled' },
+    ].map((m) => ({ divisionId: 'div', weekNumber: 1, date: '2026-09-08', startTime: '18:30', endTime: '', subLocationId: 'c', ...m }));
+    const standings = calculateStandings(TEAMS, ignored, 'div', rules('fivb_3pt'));
+    assert.ok(standings.every((s) => s.played === 0 && s.points === 0));
+  });
+
+  test('ranks by points first', () => {
+    const m = { id: 'm1', divisionId: 'div', weekNumber: 1, date: '2026-09-08', startTime: '18:30', endTime: '', subLocationId: 'c',
+      status: 'Completed', homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-b', scores: sets([19, 25], [21, 25]) };
+    const standings = calculateStandings(TEAMS, [m], 'div', rules('fivb_3pt'));
+    assert.equal(standings[0].teamId, 'team-b');
+    assert.equal(standings[0].rank, 1);
+    assert.equal(standings[1].rank, 2);
   });
 });

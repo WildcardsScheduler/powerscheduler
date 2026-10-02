@@ -31,20 +31,10 @@ export async function POST(
       );
     }
 
-    const { scores, winnerId, version } = parseResult.data;
+    const { scores, winnerId } = parseResult.data;
 
     const store = await getStoreData();
 
-    // Optimistic Concurrency Control check
-    if (version !== undefined && version !== store.version) {
-      return NextResponse.json(
-        {
-          error: 'Conflict: This match has been updated by another user or scorekeeper. Please refresh.',
-          currentVersion: store.version,
-        },
-        { status: 409 }
-      );
-    }
     let foundMatch: Match | undefined;
     let parentLeagueId: string | undefined;
 
@@ -77,17 +67,31 @@ export async function POST(
       }
     }
 
-    // Validate winnerId if supplied
-    if (winnerId && winnerId !== foundMatch.homeTeamId && winnerId !== foundMatch.awayTeamId) {
+    // The winner must be the team that won more of the submitted sets, so a
+    // mistaken or tampered request cannot record a loss as a win.
+    let homeSetsWon = 0;
+    let awaySetsWon = 0;
+    scores.forEach((s) => {
+      if (s.homeScore > s.awayScore) homeSetsWon++;
+      else if (s.awayScore > s.homeScore) awaySetsWon++;
+    });
+    if (homeSetsWon === awaySetsWon) {
       return NextResponse.json(
-        { error: 'Winner ID must belong to either the home team or away team.' },
+        { error: 'Scores are tied on sets. Enter the deciding set before saving.' },
+        { status: 400 }
+      );
+    }
+    const derivedWinnerId = homeSetsWon > awaySetsWon ? foundMatch.homeTeamId : foundMatch.awayTeamId;
+    if (winnerId && winnerId !== derivedWinnerId) {
+      return NextResponse.json(
+        { error: 'The selected winner does not match the set scores.' },
         { status: 400 }
       );
     }
 
     // Apply score update
     foundMatch.scores = scores;
-    foundMatch.winnerId = winnerId || undefined;
+    foundMatch.winnerId = derivedWinnerId;
     foundMatch.status = 'Completed';
 
     await setStoreData(store);

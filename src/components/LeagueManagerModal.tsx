@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LeagueSeason, SportType, MatchRules, ThirdSetRule, StandingsPointsSystem, DEFAULT_MATCH_RULES } from '@/types/league';
-import { X, Trophy, Plus, Calendar, Users, Building2, Layers, Edit3, Trash2, CheckCircle2, Sparkles, Check, Settings2, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { X, Trophy, Plus, Calendar, Users, Building2, Layers, Edit3, Trash2, CheckCircle2, Check, Settings2 } from 'lucide-react';
 
 interface LeagueManagerModalProps {
   leagues: LeagueSeason[];
@@ -34,7 +34,6 @@ interface LeagueManagerModalProps {
     publicFairnessReport?: boolean
   ) => void;
   onDeleteLeague: (id: string) => void;
-  onUpdateUniversalPasscode: (passcode: string) => void;
 }
 
 export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
@@ -46,41 +45,9 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
   onCreateLeague,
   onUpdateLeague,
   onDeleteLeague,
-  onUpdateUniversalPasscode,
 }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingLeagueId, setEditingLeagueId] = useState<string | null>(null);
-
-  // Universal Admin Passcode state (shared across all leagues)
-  const getActivePasscode = () => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('powerschedule_admin_passcode');
-      if (stored && stored.trim()) return stored.trim();
-    }
-    const fromLeague = leagues.find((l) => l.adminPasscode)?.adminPasscode;
-    return fromLeague || 'admin123';
-  };
-
-  const [universalPasscode, setUniversalPasscode] = useState(getActivePasscode);
-  const [showPasscode, setShowPasscode] = useState(false);
-  const [passcodeSaved, setPasscodeSaved] = useState(false);
-
-  // Sync state only when the modal is freshly opened
-  useEffect(() => {
-    if (isOpen) {
-      setUniversalPasscode(getActivePasscode());
-      setPasscodeSaved(false);
-    }
-  }, [isOpen]);
-
-  const handleSavePasscode = () => {
-    const val = universalPasscode.trim() || 'admin123';
-    onUpdateUniversalPasscode(val);
-    setPasscodeSaved(true);
-    setTimeout(() => {
-      setPasscodeSaved(false);
-    }, 6000);
-  };
 
   // New League Form State
   const [name, setName] = useState('');
@@ -222,63 +189,6 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
         {/* Content Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
 
-          {/* Universal Master Admin Passcode */}
-          <div className="p-4 bg-rose-50/60 dark:bg-slate-950 border border-rose-200 dark:border-rose-500/30 rounded-2xl space-y-2 shadow-sm">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                <KeyRound className="h-4 w-4" /> Universal Master Admin Passcode
-              </label>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                Current active: <strong className="text-rose-600 dark:text-rose-300 font-bold">{showPasscode ? universalPasscode : '••••••••'}</strong>
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed">
-              This is the single master password for all administrative access across every league season. Changing it here applies everywhere and updates all devices immediately.
-            </p>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type={showPasscode ? 'text' : 'password'}
-                  value={universalPasscode}
-                  onChange={(e) => { setUniversalPasscode(e.target.value); setPasscodeSaved(false); }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleSavePasscode();
-                    }
-                  }}
-                  placeholder="Enter Master Admin Passcode"
-                  className="w-full bg-white dark:bg-slate-900 border border-rose-200 dark:border-slate-800 text-rose-700 dark:text-rose-300 font-mono font-bold text-xs rounded-xl pl-3 pr-10 py-2.5 focus:ring-1 focus:ring-rose-500 focus:outline-none shadow-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPasscode(!showPasscode)}
-                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                  title={showPasscode ? "Hide Passcode" : "Show Passcode"}
-                >
-                  {showPasscode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={handleSavePasscode}
-                className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 ${
-                  passcodeSaved
-                    ? 'bg-emerald-600 text-white shadow-xs font-black'
-                    : 'bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-black shadow-xs'
-                }`}
-              >
-                {passcodeSaved ? <><Check className="h-4 w-4" /> Saved Everywhere!</> : 'Save Passcode'}
-              </button>
-            </div>
-            {passcodeSaved && (
-              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 animate-in fade-in">
-                <CheckCircle2 className="h-3 w-3" />
-                Universal admin password updated & synced across all league seasons and devices.
-              </p>
-            )}
-          </div>
-          
           {/* Top Bar with Add League Button */}
           <div className="flex items-center justify-between">
             <h4 className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
@@ -784,7 +694,11 @@ export const LeagueManagerModal: React.FC<LeagueManagerModalProps> = ({
                         </button>
 
                         <button
-                          onClick={() => onDeleteLeague(league.id)}
+                          onClick={() => {
+                            if (window.confirm(`Permanently delete league "${league.name}" with all its teams, schedule and scores? This cannot be undone.`)) {
+                              onDeleteLeague(league.id);
+                            }
+                          }}
                           disabled={leagues.length <= 1}
                           className={`p-1.5 rounded-lg bg-white dark:bg-slate-900 text-xs border border-slate-200 dark:border-slate-800 shadow-sm ${
                             leagues.length <= 1 ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed' : 'text-rose-500 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-slate-800'

@@ -1,10 +1,12 @@
-import { Match, Team, Court, DayOfWeek, AdvancedScheduleOptions, SubLocation } from '@/types/league';
+import { Match, Team, Court, DayOfWeek, SubLocation } from '@/types/league';
 
 export interface ScheduleGeneratorOptions {
   divisionId: string;
   teams: Team[];
   courts: Court[];
   startDate: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD (inclusive). When set, every valid date in the range is scheduled and weeksCount is ignored.
+  occupiedSlots?: string[]; // Court bookings to avoid (e.g. other divisions), keyed with slotKey(date, startTime, courtId)
   startTime?: string; // e.g. "18:30" (legacy fallback)
   matchDurationMinutes: number; // 60
   timeSlotsPerNight?: number; // legacy fallback
@@ -81,6 +83,8 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     teams,
     courts,
     startDate,
+    endDate,
+    occupiedSlots = [],
     startTime = '18:30',
     matchDurationMinutes = 60,
     timeSlotsPerNight = 3,
@@ -137,7 +141,11 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   }
 
   // Generate Available Playing Dates (excluding blackout dates and matching days of week)
-  const playingDates = generateValidDates(startDate, weeksCount, daysOfWeek, blackoutDates);
+  const playingDates = generateValidDates(startDate, weeksCount, daysOfWeek, blackoutDates, endDate);
+  if (playingDates.length === 0) {
+    warnings.push('No playing dates fall between the start and end date on the selected days.');
+    return { matches: [], warnings, report: emptyReport };
+  }
   if (blackoutDates.length > 0) {
     warnings.push(`Blackout dates active: ${blackoutDates.length} holiday/unavailable date(s) skipped.`);
   }
@@ -151,7 +159,11 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   const numTeams = pool.length;
   const roundsCount = numTeams - 1;
 
-  let currentRoundPool = [...pool];
+  // Court/time bookings made by other divisions on the same courts
+  const occupied = new Set(occupiedSlots);
+  const isCourtFree = (date: string, slotStart: string, courtId: string) =>
+    !occupied.has(slotKey(date, slotStart, courtId)) &&
+    !matches.some((m) => m.date === date && m.startTime === slotStart && m.courtId === courtId);
 
   // Tracking Matrix for Fairness Algorithms
   const timeSlotUsage = new Map<string, Map<string, number>>(); // teamId -> (slot -> count)
@@ -173,10 +185,35 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
 
   let matchIdCounter = 1;
 
+  // League nights in the same calendar week share a week number
+  const weekNumberByDate = buildWeekNumbers(playingDates);
+
+  // "Space out opponents": remember the night index each pair last met, and steer
+  // extra games (double headers, slot fills, weekly-play guarantees) away from recent rematches.
+  const lastMetNight = new Map<string, number>();
+  const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+  const SPACING_WINDOW = 3; // nights
+  let night = 1;
+  const recencyPenalty = (a: string, b: string) => {
+    if (!spaceOutOpponents) return 0;
+    const last = lastMetNight.get(pairKey(a, b));
+    return last === undefined ? 0 : Math.max(0, SPACING_WINDOW - (night - last));
+  };
+  // Lower is better: balance head-to-head counts first; a same-night rematch outweighs one extra meeting
+  const opponentScore = (a: string, b: string) =>
+    (headToHeadCounts.get(a)?.get(b) || 0) * 10 + recencyPenalty(a, b) * 4;
+  const recordMeeting = (home: string, away: string) => {
+    incrementMapCount(headToHeadCounts.get(home)!, away);
+    incrementMapCount(headToHeadCounts.get(away)!, home);
+    lastMetNight.set(pairKey(home, away), night);
+  };
+
   // Process schedule week by week
-  for (let week = 1; week <= weeksCount; week++) {
+  for (let week = 1; week <= playingDates.length; week++) {
+    night = week;
     const roundIndex = (week - 1) % roundsCount;
-    const dateStr = playingDates[week - 1] || addDaysToDate(startDate, (week - 1) * 7);
+    const dateStr = playingDates[week - 1];
+    const weekNumber = weekNumberByDate.get(dateStr) || week;
     
     // Pure Berger Table Rotation for this round
     const currentRoundPool = getBergerPoolForRound(pool, roundIndex);
@@ -224,6 +261,8 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
       const slotEnd = addMinutesToTimeString(slotStart, matchDurationMinutes);
 
       for (const court of courts) {
+        if (!isCourtFree(dateStr, slotStart, court.id)) continue;
+
         // Find best pairing for this (court, timeSlot) based on fairness scoring
         let bestPairingIdx = -1;
         let bestScore = Infinity;
@@ -261,7 +300,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
           const newMatch: Match = {
             id: `gen-${divisionId}-w${week}-m${matchIdCounter++}`,
             divisionId,
-            weekNumber: week,
+            weekNumber,
             date: dateStr,
             startTime: slotStart,
             endTime: slotEnd,
@@ -282,8 +321,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
           incrementMapCount(timeSlotUsage.get(pairing.away)!, slotStart);
           incrementMapCount(courtUsage.get(pairing.home)!, court.id);
           incrementMapCount(courtUsage.get(pairing.away)!, court.id);
-          incrementMapCount(headToHeadCounts.get(pairing.home)!, pairing.away);
-          incrementMapCount(headToHeadCounts.get(pairing.away)!, pairing.home);
+          recordMeeting(pairing.home, pairing.away);
 
           teamGameCounts.set(pairing.home, (teamGameCounts.get(pairing.home) || 0) + 1);
           teamGameCounts.set(pairing.away, (teamGameCounts.get(pairing.away) || 0) + 1);
@@ -292,7 +330,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     }
 
     if (scheduledPairs.size < roundPairings.length) {
-      warnings.push(`Week ${week}: Not enough courts/time-slots to schedule all ${roundPairings.length} matches.`);
+      warnings.push(`Week ${weekNumber} (${dateStr}): Not enough courts/time-slots to schedule all ${roundPairings.length} matches.`);
     }
 
     // Guarantee Every Team Plays Each League Night (No Bye / Sit-Out Weeks)
@@ -319,11 +357,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
             const slotEnd = addMinutesToTimeString(slotStart, matchDurationMinutes);
 
             for (const court of courts) {
-              const slotOccupied = matches.some(
-                (m) => m.date === dateStr && m.startTime === slotStart && m.courtId === court.id
-              );
-
-              if (!slotOccupied) {
+              if (isCourtFree(dateStr, slotStart, court.id)) {
                 const currentNightMatches = matches.filter((m) => m.date === dateStr);
                 const teamsBusyInSlot = new Set<string>();
                 currentNightMatches
@@ -343,7 +377,9 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
 
                 let opponentId: string | null = null;
                 if (otherUnscheduled.length > 0) {
-                  opponentId = otherUnscheduled[0];
+                  opponentId = otherUnscheduled.reduce((best, cand) =>
+                    opponentScore(uTeam, cand) < opponentScore(uTeam, best) ? cand : best
+                  );
                 } else {
                   // Find eligible double-header team
                   const eligibleOpponents = teamIds.filter((id) => {
@@ -358,17 +394,10 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
                   });
 
                   if (eligibleOpponents.length > 0) {
-                    // Pick opponent with lowest H2H count
-                    let minH2H = Infinity;
-                    let bestOpp = eligibleOpponents[0];
-                    for (const cand of eligibleOpponents) {
-                      const h2h = headToHeadCounts.get(uTeam)?.get(cand) || 0;
-                      if (h2h < minH2H) {
-                        minH2H = h2h;
-                        bestOpp = cand;
-                      }
-                    }
-                    opponentId = bestOpp;
+                    // Pick the opponent faced least (and least recently)
+                    opponentId = eligibleOpponents.reduce((best, cand) =>
+                      opponentScore(uTeam, cand) < opponentScore(uTeam, best) ? cand : best
+                    );
                   }
                 }
 
@@ -381,7 +410,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
                   const weeklyMatch: Match = {
                     id: `gen-${divisionId}-w${week}-m${matchIdCounter++}`,
                     divisionId,
-                    weekNumber: week,
+                    weekNumber,
                     date: dateStr,
                     startTime: slotStart,
                     endTime: slotEnd,
@@ -401,8 +430,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
                   incrementMapCount(timeSlotUsage.get(away)!, slotStart);
                   incrementMapCount(courtUsage.get(home)!, court.id);
                   incrementMapCount(courtUsage.get(away)!, court.id);
-                  incrementMapCount(headToHeadCounts.get(home)!, away);
-                  incrementMapCount(headToHeadCounts.get(away)!, home);
+                  recordMeeting(home, away);
                   teamGameCounts.set(home, (teamGameCounts.get(home) || 0) + 1);
                   teamGameCounts.set(away, (teamGameCounts.get(away) || 0) + 1);
 
@@ -423,12 +451,8 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
         const slotEnd = addMinutesToTimeString(slotStart, matchDurationMinutes);
 
         for (const court of courts) {
-          // Check if this slot already has a match scheduled
-          const slotOccupied = matches.some(
-            (m) => m.date === dateStr && m.startTime === slotStart && m.courtId === court.id
-          );
-
-          if (!slotOccupied) {
+          // Skip slots already used by this schedule or another division
+          if (isCourtFree(dateStr, slotStart, court.id)) {
             const dateMatches = matches.filter((m) => m.date === dateStr);
 
             // Find teams already playing in this specific time slot on this night
@@ -456,7 +480,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
             if (eligibleCandidates.length >= 2) {
               // Find candidate pair with LOWEST head-to-head count (and lowest games sum)
               let bestPair: { home: string; away: string } | null = null;
-              let minH2H = Infinity;
+              let bestPairScore = Infinity;
               let minGamesSum = Infinity;
 
               for (let i = 0; i < eligibleCandidates.length; i++) {
@@ -464,11 +488,11 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
                   const c1 = eligibleCandidates[i];
                   const c2 = eligibleCandidates[j];
 
-                  const h2h = headToHeadCounts.get(c1)?.get(c2) || 0;
+                  const pairScore = opponentScore(c1, c2);
                   const gamesSum = (teamGameCounts.get(c1) || 0) + (teamGameCounts.get(c2) || 0);
 
-                  if (h2h < minH2H || (h2h === minH2H && gamesSum < minGamesSum)) {
-                    minH2H = h2h;
+                  if (pairScore < bestPairScore || (pairScore === bestPairScore && gamesSum < minGamesSum)) {
+                    bestPairScore = pairScore;
                     minGamesSum = gamesSum;
                     bestPair = { home: c1, away: c2 };
                   }
@@ -484,7 +508,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
                 const fillMatch: Match = {
                   id: `gen-${divisionId}-w${week}-m${matchIdCounter++}`,
                   divisionId,
-                  weekNumber: week,
+                  weekNumber,
                   date: dateStr,
                   startTime: slotStart,
                   endTime: slotEnd,
@@ -507,8 +531,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
                 incrementMapCount(timeSlotUsage.get(away)!, slotStart);
                 incrementMapCount(courtUsage.get(home)!, court.id);
                 incrementMapCount(courtUsage.get(away)!, court.id);
-                incrementMapCount(headToHeadCounts.get(home)!, away);
-                incrementMapCount(headToHeadCounts.get(away)!, home);
+                recordMeeting(home, away);
 
                 teamGameCounts.set(home, (teamGameCounts.get(home) || 0) + 1);
                 teamGameCounts.set(away, (teamGameCounts.get(away) || 0) + 1);
@@ -591,7 +614,16 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   }
 
   // Compile Comprehensive Schedule Fairness & Completeness Report
-  const totalSlotsAvailable = playingDates.length * effectiveTimeSlots.length * courts.length;
+  let slotsBookedElsewhere = 0;
+  playingDates.forEach((d) =>
+    effectiveTimeSlots.forEach((t) =>
+      courts.forEach((c) => {
+        if (occupied.has(slotKey(d, t, c.id))) slotsBookedElsewhere++;
+      })
+    )
+  );
+  const totalSlotsAvailable =
+    playingDates.length * effectiveTimeSlots.length * courts.length - slotsBookedElsewhere;
   const totalSlotsFilled = matches.length;
   const slotUtilizationPercentage =
     totalSlotsAvailable > 0 ? Math.round((totalSlotsFilled / totalSlotsAvailable) * 100) : 100;
@@ -885,24 +917,42 @@ export function calculateScheduleFairnessReport(
   };
 }
 
-// Generates valid dates based on selected days of week and skips blackout dates
-function generateValidDates(
+export function slotKey(date: string, startTime: string, courtId: string): string {
+  return `${date}|${startTime}|${courtId}`;
+}
+
+// Formats a Date as YYYY-MM-DD using local time (toISOString() would convert to UTC first)
+function toLocalIsoDate(d: Date): string {
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+/**
+ * Valid playing dates on the selected days of week, skipping blackout dates.
+ * With an end date: every valid date from start to end (inclusive).
+ * Without one: the first `count` valid dates.
+ */
+export function generateValidDates(
   startDateStr: string,
   count: number,
   daysOfWeek: DayOfWeek[],
-  blackoutDates: string[]
+  blackoutDates: string[],
+  endDateStr?: string
 ): string[] {
   const result: string[] = [];
   const blackoutSet = new Set(blackoutDates);
   const targetDayIndices = new Set(daysOfWeek.map((d) => DAY_INDEX_MAP[d]));
+  if (targetDayIndices.size === 0 || !startDateStr) return result;
 
-  let current = new Date(startDateStr + 'T00:00:00');
-  
-  while (result.length < count) {
-    const dayOfWeek = current.getDay();
-    const isoDate = current.toISOString().split('T')[0];
+  const current = new Date(startDateStr + 'T00:00:00');
+  const end = endDateStr ? new Date(endDateStr + 'T00:00:00') : null;
+  const MAX_DAYS = 3 * 366; // safety bound
 
-    if (targetDayIndices.has(dayOfWeek) && !blackoutSet.has(isoDate)) {
+  for (let i = 0; i < MAX_DAYS; i++) {
+    if (end ? current > end : result.length >= count) break;
+    const isoDate = toLocalIsoDate(current);
+    if (targetDayIndices.has(current.getDay()) && !blackoutSet.has(isoDate)) {
       result.push(isoDate);
     }
     current.setDate(current.getDate() + 1);
@@ -911,47 +961,96 @@ function generateValidDates(
   return result;
 }
 
+/**
+ * Week number for each playing date: nights in the same Monday-Sunday week share a number,
+ * and weeks are numbered consecutively (a week with no games, e.g. a holiday, is skipped).
+ */
+export function buildWeekNumbers(playingDates: string[]): Map<string, number> {
+  const weekKey = (date: string) => {
+    const d = new Date(date + 'T00:00:00');
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // back to Monday
+    return toLocalIsoDate(d);
+  };
+  const result = new Map<string, number>();
+  let currentKey = '';
+  let weekNumber = 0;
+  [...playingDates].sort().forEach((date) => {
+    const key = weekKey(date);
+    if (key !== currentKey) {
+      currentKey = key;
+      weekNumber++;
+    }
+    result.set(date, weekNumber);
+  });
+  return result;
+}
+
 function incrementMapCount(map: Map<string, number>, key: string) {
   map.set(key, (map.get(key) || 0) + 1);
 }
 
+/**
+ * Assigns a work (referee) team to every match. Preference order:
+ *   1. a team playing in the slot directly before/after at the same location (already at the gym),
+ *   2. a team playing elsewhere that night,
+ *   3. a team not playing that night;
+ * ties go to the team with the fewest ref duties so far, so duty is spread evenly.
+ */
 function assignRefereesToMatches(matches: Match[], allTeamIds: string[]) {
-  const timeSlots = new Map<string, Match[]>();
+  const refCounts = new Map<string, number>(allTeamIds.map((id) => [id, 0]));
 
+  const byDate = new Map<string, Match[]>();
   matches.forEach((m) => {
-    const key = `${m.date}_${m.startTime}`;
-    const list = timeSlots.get(key) || [];
+    const list = byDate.get(m.date) || [];
     list.push(m);
-    timeSlots.set(key, list);
+    byDate.set(m.date, list);
   });
 
-  const timeSlotKeys = Array.from(timeSlots.keys()).sort();
+  Array.from(byDate.keys())
+    .sort()
+    .forEach((date) => {
+      const nightMatches = byDate.get(date)!;
+      const nightSlots = Array.from(new Set(nightMatches.map((m) => m.startTime))).sort();
 
-  timeSlotKeys.forEach((key) => {
-    const slotMatches = timeSlots.get(key) || [];
-    const playingTeams = new Set<string>();
-    
-    slotMatches.forEach((m) => {
-      playingTeams.add(m.homeTeamId);
-      playingTeams.add(m.awayTeamId);
+      nightSlots.forEach((slot, slotIdx) => {
+        const slotMatches = nightMatches.filter((m) => m.startTime === slot);
+        const busy = new Set<string>();
+        slotMatches.forEach((m) => {
+          busy.add(m.homeTeamId);
+          busy.add(m.awayTeamId);
+        });
+
+        slotMatches.forEach((m) => {
+          let bestTeam: string | undefined;
+          let bestScore = Infinity;
+
+          for (const teamId of allTeamIds) {
+            if (busy.has(teamId)) continue;
+            const teamGames = nightMatches.filter((x) => x.homeTeamId === teamId || x.awayTeamId === teamId);
+            let tier = 2;
+            if (teamGames.length > 0) {
+              const adjacentSameVenue = teamGames.some(
+                (x) =>
+                  Math.abs(nightSlots.indexOf(x.startTime) - slotIdx) === 1 &&
+                  (!m.locationId || !x.locationId || x.locationId === m.locationId)
+              );
+              tier = adjacentSameVenue ? 0 : 1;
+            }
+            const score = tier * 1000 + (refCounts.get(teamId) || 0);
+            if (score < bestScore) {
+              bestScore = score;
+              bestTeam = teamId;
+            }
+          }
+
+          if (bestTeam) {
+            m.workTeamId = bestTeam;
+            busy.add(bestTeam); // one court per work team per slot
+            refCounts.set(bestTeam, (refCounts.get(bestTeam) || 0) + 1);
+          }
+        });
+      });
     });
-
-    const availableRefs = allTeamIds.filter((tId) => !playingTeams.has(tId));
-    let refIdx = 0;
-
-    slotMatches.forEach((m) => {
-      if (availableRefs.length > 0) {
-        m.workTeamId = availableRefs[refIdx % availableRefs.length];
-        refIdx++;
-      }
-    });
-  });
-}
-
-function addDaysToDate(dateStr: string, days: number): string {
-  const date = new Date(dateStr + 'T00:00:00');
-  date.setDate(date.getDate() + days);
-  return date.toISOString().split('T')[0];
 }
 
 function addMinutesToTimeString(timeStr: string, minutes: number): string {

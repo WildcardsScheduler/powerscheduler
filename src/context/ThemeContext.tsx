@@ -25,6 +25,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
       if (stored === 'light' || stored === 'dark' || stored === 'system') {
+        // Browser-only value, read after hydration (reading it during render would mismatch the server HTML)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setThemeState(stored);
       } else {
         setThemeState('dark'); // Default to dark for existing consistency

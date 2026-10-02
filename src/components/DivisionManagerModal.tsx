@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Division, Team, SetFormat } from '@/types/league';
-import { X, Layers, Plus, Edit3, Trash2, Users, ArrowRightLeft, ShieldCheck, Check } from 'lucide-react';
+import { X, Layers, Plus, Edit3, Trash2, Users, ArrowRightLeft, Check } from 'lucide-react';
 
 interface DivisionManagerModalProps {
   divisions: Division[];
@@ -46,7 +46,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
   // Add Form State
   const [newName, setNewName] = useState('');
   const [newGender, setNewGender] = useState<Division['genderCategory']>('Co-Ed');
-  const [newSetFormat, setNewSetFormat] = useState<SetFormat>('Best of 3 (25-25-15)');
+  const [newSetFormat] = useState<SetFormat>('Best of 3 (25-25-15)');
   const [newMaxTeams, setNewMaxTeams] = useState<number>(8);
 
   // Edit Form State
@@ -145,7 +145,7 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                   {hasDivisions && <Check className="h-4 w-4 text-violet-600 dark:text-violet-400" />}
                 </div>
                 <p className="text-[11px] opacity-80 mt-1">
-                  Split teams into Division A, B, C or Co-Ed / Men's / Women's tiers.
+                  Split teams into Division A, B, C or Co-Ed / Men&apos;s / Women&apos;s tiers.
                 </p>
               </button>
             </div>
@@ -314,7 +314,11 @@ export const DivisionManagerModal: React.FC<DivisionManagerModalProps> = ({
                                 <Edit3 className="h-3.5 w-3.5" />
                               </button>
                               <button
-                                onClick={() => onDeleteDivision(div.id)}
+                                onClick={() => {
+                                  if (window.confirm(`Delete division "${div.name}"? Its teams will be moved to another division.`)) {
+                                    onDeleteDivision(div.id);
+                                  }
+                                }}
                                 disabled={divisions.length <= 1}
                                 className={`p-1 rounded-md ${
                                   divisions.length <= 1 ? 'text-slate-300 dark:text-slate-600' : 'text-rose-500 dark:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-900'

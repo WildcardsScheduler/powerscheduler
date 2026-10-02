@@ -1,27 +1,36 @@
 'use client';
 
+import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
-import { Download, Smartphone, Apple, Check, X, Share, PlusSquare, ArrowDown, ExternalLink } from 'lucide-react';
+import { Download, Smartphone, Apple, Check, X, Share, PlusSquare } from 'lucide-react';
 
 interface PWAInstallModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+// Chrome/Edge/Android "install app" prompt (not yet in TypeScript's DOM types)
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+// iOS Safari exposes navigator.standalone when launched from the home screen
+const isRunningStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches ||
+  (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
 export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClose }) => {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
     // Detect standalone PWA mode
-    const checkStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
-    setIsStandalone(checkStandalone);
+    // Browser-only value, read after hydration (reading it during render would mismatch the server HTML)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsStandalone(isRunningStandalone());
 
     // Detect iOS
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -31,7 +40,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
     // Capture Android/Desktop beforeinstallprompt event
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
@@ -86,9 +95,11 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
           
           {/* App Card Preview */}
           <div className="flex items-center space-x-4 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 p-4 rounded-2xl shadow-sm">
-            <img
+            <Image
               src="/icons/icon-192x192.png"
               alt="PowerSchedule App Icon"
+              width={64}
+              height={64}
               className="h-16 w-16 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 object-contain bg-white dark:bg-slate-950 p-1"
             />
             <div className="min-w-0 flex-1">

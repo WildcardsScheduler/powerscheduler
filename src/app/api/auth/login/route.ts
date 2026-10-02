@@ -1,8 +1,25 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getStoreData } from '@/lib/store';
-import { createSessionToken, COOKIE_NAME, SESSION_DURATION_MS } from '@/lib/auth';
+import { createSessionToken, safeEqual, COOKIE_NAME, SESSION_DURATION_MS } from '@/lib/auth';
 import { loginSchema } from '@/lib/validations/leagueSchemas';
+import { getClientIp, isLoginBlocked, recordLoginFailure, LoginLimit } from '@/lib/rateLimit';
+
+const tooManyAttempts = () => NextResponse.json(
+  { error: 'Too many failed attempts. Please wait 15 minutes and try again.' },
+  { status: 429 }
+);
+
+async function setSessionCookie(token: string) {
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: Math.floor(SESSION_DURATION_MS / 1000),
+  });
+}
 
 export async function POST(request: Request) {
   try {
@@ -20,28 +37,26 @@ export async function POST(request: Request) {
     }
 
     const { type, passcode, pin, leagueId, teamId } = parseResult.data;
-
-    const store = await getStoreData();
+    const ip = getClientIp(request);
 
     if (type === 'admin') {
+      const limits: LoginLimit[] = [
+        { key: `admin:ip:${ip}`, maxFailures: 10, windowSeconds: 15 * 60 },
+        { key: 'admin:global', maxFailures: 50, windowSeconds: 15 * 60 },
+      ];
+      if (await isLoginBlocked(limits)) return tooManyAttempts();
+
+      const store = await getStoreData();
       const serverPasscode = (process.env.ADMIN_PASSCODE || '').trim();
       const storedPasscode = store.leagues.find((l) => l.adminPasscode)?.adminPasscode?.trim();
       const validPasscode = serverPasscode || storedPasscode || 'admin123';
 
-      if (!passcode || passcode.trim() !== validPasscode) {
+      if (!passcode || !safeEqual(passcode.trim(), validPasscode)) {
+        await recordLoginFailure(limits);
         return NextResponse.json({ error: 'Invalid admin passcode.' }, { status: 401 });
       }
 
-      const token = await createSessionToken({ role: 'scheduler' });
-      const cookieStore = await cookies();
-      cookieStore.set(COOKIE_NAME, token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: Math.floor(SESSION_DURATION_MS / 1000),
-      });
-
+      await setSessionCookie(await createSessionToken({ role: 'scheduler' }));
       return NextResponse.json({
         success: true,
         role: 'scheduler',
@@ -54,33 +69,30 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'League ID and Team ID are required.' }, { status: 400 });
       }
 
-      const league = store.leagues.find((l) => l.id === leagueId) || store.leagues[0];
+      // Per-team limit stops PIN guessing even when the attacker rotates IPs.
+      const limits: LoginLimit[] = [
+        { key: `captain:ip:${ip}`, maxFailures: 20, windowSeconds: 15 * 60 },
+        { key: `captain:team:${teamId}`, maxFailures: 10, windowSeconds: 60 * 60 },
+      ];
+      if (await isLoginBlocked(limits)) return tooManyAttempts();
+
+      const store = await getStoreData();
+      const league = store.leagues.find((l) => l.id === leagueId);
       const team = league?.teams.find((t) => t.id === teamId);
 
-      if (!team) {
+      if (!league || !team) {
         return NextResponse.json({ error: 'Team not found.' }, { status: 404 });
       }
 
-      const validPin = (team.accessPin || '1234').trim();
-      if (!pin || pin.trim() !== validPin) {
-        return NextResponse.json({ error: 'Invalid 4-digit PIN.' }, { status: 401 });
+      const validPin = (team.accessPin || '').trim();
+      if (!validPin || !pin || !safeEqual(pin.trim(), validPin)) {
+        await recordLoginFailure(limits);
+        return NextResponse.json({ error: 'Invalid PIN.' }, { status: 401 });
       }
 
-      const token = await createSessionToken({
-        role: 'team_rep',
-        teamId: team.id,
-        leagueId: league.id,
-      });
-
-      const cookieStore = await cookies();
-      cookieStore.set(COOKIE_NAME, token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: Math.floor(SESSION_DURATION_MS / 1000),
-      });
-
+      await setSessionCookie(
+        await createSessionToken({ role: 'team_rep', teamId: team.id, leagueId: league.id })
+      );
       return NextResponse.json({
         success: true,
         role: 'team_rep',

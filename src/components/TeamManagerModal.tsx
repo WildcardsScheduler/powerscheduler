@@ -8,17 +8,11 @@ import {
   Plus,
   Edit3,
   Trash2,
-  UserPlus,
-  Shield,
-  Phone,
-  Mail,
-  User,
-  Palette,
-  Check,
+  UserPlus,User,Check,
   Search,
   KeyRound,
   Copy,
-  Dices,
+  Dices
 } from 'lucide-react';
 import { generateRandomPin } from '@/utils/pinGenerator';
 
@@ -111,11 +105,6 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
   const [newBadgeColor, setNewBadgeColor] = useState('#3b82f6');
   const [newAccessPin, setNewAccessPin] = useState(() => generateRandomPin());
 
-  // Sync the default division picker when the active league's divisions change
-  React.useEffect(() => {
-    setNewDivisionId(divisions[0]?.id || '');
-    setQuickBatchDivisionId(divisions[0]?.id || '');
-  }, [divisions[0]?.id]);
 
   // Edit Team Form State (derived from selected team)
   const selectedTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
@@ -144,19 +133,45 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
   const [editPGender, setEditPGender] = useState<Player['gender']>('M');
   const [editPIsCaptain, setEditPIsCaptain] = useState(false);
 
-  // Initialize edit form state when selected team changes
-  React.useEffect(() => {
-    if (selectedTeam) {
-      setEditName(selectedTeam.name);
-      setEditDivisionId(selectedTeam.divisionId);
-      setEditCaptainName(selectedTeam.captainName);
-      setEditCaptainEmail(selectedTeam.captainEmail);
-      setEditCaptainPhone(selectedTeam.captainPhone);
-      setEditBadgeColor(selectedTeam.badgeColor || '#3b82f6');
-      setEditAccessPin(selectedTeam.accessPin || '1234');
-      setEditingPlayerId(null);
-    }
-  }, [selectedTeamId, teams]);
+
+  // State below is adjusted during render, per React's "reset state when a prop changes" pattern.
+
+  // Sync the default division pickers when the active league's divisions change
+  const firstDivisionId = divisions[0]?.id || '';
+  const [lastFirstDivisionId, setLastFirstDivisionId] = useState(firstDivisionId);
+  if (firstDivisionId !== lastFirstDivisionId) {
+    setLastFirstDivisionId(firstDivisionId);
+    setNewDivisionId(firstDivisionId);
+    setQuickBatchDivisionId(firstDivisionId);
+  }
+
+  // Load the edit form when a different team is selected, or when THIS team's form fields change
+  // elsewhere. Roster/RSVP updates from captains don't touch these fields, so they no longer
+  // wipe edits in progress.
+  const editFormSource = selectedTeam
+    ? JSON.stringify([
+        selectedTeam.id,
+        selectedTeam.name,
+        selectedTeam.divisionId,
+        selectedTeam.captainName,
+        selectedTeam.captainEmail,
+        selectedTeam.captainPhone,
+        selectedTeam.badgeColor,
+        selectedTeam.accessPin,
+      ])
+    : '';
+  const [loadedEditFormSource, setLoadedEditFormSource] = useState('');
+  if (selectedTeam && editFormSource !== loadedEditFormSource) {
+    setLoadedEditFormSource(editFormSource);
+    setEditName(selectedTeam.name);
+    setEditDivisionId(selectedTeam.divisionId);
+    setEditCaptainName(selectedTeam.captainName);
+    setEditCaptainEmail(selectedTeam.captainEmail);
+    setEditCaptainPhone(selectedTeam.captainPhone);
+    setEditBadgeColor(selectedTeam.badgeColor || '#3b82f6');
+    setEditAccessPin(selectedTeam.accessPin || '1234');
+    setEditingPlayerId(null);
+  }
 
   if (!isOpen) return null;
 
@@ -376,7 +391,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                       <Users className="h-4 w-4" /> Quick Add Numbered Teams
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Generate placeholder teams ("Team 1", "Team 2", etc.) so you can perform schedule generation immediately and update names/captains later.
+                      Generate placeholder teams (&quot;Team 1&quot;, &quot;Team 2&quot;, etc.) so you can perform schedule generation immediately and update names/captains later.
                     </p>
                   </div>
                   {teams.length > 0 && (

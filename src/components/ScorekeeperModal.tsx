@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Match, Team, Division, SetScore, MatchRules, DEFAULT_MATCH_RULES } from '@/types/league';
-import { X, CheckCircle, Plus, Minus, Trophy, ShieldAlert, Info, AlertCircle, Lock } from 'lucide-react';
+import { X, CheckCircle, Plus, Minus, Trophy, ShieldAlert, Info, Lock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatTime } from '@/utils/formatUtils';
 
@@ -63,11 +63,6 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
   const [sets, setSets] = useState<SetScore[]>(() => {
     return ensureThreeSets(match.scores, totalSets);
   });
-
-  // Sync state if match or totalSets changes
-  useEffect(() => {
-    setSets(ensureThreeSets(match.scores, totalSets));
-  }, [match.id, match.scores, totalSets]);
 
   if (!isOpen || !homeTeam || !awayTeam) return null;
 

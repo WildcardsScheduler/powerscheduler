@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { initialLeaguesList, calculateStandings } from '@/data/mockLeagueData';
 import { LeagueSeason, Match, SetScore, TeamStanding, Location, SubLocation, SportType, Division, SetFormat, Team, Player, MatchRules } from '@/types/league';
 import { Navbar, UserRole } from '@/components/Navbar';
@@ -21,22 +21,36 @@ import { PWAInstallBar } from '@/components/PWAInstallBar';
 import { LeagueSelectorBar } from '@/components/LeagueSelectorBar';
 import { MatchEditorModal } from '@/components/MatchEditorModal';
 import { FairnessReportModal } from '@/components/FairnessReportModal';
+import { BackupModal } from '@/components/BackupModal';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
 import { formatMatchRulesDescription } from '@/utils/formatRules';
 import { generateRandomPin } from '@/utils/pinGenerator';
-import { Globe, Trophy, Users, Calendar, MapPin, BookOpen, Download } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 
 export default function Home() {
   const [leagues, setLeagues] = useState<LeagueSeason[]>(initialLeaguesList);
   const [activeLeagueId, setActiveLeagueId] = useState<string>(initialLeaguesList[0].id);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [selectedDivisionId, setSelectedDivisionId] = useState<string>(initialLeaguesList[0].divisions[0]?.id || '');
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(initialLeaguesList[0].teams[0]?.id || '');
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginModalTab, setLoginModalTab] = useState<'team' | 'admin'>('team');
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
-  const [isCloudSynced, setIsCloudSynced] = useState(false);
-  const [serverVersion, setServerVersion] = useState<number>(1);
+
+  // --- Cloud sync bookkeeping (refs so async callbacks always see current values) ---
+  // Store version of the data we last received from / saved to the server.
+  const versionRef = useRef<number>(0);
+  // JSON of the leagues tree + activeId as the server last knew them. Local state that
+  // differs from this has unsaved admin edits ("dirty").
+  const lastSyncedLeaguesRef = useRef<string>('');
+  const lastSyncedActiveIdRef = useRef<string>('');
+  const syncInFlightRef = useRef(false);
+  const syncQueuedRef = useRef(false);
+  const syncFailureAlertedRef = useRef(false);
+  // Count of in-flight targeted writes (scores, RSVPs, PINs) from captains.
+  const pendingWritesRef = useRef(0);
 
   // Helper to repair potential orphaned divisionIds
   const repairLeaguesData = (data: LeagueSeason[]) => {
@@ -55,67 +69,102 @@ export default function Home() {
     });
   };
 
-  const isDefaultInitialData = (data: LeagueSeason[]) => {
-    if (!data || data.length === 0) return true;
-    if (data.length !== initialLeaguesList.length) return false;
-    return data.every((l, idx) => {
-      const init = initialLeaguesList[idx];
-      return (
-        init &&
-        l.id === init.id &&
-        l.name === init.name &&
-        l.teams.length === init.teams.length &&
-        l.matches.length === init.matches.length
-      );
-    });
-  };
-
   // Listen for direct URL query params (e.g. ?login=admin, ?login=team, or ?admin=true)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const loginParam = params.get('login');
-      const adminParam = params.get('admin');
-      if (loginParam === 'admin' || adminParam === 'true') {
-        setLoginModalTab('admin');
-        setIsLoginModalOpen(true);
-      } else if (loginParam === 'team' || loginParam === 'true') {
-        setLoginModalTab('team');
-        setIsLoginModalOpen(true);
-      }
+    const params = new URLSearchParams(window.location.search);
+    const loginParam = params.get('login');
+    const tab =
+      loginParam === 'admin' || params.get('admin') === 'true'
+        ? 'admin'
+        : loginParam === 'team' || loginParam === 'true'
+        ? 'team'
+        : null;
+    if (tab) {
+      // Browser-only (URL) read after hydration; reading it during render would mismatch the server HTML
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLoginModalTab(tab);
+      setIsLoginModalOpen(true);
     }
   }, []);
+
+  const [authRole, setAuthRole] = useState<UserRole>('public');
+  const [authLeagueId, setAuthLeagueId] = useState<string | null>(null);
+  const [authTeamId, setAuthTeamId] = useState<string | null>(null);
+
+  // Latest values for async callbacks and the polling interval
+  const leaguesRef = useRef(leagues);
+  const activeLeagueIdRef = useRef(activeLeagueId);
+  const authRoleRef = useRef(authRole);
+  useEffect(() => {
+    leaguesRef.current = leagues;
+    activeLeagueIdRef.current = activeLeagueId;
+    authRoleRef.current = authRole;
+  }, [leagues, activeLeagueId, authRole]);
+
+  const hasUnsyncedAdminEdits = useCallback(
+    () =>
+      JSON.stringify(leaguesRef.current) !== lastSyncedLeaguesRef.current ||
+      activeLeagueIdRef.current !== lastSyncedActiveIdRef.current,
+    []
+  );
+
+  // Replace local state with the server's copy and mark it as synced.
+  const applyServerData = useCallback(
+    (data: { leagues: LeagueSeason[]; version?: number }) => {
+      const repaired = repairLeaguesData(data.leagues);
+      const json = JSON.stringify(repaired);
+      lastSyncedLeaguesRef.current = json;
+      leaguesRef.current = repaired;
+      if (typeof data.version === 'number') versionRef.current = data.version;
+      setLeagues((current) => (JSON.stringify(current) === json ? current : repaired));
+      try {
+        localStorage.setItem('powerschedule_leagues', json);
+      } catch {}
+      return repaired;
+    },
+    []
+  );
+
+  const refreshFromServer = useCallback(async () => {
+    try {
+      const res = await fetch('/api/leagues', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data?.leagues) && data.leagues.length > 0) return applyServerData(data);
+      }
+    } catch (err) {
+      console.warn('Failed to refresh league data:', err);
+    }
+    return null;
+  }, [applyServerData]);
 
   // Load state from online cloud API on mount (Cloud is the authoritative single source of truth)
   useEffect(() => {
     let isMounted = true;
+
+    // Older versions stored the admin passcode in plain text in the browser.
+    try {
+      localStorage.removeItem('powerschedule_admin_passcode');
+    } catch {}
+
+    const pickInitialLeagueId = (available: LeagueSeason[], serverActiveId?: string) => {
+      const defaultSavedId = localStorage.getItem('powerschedule_default_league_id');
+      if (defaultSavedId && available.some((l) => l.id === defaultSavedId)) return defaultSavedId;
+      if (serverActiveId && available.some((l) => l.id === serverActiveId)) return serverActiveId;
+      return available[0].id;
+    };
 
     const fetchCloudData = async () => {
       try {
         const res = await fetch('/api/leagues', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
-          if (data?.leagues && Array.isArray(data.leagues) && data.leagues.length > 0) {
-            const repaired = repairLeaguesData(data.leagues);
-            if (isMounted) {
-              setLeagues(repaired);
-              if (typeof data.version === 'number') {
-                setServerVersion(data.version);
-              }
-              const defaultSavedId = localStorage.getItem('powerschedule_default_league_id');
-              if (defaultSavedId && repaired.some((l: LeagueSeason) => l.id === defaultSavedId)) {
-                setActiveLeagueId(defaultSavedId);
-              } else if (data.activeId && repaired.some((l: LeagueSeason) => l.id === data.activeId)) {
-                setActiveLeagueId(data.activeId);
-              } else {
-                setActiveLeagueId(repaired[0].id);
-              }
-              setIsCloudSynced(true);
-            }
-            // Update offline cache
-            try {
-              localStorage.setItem('powerschedule_leagues', JSON.stringify(repaired));
-            } catch {}
+          if (isMounted && Array.isArray(data?.leagues) && data.leagues.length > 0) {
+            const repaired = applyServerData(data);
+            const initialId = pickInitialLeagueId(repaired, data.activeId);
+            lastSyncedActiveIdRef.current = initialId;
+            activeLeagueIdRef.current = initialId;
+            setActiveLeagueId(initialId);
             return;
           }
         }
@@ -123,21 +172,23 @@ export default function Home() {
         console.warn('Could not fetch online cloud data, falling back to local storage cache', err);
       }
 
-      // Offline / Local Storage Fallback only when cloud network is unreachable
+      // Offline / Local Storage Fallback only when cloud network is unreachable.
+      // Marked as "synced" with version 0 so an admin can never push this possibly-stale
+      // copy over the real data (the server will reject it as a version conflict).
       try {
         const rawSaved = localStorage.getItem('powerschedule_leagues');
         if (rawSaved) {
           const offlineData = JSON.parse(rawSaved);
           if (offlineData && Array.isArray(offlineData) && offlineData.length > 0 && isMounted) {
             const repaired = repairLeaguesData(offlineData);
+            lastSyncedLeaguesRef.current = JSON.stringify(repaired);
+            leaguesRef.current = repaired;
+            versionRef.current = 0;
             setLeagues(repaired);
-            const defaultSavedId = localStorage.getItem('powerschedule_default_league_id');
-            if (defaultSavedId && repaired.some((l: LeagueSeason) => l.id === defaultSavedId)) {
-              setActiveLeagueId(defaultSavedId);
-            } else {
-              setActiveLeagueId(repaired[0].id);
-            }
-            setIsCloudSynced(false);
+            const initialId = pickInitialLeagueId(repaired);
+            lastSyncedActiveIdRef.current = initialId;
+            activeLeagueIdRef.current = initialId;
+            setActiveLeagueId(initialId);
           }
         }
       } catch (err) {
@@ -152,11 +203,7 @@ export default function Home() {
     return () => {
       isMounted = false;
     };
-  }, []);
-
-  const [authRole, setAuthRole] = useState<UserRole>('public');
-  const [authLeagueId, setAuthLeagueId] = useState<string | null>(null);
-  const [authTeamId, setAuthTeamId] = useState<string | null>(null);
+  }, [applyServerData]);
 
   // Hydrate auth role from secure server session
   useEffect(() => {
@@ -193,7 +240,10 @@ export default function Home() {
     };
   }, [isLoaded]);
 
-  const handleLoginSuccess = (role: 'scheduler' | 'team_rep', teamId?: string, leagueId?: string) => {
+  const handleLoginSuccess = async (role: 'scheduler' | 'team_rep', teamId?: string, leagueId?: string) => {
+    // Reload with the new session BEFORE switching roles: the copy loaded while logged out
+    // has captain contact details and PINs stripped, and must never be saved back.
+    await refreshFromServer();
     setAuthRole(role);
     if (role === 'team_rep' && teamId && leagueId) {
       setAuthLeagueId(leagueId);
@@ -211,92 +261,173 @@ export default function Home() {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {}
     setAuthRole('public');
+    authRoleRef.current = 'public';
     setAuthLeagueId(null);
     setAuthTeamId(null);
     localStorage.removeItem('powerschedule_auth_role');
     localStorage.removeItem('powerschedule_auth_league_id');
     localStorage.removeItem('powerschedule_auth_team_id');
+    // Drop PINs / contact details from memory and the offline cache
+    await refreshFromServer();
   };
 
-  // Periodic polling interval to keep all devices (phone, desktop, public viewers) in sync
+  // Save the admin's full league tree. Only one save runs at a time; edits made
+  // meanwhile are picked up by a follow-up save.
+  const pushLeaguesToCloud = useCallback(async () => {
+    if (syncInFlightRef.current) {
+      syncQueuedRef.current = true;
+      return;
+    }
+    syncInFlightRef.current = true;
+    try {
+      do {
+        syncQueuedRef.current = false;
+        const leaguesSnapshot = leaguesRef.current;
+        const activeIdSnapshot = activeLeagueIdRef.current;
+        const leaguesJson = JSON.stringify(leaguesSnapshot);
+        if (leaguesJson === lastSyncedLeaguesRef.current && activeIdSnapshot === lastSyncedActiveIdRef.current) {
+          break;
+        }
+
+        const res = await fetch('/api/leagues', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ leagues: leaguesSnapshot, activeId: activeIdSnapshot, version: versionRef.current }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok) {
+          if (typeof data.version === 'number') versionRef.current = data.version;
+          lastSyncedLeaguesRef.current = leaguesJson;
+          lastSyncedActiveIdRef.current = activeIdSnapshot;
+          syncFailureAlertedRef.current = false;
+          continue;
+        }
+
+        if (res.status === 409) {
+          await refreshFromServer();
+          lastSyncedActiveIdRef.current = activeLeagueIdRef.current;
+          window.alert(
+            'Someone else saved a change at the same moment (for example, a captain entering a score), ' +
+              'so your last change was NOT saved.\n\nThe latest data has been loaded. Please check it and redo your change.'
+          );
+          break;
+        }
+
+        if (res.status === 401 || res.status === 403) {
+          window.alert('Your admin session has expired, so your last change was NOT saved. Please sign in again.');
+          setAuthRole('public');
+          authRoleRef.current = 'public';
+          await refreshFromServer();
+          break;
+        }
+
+        throw new Error(data.error || `HTTP ${res.status}`);
+      } while (syncQueuedRef.current);
+    } catch (err) {
+      if (!syncFailureAlertedRef.current) {
+        syncFailureAlertedRef.current = true;
+        window.alert(
+          `Could not save your changes to the cloud (${err instanceof Error ? err.message : 'network error'}). ` +
+            'Saving will be retried automatically. Please keep this page open until it succeeds.'
+        );
+      }
+    } finally {
+      syncInFlightRef.current = false;
+    }
+  }, [refreshFromServer]);
+
+  // Targeted write used by captains (scores, RSVPs, PIN changes). On failure the
+  // user is told and the optimistic local change is rolled back.
+  const sendTargetedWrite = useCallback(
+    async (url: string, method: 'POST' | 'PATCH', body: unknown, failureMessage: string) => {
+      pendingWritesRef.current += 1;
+      let ok = false;
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          if (typeof data.version === 'number') versionRef.current = Math.max(versionRef.current, data.version);
+          ok = true;
+        } else {
+          window.alert(`${failureMessage}: ${data.error || `HTTP ${res.status}`}`);
+        }
+      } catch {
+        window.alert(`${failureMessage}: network error. Please check your connection and try again.`);
+      } finally {
+        pendingWritesRef.current -= 1;
+      }
+      if (!ok) await refreshFromServer();
+      return ok;
+    },
+    [refreshFromServer]
+  );
+
+  // Periodic polling to keep all devices (phone, desktop, public viewers) in sync.
+  // Paused while the page is hidden (each poll is a database request), with an
+  // immediate refresh when the user comes back to it.
   useEffect(() => {
     if (!isLoaded) return;
-    const interval = setInterval(async () => {
+    const isBusy = () =>
+      syncInFlightRef.current ||
+      pendingWritesRef.current > 0 ||
+      (authRoleRef.current === 'scheduler' && hasUnsyncedAdminEdits());
+
+    const poll = async () => {
+      if (authRoleRef.current === 'scheduler' && hasUnsyncedAdminEdits() && !syncInFlightRef.current) {
+        // A previous save failed: retry it rather than overwriting the admin's edits.
+        // Runs even while hidden so unsaved changes aren't left waiting.
+        pushLeaguesToCloud();
+        return;
+      }
+      if (document.hidden) return;
+      if (isBusy()) return;
       try {
         const res = await fetch('/api/leagues', { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          if (data?.leagues && Array.isArray(data.leagues) && data.leagues.length > 0) {
-            const repaired = repairLeaguesData(data.leagues);
-            setLeagues((currentLeagues) => {
-              if (JSON.stringify(repaired) === JSON.stringify(currentLeagues)) {
-                return currentLeagues;
-              }
-              return repaired;
-            });
-            if (typeof data.version === 'number') {
-              setServerVersion(data.version);
-            }
-            setIsCloudSynced(true);
-            try {
-              localStorage.setItem('powerschedule_leagues', JSON.stringify(repaired));
-            } catch {}
-          }
-        }
+        if (!res.ok) return;
+        const data = await res.json();
+        // Local state may have changed while this request was in flight
+        if (isBusy()) return;
+        if (typeof data?.version === 'number' && data.version < versionRef.current) return;
+        if (Array.isArray(data?.leagues) && data.leagues.length > 0) applyServerData(data);
       } catch {
         // silent fail on network pulse
       }
-    }, 6000);
+    };
 
-    return () => clearInterval(interval);
-  }, [isLoaded]);
+    // Admins poll quickly so their copy stays fresh (fewer save conflicts with captains);
+    // everyone else mostly checks schedules and final scores, so 30s is plenty.
+    const interval = setInterval(poll, authRole === 'scheduler' ? 6000 : 30000);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) poll();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
-  // Persist state to online cloud API whenever leagues or active league changes (Scheduler Only)
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isLoaded, authRole, applyServerData, hasUnsyncedAdminEdits, pushLeaguesToCloud]);
+
+  // Persist the admin's local edits to the cloud
   useEffect(() => {
     if (!isLoaded) return;
     try {
-      localStorage.setItem('powerschedule_leagues', JSON.stringify(leagues));
       localStorage.setItem('powerschedule_active_league_id', activeLeagueId);
-
-      // Restrict full league tree write to authenticated administrators
-      if (authRole === 'scheduler') {
-        fetch('/api/leagues', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ leagues, activeId: activeLeagueId, version: serverVersion }),
-        })
-          .then(async (res) => {
-            if (res.ok) {
-              const data = await res.json();
-              if (typeof data?.version === 'number') setServerVersion(data.version);
-              setIsCloudSynced(true);
-            } else if (res.status === 409) {
-              console.warn('Schedule was concurrently updated; re-fetching latest state.');
-              const fresh = await fetch('/api/leagues', { cache: 'no-store' });
-              if (fresh.ok) {
-                const freshData = await fresh.json();
-                if (freshData?.leagues) setLeagues(repairLeaguesData(freshData.leagues));
-                if (typeof freshData?.version === 'number') setServerVersion(freshData.version);
-              }
-            }
-          })
-          .catch((err) => {
-            console.warn('Cloud sync post warning:', err);
-          });
-      }
-    } catch (err) {
-      console.error('Failed to save state', err);
+    } catch {}
+    if (authRole === 'scheduler' && hasUnsyncedAdminEdits()) {
+      // Saving to the server is a side effect; any state updates inside happen after the request
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      pushLeaguesToCloud();
     }
-  }, [leagues, activeLeagueId, isLoaded, authRole, serverVersion]);
+  }, [leagues, activeLeagueId, isLoaded, authRole, hasUnsyncedAdminEdits, pushLeaguesToCloud]);
 
   const league = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
 
-  const [selectedDivisionId, setSelectedDivisionId] = useState<string>(
-    league.divisions[0]?.id || ''
-  );
-  const [selectedTeamId, setSelectedTeamId] = useState<string>(
-    league.teams[0]?.id || ''
-  );
 
   // Modals State
   const [isScorekeeperOpen, setIsScorekeeperOpen] = useState(false);
@@ -309,6 +440,7 @@ export default function Home() {
   const [isMatchEditorOpen, setIsMatchEditorOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [isFairnessReportOpen, setIsFairnessReportOpen] = useState(false);
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
 
   // Derive effective role strictly for the current active league view
   const currentRole: UserRole =
@@ -381,9 +513,8 @@ export default function Home() {
     adminPasscode?: string,
     publicFairnessReport?: boolean
   ) => {
-    const localStored = typeof window !== 'undefined' ? localStorage.getItem('powerschedule_admin_passcode') : null;
     const existingPasscode = leagues.find((l) => l.adminPasscode)?.adminPasscode;
-    const universalPasscode = adminPasscode || localStored || existingPasscode || 'admin123';
+    const universalPasscode = adminPasscode || existingPasscode || 'admin123';
 
     const newLeague = autofill
       ? createSampleLeague(name, sport, startDate, endDate, maxTeams, hasDivisions, matchRules)
@@ -412,8 +543,7 @@ export default function Home() {
     publicFairnessReport?: boolean
   ) => {
     const formattedDesc = formatMatchRulesDescription(matchRules);
-    const localStored = typeof window !== 'undefined' ? localStorage.getItem('powerschedule_admin_passcode') : null;
-    const updatedPasscode = adminPasscode?.trim() || localStored || leagues.find((l) => l.adminPasscode)?.adminPasscode || 'admin123';
+    const updatedPasscode = adminPasscode?.trim() || leagues.find((l) => l.adminPasscode)?.adminPasscode || 'admin123';
 
     // Universal update across all leagues in the platform
     setLeagues((prev) =>
@@ -434,7 +564,7 @@ export default function Home() {
           divisions: isTarget
             ? l.divisions.map((d) => ({
                 ...d,
-                setFormat: formattedDesc as any,
+                setFormat: formattedDesc as SetFormat,
                 matchRules: matchRules,
               }))
             : l.divisions,
@@ -450,28 +580,6 @@ export default function Home() {
     if (activeLeagueId === id) {
       handleSelectLeague(nextLeagues[0].id);
     }
-  };
-
-  // Universal Admin Passcode — applies to all leagues and syncs everywhere immediately
-  const handleUpdateUniversalPasscode = (passcode: string) => {
-    const cleanPasscode = passcode.trim() || 'admin123';
-    try {
-      localStorage.setItem('powerschedule_admin_passcode', cleanPasscode);
-    } catch (e) {
-      console.warn('Failed to save admin passcode to localStorage', e);
-    }
-    setLeagues((prev) => {
-      const updated = prev.map((l) => ({ ...l, adminPasscode: cleanPasscode }));
-      // Immediately post to cloud store
-      fetch('/api/leagues', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leagues: updated, activeId: activeLeagueId }),
-      }).then(() => setIsCloudSynced(true)).catch((err) => {
-        console.warn('Cloud sync post error on passcode update:', err);
-      });
-      return updated;
-    });
   };
 
   // Division CRUD Handlers
@@ -684,21 +792,25 @@ export default function Home() {
         t.id === teamId ? { ...t, accessPin: cleanPin } : t
       ),
     }));
-    fetch(`/api/teams/${encodeURIComponent(teamId)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessPin: cleanPin, version: serverVersion }),
-    })
-      .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          if (typeof data.version === 'number') setServerVersion(data.version);
-        }
-      })
-      .catch((err) => console.warn('Failed to sync team PIN to server:', err));
+    if (authRole === 'scheduler') return; // saved by the admin sync effect
+    sendTargetedWrite(
+      `/api/teams/${encodeURIComponent(teamId)}`,
+      'PATCH',
+      { accessPin: cleanPin },
+      'Your new PIN was NOT saved'
+    );
   };
 
   const handleDeleteTeam = (teamId: string) => {
+    const team = league.teams.find((t) => t.id === teamId);
+    const matchCount = league.matches.filter((m) => m.homeTeamId === teamId || m.awayTeamId === teamId).length;
+    if (
+      !window.confirm(
+        `Delete "${team?.name || 'this team'}"? This also deletes its ${matchCount} scheduled/played match(es), including any scores. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
     updateActiveLeague((prev) => ({
       ...prev,
       teams: prev.teams.filter((t) => t.id !== teamId),
@@ -843,7 +955,6 @@ export default function Home() {
   };
 
   // Handle Score Save
-  // Handle Score Save via Scoped API
   const handleSaveMatchScore = async (matchId: string, scores: SetScore[], winnerId: string) => {
     // Optimistic UI update
     updateActiveLeague((prev) => ({
@@ -853,33 +964,16 @@ export default function Home() {
       ),
     }));
 
-    try {
-      const res = await fetch(`/api/matches/${encodeURIComponent(matchId)}/score`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scores, winnerId, version: serverVersion }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (typeof data.version === 'number') setServerVersion(data.version);
-      } else if (res.status === 409) {
-        console.warn('Match score conflict: re-fetching latest schedule.');
-        const fresh = await fetch('/api/leagues', { cache: 'no-store' });
-        if (fresh.ok) {
-          const freshData = await fresh.json();
-          if (freshData?.leagues) setLeagues(repairLeaguesData(freshData.leagues));
-          if (typeof freshData?.version === 'number') setServerVersion(freshData.version);
-        }
-      } else {
-        const err = await res.json();
-        console.warn('Failed to persist match score:', err.error);
-      }
-    } catch (e) {
-      console.warn('Network error saving match score:', e);
-    }
+    if (authRole === 'scheduler') return; // saved by the admin sync effect
+    await sendTargetedWrite(
+      `/api/matches/${encodeURIComponent(matchId)}/score`,
+      'POST',
+      { scores, winnerId },
+      'The match score was NOT saved'
+    );
   };
 
-  // Manual Match Edit & Reschedule Handlers via Scoped API
+  // Manual Match Edit & Reschedule Handlers (admin only; saved by the admin sync effect)
   const handleEditMatch = (match: Match) => {
     setEditingMatch(match);
     setIsMatchEditorOpen(true);
@@ -890,77 +984,36 @@ export default function Home() {
     setIsMatchEditorOpen(true);
   };
 
-  const handleSaveMatch = async (savedMatch: Match) => {
-    const exists = league.matches.some((m) => m.id === savedMatch.id);
-
-    // Optimistic UI update
+  const handleSaveMatch = (savedMatch: Match) => {
     updateActiveLeague((prev) => {
-      let updatedMatches: Match[];
-      if (exists) {
-        updatedMatches = prev.matches.map((m) => (m.id === savedMatch.id ? savedMatch : m));
-      } else {
-        updatedMatches = [...prev.matches, savedMatch];
-      }
+      const exists = prev.matches.some((m) => m.id === savedMatch.id);
       return {
         ...prev,
-        matches: updatedMatches,
+        matches: exists
+          ? prev.matches.map((m) => (m.id === savedMatch.id ? savedMatch : m))
+          : [...prev.matches, savedMatch],
       };
     });
     setIsMatchEditorOpen(false);
     setEditingMatch(null);
-
-    try {
-      let res: Response;
-      if (exists) {
-        res = await fetch(`/api/matches/${encodeURIComponent(savedMatch.id)}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...savedMatch, version: serverVersion }),
-        });
-      } else {
-        res = await fetch('/api/matches', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ leagueId: activeLeagueId, match: savedMatch, version: serverVersion }),
-        });
-      }
-      if (res.ok) {
-        const data = await res.json();
-        if (typeof data.version === 'number') setServerVersion(data.version);
-      } else if (res.status === 409) {
-        console.warn('Schedule conflict on match save: re-fetching latest schedule.');
-        const fresh = await fetch('/api/leagues', { cache: 'no-store' });
-        if (fresh.ok) {
-          const freshData = await fresh.json();
-          if (freshData?.leagues) setLeagues(repairLeaguesData(freshData.leagues));
-          if (typeof freshData?.version === 'number') setServerVersion(freshData.version);
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to persist match edit:', e);
-    }
   };
 
-  const handleDeleteMatch = async (matchId: string) => {
-    // Optimistic UI update
+  const handleDeleteMatch = (matchId: string) => {
     updateActiveLeague((prev) => ({
       ...prev,
       matches: prev.matches.filter((m) => m.id !== matchId),
     }));
     setIsMatchEditorOpen(false);
     setEditingMatch(null);
+  };
 
-    try {
-      const res = await fetch(`/api/matches/${encodeURIComponent(matchId)}`, {
-        method: 'DELETE',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (typeof data.version === 'number') setServerVersion(data.version);
-      }
-    } catch (e) {
-      console.warn('Failed to delete match on server:', e);
-    }
+  // Restore all leagues from a backup (admin only; saved to the cloud by the admin sync effect)
+  const handleRestoreBackup = (restored: LeagueSeason[], restoredActiveId?: string) => {
+    const repaired = repairLeaguesData(restored);
+    setLeagues(repaired);
+    const nextId =
+      restoredActiveId && repaired.some((l) => l.id === restoredActiveId) ? restoredActiveId : repaired[0].id;
+    handleSelectLeague(nextId, repaired.find((l) => l.id === nextId));
   };
 
   // Handle New Generated Schedule Apply
@@ -973,32 +1026,24 @@ export default function Home() {
 
   // Handle RSVP status update with server sync to /api/teams/[id]
   const handleUpdateRsvp = (teamId: string, playerId: string, status: 'Going' | 'Maybe' | 'Out') => {
-    updateActiveLeague((prev) => {
-      const targetTeam = prev.teams.find((t) => t.id === teamId);
-      if (targetTeam) {
-        const updatedRoster = targetTeam.roster.map((player) =>
-          player.id === playerId ? { ...player, rsvpStatus: status } : player
-        );
-        fetch(`/api/teams/${encodeURIComponent(teamId)}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roster: updatedRoster, version: serverVersion }),
-        })
-          .then(async (res) => {
-            if (res.ok) {
-              const data = await res.json();
-              if (typeof data.version === 'number') setServerVersion(data.version);
-            }
-          })
-          .catch((err) => console.warn('Failed to sync RSVP to server:', err));
+    const targetTeam = league.teams.find((t) => t.id === teamId);
+    if (!targetTeam) return;
+    const updatedRoster = targetTeam.roster.map((player) =>
+      player.id === playerId ? { ...player, rsvpStatus: status } : player
+    );
 
-        return {
-          ...prev,
-          teams: prev.teams.map((t) => (t.id === teamId ? { ...t, roster: updatedRoster } : t)),
-        };
-      }
-      return prev;
-    });
+    updateActiveLeague((prev) => ({
+      ...prev,
+      teams: prev.teams.map((t) => (t.id === teamId ? { ...t, roster: updatedRoster } : t)),
+    }));
+
+    if (authRole === 'scheduler') return; // saved by the admin sync effect
+    sendTargetedWrite(
+      `/api/teams/${encodeURIComponent(teamId)}`,
+      'PATCH',
+      { roster: updatedRoster },
+      'The RSVP was NOT saved'
+    );
   };
 
   const activeHomeTeam = activeScoreMatch
@@ -1082,6 +1127,7 @@ export default function Home() {
             onOpenLeagueManager={() => setIsLeagueManagerOpen(true)}
             onOpenRulesModal={() => setIsRulesModalOpen(true)}
             onOpenFairnessReport={() => setIsFairnessReportOpen(true)}
+            onOpenBackups={() => setIsBackupOpen(true)}
             selectedDivisionId={effectiveDivisionId}
             onSelectDivision={setSelectedDivisionId}
           />
@@ -1172,13 +1218,14 @@ export default function Home() {
       </main>
 
       {/* Court-side Mobile Scorekeeper Modal */}
-      {activeScoreMatch && activeDivision && (
+      {activeScoreMatch && (
         <ScorekeeperModal
+          key={activeScoreMatch.id}
           match={activeScoreMatch}
           homeTeam={activeHomeTeam}
           awayTeam={activeAwayTeam}
           workTeam={activeWorkTeam}
-          division={activeDivision}
+          division={league.divisions.find((d) => d.id === activeScoreMatch.divisionId) || activeDivision}
           leagueRules={league.matchRules}
           isOpen={isScorekeeperOpen}
           currentRole={currentRole}
@@ -1198,6 +1245,7 @@ export default function Home() {
         courts={allSubLocations}
         locations={league.locations}
         teams={league.teams}
+        existingMatches={league.matches}
         isOpen={isGeneratorOpen}
         onClose={() => setIsGeneratorOpen(false)}
         onApplySchedule={handleApplySchedule}
@@ -1228,7 +1276,6 @@ export default function Home() {
         onCreateLeague={handleCreateLeague}
         onUpdateLeague={handleUpdateLeague}
         onDeleteLeague={handleDeleteLeague}
-        onUpdateUniversalPasscode={handleUpdateUniversalPasscode}
       />
 
       {/* Division Structure & Team Assignment Manager Modal */}
@@ -1295,7 +1342,9 @@ export default function Home() {
       />
 
       {/* Manual Match Editor & In-Season Rescheduling Modal */}
+      {isMatchEditorOpen && (
       <MatchEditorModal
+        key={editingMatch?.id ?? 'new-match'}
         isOpen={isMatchEditorOpen}
         match={editingMatch}
         teams={league.teams}
@@ -1310,6 +1359,18 @@ export default function Home() {
         onSaveMatch={handleSaveMatch}
         onDeleteMatch={handleDeleteMatch}
       />
+      )}
+
+      {/* Backups (admin only) */}
+      {currentRole === 'scheduler' && isBackupOpen && (
+        <BackupModal
+          isOpen={isBackupOpen}
+          onClose={() => setIsBackupOpen(false)}
+          leagues={leagues}
+          activeLeagueId={activeLeagueId}
+          onRestore={handleRestoreBackup}
+        />
+      )}
 
       {/* Schedule Equity & Fairness Audit Report Modal */}
       <FairnessReportModal

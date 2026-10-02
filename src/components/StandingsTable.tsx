@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { TeamStanding, Division, MatchRules } from '@/types/league';
-import { Trophy, Info, Users, ShieldAlert, Award } from 'lucide-react';
+import { Trophy, Info, Users } from 'lucide-react';
 import { formatMatchRulesDescription } from '@/utils/formatRules';
 
 interface StandingsTableProps {

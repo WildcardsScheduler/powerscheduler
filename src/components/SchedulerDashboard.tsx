@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { LeagueSeason, Division, Team, Match, Location } from '@/types/league';
-import { ShieldCheck, Calendar, Sparkles, Building2, Plus, Layers, MapPin, Users, KeyRound, BookOpen, Scale } from 'lucide-react';
+import { ShieldCheck, Sparkles, Building2, Layers, MapPin, Users, Settings2, BookOpen, Scale, DatabaseBackup } from 'lucide-react';
 
 interface SchedulerDashboardProps {
   league: LeagueSeason;
@@ -17,6 +17,7 @@ interface SchedulerDashboardProps {
   onOpenLeagueManager: () => void;
   onOpenRulesModal?: () => void;
   onOpenFairnessReport?: () => void;
+  onOpenBackups?: () => void;
   selectedDivisionId: string;
   onSelectDivision: (id: string) => void;
 }
@@ -34,8 +35,7 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
   onOpenLeagueManager,
   onOpenRulesModal,
   onOpenFairnessReport,
-  selectedDivisionId,
-  onSelectDivision,
+  onOpenBackups,
 }) => {
   const refDutiesAssigned = matches.filter((m) => !!m.workTeamId).length;
   const totalSubLocations = locations.reduce((sum, loc) => sum + loc.subLocations.length, 0);
@@ -76,12 +76,22 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
             </button>
           )}
 
+          {onOpenBackups && (
+            <button
+              onClick={onOpenBackups}
+              className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#333943] font-semibold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5"
+            >
+              <DatabaseBackup className="h-4 w-4 text-slate-600 dark:text-[#a0aaba]" />
+              <span>Backups</span>
+            </button>
+          )}
+
           <button
             onClick={onOpenLeagueManager}
             className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#333943] font-semibold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5"
           >
-            <KeyRound className="h-4 w-4 text-slate-600 dark:text-[#a0aaba]" />
-            <span>Passcode & League Settings</span>
+            <Settings2 className="h-4 w-4 text-slate-600 dark:text-[#a0aaba]" />
+            <span>League Settings</span>
           </button>
 
           <button

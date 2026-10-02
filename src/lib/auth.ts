@@ -14,7 +14,22 @@ export const COOKIE_NAME = 'powerschedule_session';
 export const SESSION_DURATION_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 
 function getSecretKey(): string {
-  return process.env.AUTH_SECRET || 'powerschedule-fallback-secret-key-32b';
+  const secret = process.env.AUTH_SECRET;
+  // Reject the placeholder from .env.example: it's long enough but publicly known.
+  const isPlaceholder = secret?.startsWith('replace-with');
+  if (secret && secret.length >= 32 && !isPlaceholder) return secret;
+  // A publicly known fallback secret would let anyone forge an admin session cookie.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('AUTH_SECRET must be set to a random string of at least 32 characters in production.');
+  }
+  return 'powerschedule-dev-only-secret-key-not-for-production';
+}
+
+/** Constant-time string comparison for passcodes / PINs. */
+export function safeEqual(a: string, b: string): boolean {
+  const ha = crypto.createHash('sha256').update(a).digest();
+  const hb = crypto.createHash('sha256').update(b).digest();
+  return crypto.timingSafeEqual(ha, hb);
 }
 
 function sign(message: string, secret: string): string {

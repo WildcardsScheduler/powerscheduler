@@ -1,15 +1,21 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Division, SubLocation, Location, Team, Match, DayOfWeek } from '@/types/league';
-import { generateVolleyballSchedule, ScheduleFairnessReport, TeamFairnessMetric } from '@/utils/schedulerEngine';
+import {
+  generateVolleyballSchedule,
+  generateValidDates,
+  buildWeekNumbers,
+  slotKey,
+  ScheduleFairnessReport
+} from '@/utils/schedulerEngine';
 import {
   getCanadianHolidaysForDateRange,
   getDayOfWeekName,
   PROVINCE_OPTIONS,
   CanadianProvince,
 } from '@/utils/canadianHolidays';
-import { formatTime, formatTimeRange } from '@/utils/formatUtils';
+import { formatTime, formatTimeRange, formatShortDate } from '@/utils/formatUtils';
 import {
   X,
   Sparkles,
@@ -24,14 +30,11 @@ import {
   Flag,
   AlertCircle,
   Building2,
-  BarChart3,
-  PieChart,
-  ListFilter,
-  Zap,
+  BarChart3,Zap,
   CheckCircle2,
   SlidersHorizontal,
   Layers,
-  Printer,
+  Printer
 } from 'lucide-react';
 import { PrintScheduleModal } from './PrintScheduleModal';
 
@@ -40,6 +43,7 @@ interface ScheduleGeneratorModalProps {
   courts: SubLocation[];
   locations?: Location[];
   teams: Team[];
+  existingMatches?: Match[]; // All matches in the league (used to avoid courts booked by other divisions)
   isOpen: boolean;
   onClose: () => void;
   onApplySchedule: (newMatches: Match[], divisionId: string) => void;
@@ -62,6 +66,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   courts,
   locations,
   teams,
+  existingMatches = [],
   isOpen,
   onClose,
   onApplySchedule,
@@ -69,6 +74,12 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   defaultEndDate = '2026-11-24',
 }) => {
   const [selectedDivisionId, setSelectedDivisionId] = useState(divisions[0]?.id || '');
+  // Generated State & View Navigation
+  const [generatedMatches, setGeneratedMatches] = useState<Match[] | null>(null);
+  const [generatedReport, setGeneratedReport] = useState<ScheduleFairnessReport | null>(null);
+  const [viewMode, setViewMode] = useState<'config' | 'report' | 'fixtures'>('config');
+  const [previewWeek, setPreviewWeek] = useState<number>(1);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [matchDuration, setMatchDuration] = useState(60);
@@ -92,34 +103,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
     setGeneratedMatches(null);
   };
 
-  // Compute weeksCount automatically from the date range
-  const weeksCount = useMemo(() => {
-    if (!startDate || !endDate) return 8;
-    const start = new Date(startDate + 'T00:00:00Z');
-    const end = new Date(endDate + 'T00:00:00Z');
-    const diffMs = end.getTime() - start.getTime();
-    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-    return Math.max(1, Math.round(diffDays / 7));
-  }, [startDate, endDate]);
 
-  // Reset state ONLY when reopening the modal or switching division context
-  const firstDivisionId = divisions[0]?.id || '';
-
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedDivisionId(firstDivisionId);
-      setSelectedCourtIds((prev) => {
-        const valid = prev.filter((id) => courts.some((c) => c.id === id));
-        return valid.length > 0 ? valid : courts.map((c) => c.id);
-      });
-      setStartDate(defaultStartDate);
-      setEndDate(defaultEndDate);
-      setGeneratedMatches(null);
-      setGeneratedReport(null);
-      setWarnings([]);
-      setViewMode('config');
-    }
-  }, [isOpen, firstDivisionId]);
 
   // Days of Week Selection
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>(['Tuesday']);
@@ -144,6 +128,15 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   });
   const [newBlackoutDate, setNewBlackoutDate] = useState('');
 
+  // League nights between the start and end date (inclusive), after blackouts.
+  // Nights in the same calendar week share a week number.
+  const { nightsCount, weeksCount } = useMemo(() => {
+    if (!startDate || !endDate) return { nightsCount: 0, weeksCount: 0 };
+    const dates = generateValidDates(startDate, 0, selectedDays, blackoutDates, endDate);
+    const weekNumbers = buildWeekNumbers(dates);
+    return { nightsCount: dates.length, weeksCount: new Set(weekNumbers.values()).size };
+  }, [startDate, endDate, selectedDays, blackoutDates]);
+
   // Advanced Rules & Priorities
   const [fillAllTimeslots, setFillAllTimeslots] = useState(true); // Default ON to maximize slot utilization
   const [guaranteeWeeklyPlay, setGuaranteeWeeklyPlay] = useState(true); // Guarantee every team plays on each league night
@@ -155,17 +148,29 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   const [fairnessTimeSlots, setFairnessTimeSlots] = useState(true);
   const [fairnessCourts, setFairnessCourts] = useState(true);
 
-  // Generated State & View Navigation
-  const [generatedMatches, setGeneratedMatches] = useState<Match[] | null>(null);
-  const [generatedReport, setGeneratedReport] = useState<ScheduleFairnessReport | null>(null);
-  const [viewMode, setViewMode] = useState<'config' | 'report' | 'fixtures'>('config');
-  const [previewWeek, setPreviewWeek] = useState<number>(1);
-  const [warnings, setWarnings] = useState<string[]>([]);
-
   // Head-to-Head Opponent Matrix View Mode
   const [h2hFilter, setH2hFilter] = useState<'breakdown' | 'official' | 'exhibition' | 'all'>('breakdown');
 
   const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
+
+  // Reset ONLY when the modal opens or the division list changes (state adjusted during render,
+  // per React's "reset state when a prop changes" pattern)
+  const resetKey = `${isOpen}|${divisions[0]?.id || ''}`;
+  const [lastResetKey, setLastResetKey] = useState(resetKey);
+  if (resetKey !== lastResetKey) {
+    setLastResetKey(resetKey);
+    if (isOpen) {
+      setSelectedDivisionId(divisions[0]?.id || '');
+      const validCourtIds = selectedCourtIds.filter((id) => courts.some((c) => c.id === id));
+      setSelectedCourtIds(validCourtIds.length > 0 ? validCourtIds : courts.map((c) => c.id));
+      setStartDate(defaultStartDate);
+      setEndDate(defaultEndDate);
+      setGeneratedMatches(null);
+      setGeneratedReport(null);
+      setWarnings([]);
+      setViewMode('config');
+    }
+  }
 
   if (!isOpen) return null;
 
@@ -236,8 +241,12 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
       teams: divisionTeams,
       courts: activeCourts,
       startDate,
+      endDate,
+      occupiedSlots: existingMatches
+        .filter((m) => m.divisionId !== selectedDivisionId)
+        .map((m) => slotKey(m.date, m.startTime, m.subLocationId || m.courtId || '')),
       matchDurationMinutes: Number(matchDuration),
-      weeksCount: weeksCount,
+      weeksCount: nightsCount,
       assignWorkTeams,
       daysOfWeek: selectedDays,
       timeSlots,
@@ -261,6 +270,15 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
   const handleConfirmAndApply = () => {
     if (generatedMatches) {
+      const divisionMatches = existingMatches.filter((m) => m.divisionId === selectedDivisionId);
+      const scoredCount = divisionMatches.filter((m) => m.status === 'Completed' || m.scores?.length > 0).length;
+      if (divisionMatches.length > 0) {
+        const message =
+          `This will REPLACE all ${divisionMatches.length} existing match(es) in this division` +
+          (scoredCount > 0 ? `, including ${scoredCount} with recorded scores, which will be lost` : '') +
+          '. Continue?';
+        if (!window.confirm(message)) return;
+      }
       onApplySchedule(generatedMatches, selectedDivisionId);
       onClose();
     }
@@ -401,7 +419,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none shadow-sm"
                   />
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
-                    <span className="bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-bold px-1.5 py-0.5 rounded">{weeksCount} weeks</span>
+                    <span className="bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-bold px-1.5 py-0.5 rounded">{weeksCount} weeks{nightsCount !== weeksCount ? ` · ${nightsCount} nights` : ''}</span>
                     <span>calculated from date range</span>
                   </p>
                 </div>
@@ -1410,6 +1428,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                 <div className="space-y-2">
                   {generatedMatches
                     .filter((m) => m.weekNumber === previewWeek)
+                    .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime))
                     .map((m) => {
                       const hTeam = teams.find((t) => t.id === m.homeTeamId)?.name || m.homeTeamId;
                       const aTeam = teams.find((t) => t.id === m.awayTeamId)?.name || m.awayTeamId;
@@ -1423,6 +1442,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                         >
                           <div className="flex items-center space-x-3">
                             <span className="font-mono text-amber-700 dark:text-amber-400 font-bold bg-slate-100 dark:bg-slate-950 px-2 py-1 rounded border border-slate-200 dark:border-slate-800">
+                              {nightsCount !== weeksCount && `${formatShortDate(m.date)} · `}
                               {formatTimeRange(m.startTime, m.endTime)}
                             </span>
                             <span className="text-slate-600 dark:text-slate-400 font-medium">📍 {courtName}</span>

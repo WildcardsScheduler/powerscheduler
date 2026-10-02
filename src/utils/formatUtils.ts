@@ -44,3 +44,45 @@ export function formatTimeRange(startTime?: string | null, endTime?: string | nu
   if (!startTime && endTime) return formatTime(endTime);
   return `${formatTime(startTime)} - ${formatTime(endTime)}`;
 }
+
+/**
+ * Formats a YYYY-MM-DD date as a short label, e.g. "Tue, Sep 15".
+ */
+export function formatShortDate(dateStr?: string | null): string {
+  if (!dateStr) return '';
+  return new Date(dateStr + 'T12:00:00Z').toLocaleDateString('en-CA', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+/** Minutes since midnight for a 24-hour "HH:MM" string, or null if unparseable. */
+export function timeToMinutes(timeStr?: string | null): number | null {
+  const match = timeStr?.trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+/**
+ * True if two time ranges on the same day overlap. Back-to-back games
+ * (one ends at 19:30, the next starts at 19:30) do not overlap.
+ * A missing end time is treated as start + defaultDurationMinutes.
+ */
+export function timeRangesOverlap(
+  aStart: string,
+  aEnd: string | undefined,
+  bStart: string,
+  bEnd: string | undefined,
+  defaultDurationMinutes = 60
+): boolean {
+  const as = timeToMinutes(aStart);
+  const bs = timeToMinutes(bStart);
+  if (as === null || bs === null) return aStart === bStart;
+  let ae = timeToMinutes(aEnd) ?? as + defaultDurationMinutes;
+  let be = timeToMinutes(bEnd) ?? bs + defaultDurationMinutes;
+  if (ae <= as) ae = as + defaultDurationMinutes;
+  if (be <= bs) be = bs + defaultDurationMinutes;
+  return as < be && bs < ae;
+}

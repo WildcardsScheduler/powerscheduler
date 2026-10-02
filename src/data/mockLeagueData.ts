@@ -1,4 +1,4 @@
-import { LeagueSeason, TeamStanding, Match, Team, DEFAULT_MATCH_RULES, MatchRules } from '@/types/league';
+import { LeagueSeason, TeamStanding, Match, Team, MatchRules } from '@/types/league';
 
 export const initialLeagueData: LeagueSeason = {
   id: 'league-fall-2026',
@@ -102,8 +102,12 @@ export function calculateStandings(
       else if (set2.awayScore > set2.homeScore) awayRegSets += 1;
     }
 
-    // A regulation sweep occurs if a team won both of the first 2 sets (2-0 sweep)
-    const isRegulationSweep = homeRegSets === 2 || awayRegSets === 2;
+    const pointsSystem = matchRules?.standingsPointsSystem || 'fivb_3pt';
+
+    // A regulation sweep occurs if a team won both of the first 2 sets (2-0 sweep).
+    // Only meaningful in 3-set matches: 2-0 does not decide a best-of-5.
+    const isThreeSetMatch = (matchRules?.totalSets ?? 3) <= 3;
+    const isRegulationSweep = isThreeSetMatch && (homeRegSets === 2 || awayRegSets === 2);
     const sweepWinnerId = homeRegSets === 2 ? m.homeTeamId : awayRegSets === 2 ? m.awayTeamId : null;
 
     let homeSets = 0;
@@ -111,10 +115,11 @@ export function calculateStandings(
 
     m.scores.forEach((s) => {
       const isThirdSet = s.setNumber === 3;
+      const isDeadRubber = isRegulationSweep && isThirdSet;
 
-      // If a team already swept 2-0 in regulation, any 3rd set played is an unofficial dead rubber:
-      // It does NOT count towards official sets won/lost, nor towards +/- point differential!
-      if (isRegulationSweep && isThirdSet) {
+      // A 3rd set played after a 2-0 sweep is a dead rubber. It never counts towards +/-.
+      // It only counts towards sets won/lost (and standings points) under "1 point per set won".
+      if (isDeadRubber && pointsSystem !== 'one_pt_per_set') {
         return;
       }
 
@@ -123,7 +128,7 @@ export function calculateStandings(
       else if (s.awayScore > s.homeScore) awaySets += 1;
 
       // Exclude 3rd set scores from +/- point totals if option enabled or if it was a dead rubber
-      if (!excludeThirdSet || !isThirdSet) {
+      if (!isDeadRubber && (!excludeThirdSet || !isThirdSet)) {
         home.pointsFor += s.homeScore;
         home.pointsAgainst += s.awayScore;
         away.pointsFor += s.awayScore;
@@ -136,7 +141,6 @@ export function calculateStandings(
     away.setsWon += awaySets;
     away.setsLost += homeSets;
 
-    const pointsSystem = matchRules?.standingsPointsSystem || 'fivb_3pt';
     const effectiveWinnerId = isRegulationSweep && sweepWinnerId ? sweepWinnerId : m.winnerId;
 
     if (effectiveWinnerId === m.homeTeamId) {

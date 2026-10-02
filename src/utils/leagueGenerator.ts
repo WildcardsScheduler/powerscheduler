@@ -1,5 +1,4 @@
-import { LeagueSeason, Division, Location, Team, Match, SportType, MatchRules, DEFAULT_MATCH_RULES } from '@/types/league';
-import { generateVolleyballSchedule } from './schedulerEngine';
+import { LeagueSeason, Division, Location, Team, Match, SportType, MatchRules, SetFormat, DEFAULT_MATCH_RULES } from '@/types/league';
 import { formatMatchRulesDescription } from './formatRules';
 import { generateRandomPin } from './pinGenerator';
 
@@ -21,7 +20,7 @@ export function createBlankLeague(
     id: `div-${timestamp}-main`,
     name: hasDivisions ? 'Division A' : 'Main Division',
     genderCategory: 'Co-Ed',
-    setFormat: initialFormat as any,
+    setFormat: initialFormat as SetFormat,
     matchRules: rules,
     capRule: 'Win by 2 (Uncapped)',
     workTeamRequired: true,
@@ -278,7 +277,6 @@ export function createSampleLeague(
 
   const teams: Team[] = [];
   const matches: Match[] = [];
-  const allSubLocs = locations.flatMap((l) => l.subLocations);
 
   divisions.forEach((division, divIndex) => {
     const targetCount = division.maxTeams || 8;

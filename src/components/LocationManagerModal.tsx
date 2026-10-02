@@ -269,7 +269,11 @@ export const LocationManagerModal: React.FC<LocationManagerModalProps> = ({
                       </button>
 
                       <button
-                        onClick={() => onDeleteLocation(loc.id)}
+                        onClick={() => {
+                          if (window.confirm(`Delete location "${loc.name}" and all of its courts? Matches booked on those courts will lose their court assignment.`)) {
+                            onDeleteLocation(loc.id);
+                          }
+                        }}
                         className="p-1.5 rounded-lg bg-white hover:bg-rose-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-rose-500 dark:text-rose-400 border border-slate-200 dark:border-slate-800 text-xs shadow-sm"
                         title="Delete Location"
                       >

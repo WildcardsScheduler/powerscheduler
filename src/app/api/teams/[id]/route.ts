@@ -43,16 +43,6 @@ export async function PATCH(
     const validatedData = parseResult.data;
     const store = await getStoreData();
 
-    // Optimistic Concurrency Control check
-    if (validatedData.version !== undefined && validatedData.version !== store.version) {
-      return NextResponse.json(
-        {
-          error: 'Conflict: This team has been updated by another user or session. Please refresh.',
-          currentVersion: store.version,
-        },
-        { status: 409 }
-      );
-    }
 
     let foundTeam: Team | undefined;
     let targetLeague: LeagueSeason | undefined;

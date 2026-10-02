@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth';
 import { getStoreData, setStoreData } from '@/lib/store';
 import { updateMatchRequestSchema } from '@/lib/validations/leagueSchemas';
 import { Match, LeagueSeason } from '@/types/league';
+import { timeRangesOverlap } from '@/utils/formatUtils';
 
 export async function PATCH(
   request: Request,
@@ -31,20 +32,14 @@ export async function PATCH(
       );
     }
 
-    const { version, ...updatedFields } = parseResult.data;
+    // Zod fills `.default()` values even for omitted keys, which would reset scores/status/notes
+    // on a partial update. Only apply fields the client actually sent.
+    const sentKeys = new Set(Object.keys(rawBody ?? {}));
+    const updatedFields = Object.fromEntries(
+      Object.entries(parseResult.data).filter(([key]) => key !== 'version' && sentKeys.has(key))
+    ) as Partial<Match>;
 
     const store = await getStoreData();
-
-    // Optimistic Concurrency Control check
-    if (version !== undefined && version !== store.version) {
-      return NextResponse.json(
-        {
-          error: 'Conflict: This match has been updated by another user. Please refresh.',
-          currentVersion: store.version,
-        },
-        { status: 409 }
-      );
-    }
 
     let foundMatch: Match | undefined;
     let targetLeague: LeagueSeason | undefined;
@@ -65,6 +60,7 @@ export async function PATCH(
     // Check scheduling conflicts if date, time, court, or teams are being updated
     const targetDate = updatedFields.date || foundMatch.date;
     const targetStart = updatedFields.startTime || foundMatch.startTime;
+    const targetEnd = updatedFields.endTime || foundMatch.endTime;
     const targetCourt = updatedFields.subLocationId || foundMatch.subLocationId;
     const targetHome = updatedFields.homeTeamId || foundMatch.homeTeamId;
     const targetAway = updatedFields.awayTeamId || foundMatch.awayTeamId;
@@ -81,11 +77,11 @@ export async function PATCH(
         m.id !== matchId &&
         m.date === targetDate &&
         (m.subLocationId === targetCourt || m.courtId === targetCourt) &&
-        m.startTime === targetStart
+        timeRangesOverlap(m.startTime, m.endTime, targetStart, targetEnd)
     );
     if (courtConflict) {
       return NextResponse.json(
-        { error: `Conflict: Court is already booked at ${targetStart} on ${targetDate}.` },
+        { error: `Conflict: Court already has a match at ${courtConflict.startTime} on ${targetDate}.` },
         { status: 409 }
       );
     }
@@ -94,7 +90,7 @@ export async function PATCH(
       (m) =>
         m.id !== matchId &&
         m.date === targetDate &&
-        m.startTime === targetStart &&
+        timeRangesOverlap(m.startTime, m.endTime, targetStart, targetEnd) &&
         (m.homeTeamId === targetHome ||
           m.awayTeamId === targetHome ||
           m.homeTeamId === targetAway ||
@@ -102,7 +98,7 @@ export async function PATCH(
     );
     if (teamConflict) {
       return NextResponse.json(
-        { error: `Conflict: One of the teams is already scheduled at ${targetStart} on ${targetDate}.` },
+        { error: `Conflict: One of the teams is already scheduled at ${teamConflict.startTime} on ${targetDate}.` },
         { status: 409 }
       );
     }

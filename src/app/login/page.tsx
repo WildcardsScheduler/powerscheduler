@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { LeagueSeason } from '@/types/league';
 import { KeyRound, ShieldCheck, UserCheck, AlertCircle, CheckCircle2, Eye, EyeOff, ArrowLeft, Volleyball } from 'lucide-react';
 
@@ -29,6 +29,8 @@ export default function LoginPage() {
     let isMounted = true;
     if (typeof window !== 'undefined') {
       const tabParam = new URLSearchParams(window.location.search).get('tab');
+      // Browser-only value, read after hydration (reading it during render would mismatch the server HTML)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (tabParam === 'admin') setActiveTab('admin');
     }
     fetch('/api/leagues', { cache: 'no-store' })
@@ -89,7 +91,7 @@ export default function LoginPage() {
 
       setTeamSuccess(data.message || 'Access Granted. Redirecting...');
       setTimeout(() => {
-        window.location.href = '/';
+        router.replace('/');
       }, 400);
     } catch {
       setTeamError('Unable to connect to authentication service.');
@@ -122,7 +124,7 @@ export default function LoginPage() {
 
       setAdminSuccess('Administrator Authorized. Redirecting...');
       setTimeout(() => {
-        window.location.href = '/';
+        router.replace('/');
       }, 400);
     } catch {
       setAdminError('Unable to connect to authentication service.');

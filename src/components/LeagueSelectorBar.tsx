@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, Star, Plus, Settings2, ChevronDown, Check } from 'lucide-react';
+import { Trophy, Star, Settings2, ChevronDown, Check } from 'lucide-react';
 import { LeagueSeason } from '@/types/league';
 import { UserRole } from './Navbar';
 
@@ -28,12 +28,13 @@ export const LeagueSelectorBar: React.FC<LeagueSelectorBarProps> = ({
     try {
       const saved = localStorage.getItem('powerschedule_default_league_id');
       if (saved) {
+        // Browser-only value, read after hydration (reading it during render would mismatch the server HTML)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDefaultLeagueId(saved);
       }
     } catch {}
   }, []);
 
-  const activeLeague = leagues.find((l) => l.id === activeLeagueId) || leagues[0];
   const isCurrentDefault = defaultLeagueId === activeLeagueId;
 
   const handleToggleDefault = () => {

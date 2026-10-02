@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Team, Match, Location, Division, Player } from '@/types/league';
+import { Team, Match, Location, Division } from '@/types/league';
 import {
   Users,
   Calendar,
@@ -12,9 +12,7 @@ import {
   XCircle,
   HelpCircle,
   Phone,
-  Mail,
-  Building2,
-  Edit3,
+  Mail,Edit3,
   Trophy,
   Lock,
   Search,
@@ -22,17 +20,11 @@ import {
   Check,
   MessageSquare,
   BookUser,
-  BookOpen,
-  ShieldCheck,
-  ExternalLink,
-  Scale,
+  BookOpen,Scale,
   KeyRound,
   Eye,
-  EyeOff,
-  Share2,
-  Sparkles,
-  Shield,
-  X,
+  EyeOff,Shield,
+  X
 } from 'lucide-react';
 import { formatTimeRange } from '@/utils/formatUtils';
 import { DEFAULT_LEAGUE_RULES } from '@/data/defaultRules';
@@ -101,7 +93,6 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
     );
   }
 
-  const activeDivision = divisions.find((d) => d.id === activeTeam.divisionId);
 
   // Find next upcoming match for this team (as home, away, OR work team!)
   const teamMatches = matches.filter(

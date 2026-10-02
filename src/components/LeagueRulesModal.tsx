@@ -8,15 +8,10 @@ import {
   BookOpen,
   Edit3,
   Check,
-  Copy,
-  Printer,
-  Sparkles,
-  Search,
+  Copy,Search,
   ShieldCheck,
   RotateCcw,
-  Save,
-  AlertCircle,
-  FileText,
+  Save
 } from 'lucide-react';
 
 interface LeagueRulesModalProps {
@@ -41,12 +36,16 @@ export const LeagueRulesModal: React.FC<LeagueRulesModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Sync state when league changes or modal opens
-  React.useEffect(() => {
-    setEditText(league.rulesContent || DEFAULT_LEAGUE_RULES);
+  // Reset the editor when the modal opens or the saved rules change
+  // (state adjusted during render, per React's "reset state when a prop changes" pattern)
+  const resetKey = `${isOpen}|${league.rulesContent ?? ''}`;
+  const [lastResetKey, setLastResetKey] = useState(resetKey);
+  if (resetKey !== lastResetKey) {
+    setLastResetKey(resetKey);
+    setEditText(currentRules);
     setIsEditing(false);
     setSaveSuccess(false);
-  }, [league.rulesContent, isOpen]);
+  }
 
   if (!isOpen) return null;
 
@@ -65,9 +64,6 @@ export const LeagueRulesModal: React.FC<LeagueRulesModalProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
 
   const handleResetDefault = () => {
     if (window.confirm('Reset rules text to the standard default template?')) {

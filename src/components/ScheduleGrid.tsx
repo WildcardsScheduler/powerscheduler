@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Match, Team, Location, Division, SubLocation } from '@/types/league';
-import { Calendar, Clock, MapPin, ShieldAlert, Edit3, CheckCircle2, Building2, Filter, Printer, Lock, Plus, Scale, Wrench } from 'lucide-react';
+import { Match, Team, Location, Division } from '@/types/league';
+import { Calendar, Clock, ShieldAlert, Edit3, CheckCircle2, Building2, Filter, Printer, Lock, Plus, Scale, Wrench } from 'lucide-react';
 import { PrintScheduleModal } from './PrintScheduleModal';
-import { formatTimeRange } from '@/utils/formatUtils';
+import { formatTimeRange, formatShortDate } from '@/utils/formatUtils';
 
 interface ScheduleGridProps {
   matches: Match[];
@@ -53,7 +53,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     return { primaryLoc, subLoc };
   };
 
-  // Filter matches by division, week, and location
+  // Filter matches by division, week, and location (sorted by night, then time)
   const filteredMatches = matches.filter((m) => {
     if (m.divisionId !== selectedDivisionId) return false;
     if (m.weekNumber !== selectedWeek) return false;
@@ -64,18 +64,22 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     }
 
     return true;
-  });
+  }).sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+
+  // A week can hold more than one league night (e.g. Tuesday + Thursday)
+  const selectedWeekHasMultipleNights = new Set(filteredMatches.map((m) => m.date)).size > 1;
 
   const availableWeeks = Array.from(
     new Set(matches.filter((m) => m.divisionId === selectedDivisionId).map((m) => m.weekNumber))
   ).sort((a, b) => a - b);
 
-  // Map each week number to the actual date of its first match
+  // Map each week number to its earliest match date
   const weekDateMap = new Map<number, string>();
   matches
     .filter((m) => m.divisionId === selectedDivisionId)
     .forEach((m) => {
-      if (!weekDateMap.has(m.weekNumber)) {
+      const existing = weekDateMap.get(m.weekNumber);
+      if (!existing || m.date < existing) {
         weekDateMap.set(m.weekNumber, m.date);
       }
     });
@@ -210,7 +214,10 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 <div className="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-[#a0aaba]">
                   <div className="flex items-center space-x-1.5 shrink-0">
                     <Clock className="h-3.5 w-3.5 text-slate-600 dark:text-[#a0aaba]" />
-                    <span className="font-medium text-slate-700 dark:text-slate-300">{formatTimeRange(match.startTime, match.endTime)}</span>
+                    <span className="font-medium text-slate-700 dark:text-slate-300">
+                      {selectedWeekHasMultipleNights && <span className="font-bold">{formatShortDate(match.date)} · </span>}
+                      {formatTimeRange(match.startTime, match.endTime)}
+                    </span>
                   </div>
 
                   {/* Primary Location + Sub-location Name */}

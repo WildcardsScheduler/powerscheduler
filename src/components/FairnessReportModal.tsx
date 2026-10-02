@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Match, Team, Division, Location, SubLocation } from '@/types/league';
-import { X, Scale, CheckCircle2, Clock, MapPin, ShieldAlert, ArrowLeftRight, Users, Printer, Sparkles, Filter, Info, Eye, EyeOff } from 'lucide-react';
+import { X, Scale, Clock, Users, Eye, EyeOff } from 'lucide-react';
 import { calculateScheduleFairnessReport, ScheduleFairnessReport } from '@/utils/schedulerEngine';
 import { formatTimeRange } from '@/utils/formatUtils';
+import { OpponentTimeline } from './OpponentTimeline';
 
 interface FairnessReportModalProps {
   isOpen: boolean;
@@ -34,21 +35,22 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
   const [activeDivId, setActiveDivId] = useState<string>(
     selectedDivisionId || divisions[0]?.id || ''
   );
-  const [activeTab, setActiveTab] = useState<'matrix' | 'h2h'>('matrix');
+  const [activeTab, setActiveTab] = useState<'matrix' | 'h2h' | 'timeline'>('matrix');
   const [h2hFilter, setH2hFilter] = useState<'breakdown' | 'official' | 'exhibition' | 'all'>('breakdown');
 
-  // Re-sync active division whenever modal opens or division props change
-  useEffect(() => {
+  // Start on the currently selected division each time the modal opens
+  // (state adjusted during render, per React's "reset state when a prop changes" pattern)
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen);
     if (isOpen) {
-      if (selectedDivisionId && divisions.some((d) => d.id === selectedDivisionId)) {
-        setActiveDivId(selectedDivisionId);
-      } else if (divisions.length > 0) {
-        setActiveDivId(divisions[0].id);
-      } else {
-        setActiveDivId('');
-      }
+      setActiveDivId(
+        selectedDivisionId && divisions.some((d) => d.id === selectedDivisionId)
+          ? selectedDivisionId
+          : divisions[0]?.id || ''
+      );
     }
-  }, [isOpen, selectedDivisionId, divisions]);
+  }
 
   // Courts flat list
   const courts: SubLocation[] = useMemo(() => {
@@ -202,6 +204,16 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
               }`}
             >
               Head-to-Head Opponent Grid
+            </button>
+            <button
+              onClick={() => setActiveTab('timeline')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                activeTab === 'timeline'
+                  ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white font-black shadow-xs'
+                  : 'text-slate-600 dark:text-[#a0aaba] hover:text-[#242424] dark:hover:text-white'
+              }`}
+            >
+              Opponent Timeline
             </button>
           </div>
 
@@ -359,6 +371,8 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                 </table>
               </div>
             </div>
+          ) : activeTab === 'timeline' ? (
+            <OpponentTimeline teams={divisionTeams} matches={divisionMatches} />
           ) : (
             /* 3. Head-to-Head Opponent Grid */
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl space-y-2">
