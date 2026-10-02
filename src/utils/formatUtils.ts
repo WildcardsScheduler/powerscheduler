@@ -86,3 +86,29 @@ export function timeRangesOverlap(
   if (be <= bs) be = bs + defaultDurationMinutes;
   return as < be && bs < ae;
 }
+
+/** The digits of a North American phone number, without a leading country code 1 (at most 10). */
+export function phoneDigits(input?: string | null): string {
+  let digits = (input || '').replace(/\D/g, '');
+  if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+  return digits.slice(0, 10);
+}
+
+/**
+ * Formats typed or pasted phone input as "(403) 846-3953". Accepts raw digits,
+ * dashes, dots, spaces or a +1 prefix. Partial numbers are formatted as far as
+ * they go, so it can be applied on every keystroke.
+ */
+export function formatPhoneNumber(input?: string | null): string {
+  const d = phoneDigits(input);
+  if (d.length === 0) return '';
+  if (d.length <= 3) return `(${d}`;
+  if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+}
+
+/** True for an empty phone or a complete 10-digit number. */
+export function isPhoneEmptyOrComplete(input?: string | null): boolean {
+  const len = phoneDigits(input).length;
+  return len === 0 || len === 10;
+}

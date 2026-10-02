@@ -151,3 +151,28 @@ describe('Match time clash check', () => {
     assert.equal(timeRangesOverlap('18:30', '', '19:30', '20:30'), false);
   });
 });
+
+describe('Captain phone formatting', () => {
+  const { formatPhoneNumber, isPhoneEmptyOrComplete } = loadTs('src/utils/formatUtils.ts');
+
+  test('formats pasted numbers in any common style', () => {
+    for (const input of ['4038463953', '403-846-3953', '403.846.3953', '403 846 3953', '+1 (403) 846-3953', '1-403-846-3953']) {
+      assert.equal(formatPhoneNumber(input), '(403) 846-3953', input);
+    }
+  });
+
+  test('formats partial numbers while typing and drops extra digits', () => {
+    assert.equal(formatPhoneNumber('4'), '(4');
+    assert.equal(formatPhoneNumber('403'), '(403');
+    assert.equal(formatPhoneNumber('4038'), '(403) 8');
+    assert.equal(formatPhoneNumber('4038463'), '(403) 846-3');
+    assert.equal(formatPhoneNumber('403846395312'), '(403) 846-3953');
+    assert.equal(formatPhoneNumber('abc'), '');
+  });
+
+  test('only empty or full 10-digit numbers can be saved', () => {
+    assert.equal(isPhoneEmptyOrComplete(''), true);
+    assert.equal(isPhoneEmptyOrComplete('(403) 846-3953'), true);
+    assert.equal(isPhoneEmptyOrComplete('(403) 846-39'), false);
+  });
+});

@@ -15,6 +15,12 @@ import {
   Dices
 } from 'lucide-react';
 import { generateRandomPin } from '@/utils/pinGenerator';
+import { formatPhoneNumber, isPhoneEmptyOrComplete, phoneDigits } from '@/utils/formatUtils';
+
+const PHONE_HINT = 'Enter all 10 digits, e.g. (403) 846-3953';
+
+/** Shows a stored phone in the standard format if it's a full number; anything else is left as entered. */
+const phoneForEditing = (phone: string) => (phoneDigits(phone).length === 10 ? formatPhoneNumber(phone) : phone);
 
 interface TeamManagerModalProps {
   teams: Team[];
@@ -167,7 +173,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
     setEditDivisionId(selectedTeam.divisionId);
     setEditCaptainName(selectedTeam.captainName);
     setEditCaptainEmail(selectedTeam.captainEmail);
-    setEditCaptainPhone(selectedTeam.captainPhone);
+    setEditCaptainPhone(phoneForEditing(selectedTeam.captainPhone || ''));
     setEditBadgeColor(selectedTeam.badgeColor || '#3b82f6');
     setEditAccessPin(selectedTeam.accessPin || '1234');
     setEditingPlayerId(null);
@@ -184,6 +190,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
   const handleCreateTeamSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTeamName.trim()) return;
+    if (!isPhoneEmptyOrComplete(newCaptainPhone)) return;
 
     onAddTeam(
       newTeamName.trim(),
@@ -215,6 +222,7 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
 
   const handleSaveTeamEdit = () => {
     if (!selectedTeam || !editName.trim()) return;
+    if (!isPhoneEmptyOrComplete(editCaptainPhone)) return;
 
     onUpdateTeam(
       selectedTeam.id,
@@ -533,13 +541,22 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                       onChange={(e) => setNewCaptainEmail(e.target.value)}
                       className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs shadow-sm"
                     />
-                    <input
-                      type="tel"
-                      placeholder="Phone Number"
-                      value={newCaptainPhone}
-                      onChange={(e) => setNewCaptainPhone(e.target.value)}
-                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs shadow-sm"
-                    />
+                    <div>
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel-national"
+                        placeholder="(403) 555-0123"
+                        value={newCaptainPhone}
+                        onChange={(e) => setNewCaptainPhone(formatPhoneNumber(e.target.value))}
+                        className={`w-full bg-white dark:bg-slate-900 border text-slate-900 dark:text-white rounded-xl px-3 py-1.5 text-xs shadow-sm ${
+                          isPhoneEmptyOrComplete(newCaptainPhone) ? 'border-slate-200 dark:border-slate-800' : 'border-rose-400 dark:border-rose-500/60'
+                        }`}
+                      />
+                      {!isPhoneEmptyOrComplete(newCaptainPhone) && (
+                        <p className="mt-1 text-[10px] text-rose-600 dark:text-rose-400">{PHONE_HINT}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -684,10 +701,18 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                       <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Captain Phone</label>
                       <input
                         type="tel"
+                        inputMode="tel"
+                        autoComplete="tel-national"
+                        placeholder="(403) 555-0123"
                         value={editCaptainPhone}
-                        onChange={(e) => setEditCaptainPhone(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-2.5 py-1 text-xs shadow-sm"
+                        onChange={(e) => setEditCaptainPhone(formatPhoneNumber(e.target.value))}
+                        className={`w-full bg-white dark:bg-slate-900 border text-slate-900 dark:text-white rounded-xl px-2.5 py-1 text-xs shadow-sm ${
+                          isPhoneEmptyOrComplete(editCaptainPhone) ? 'border-slate-200 dark:border-slate-800' : 'border-rose-400 dark:border-rose-500/60'
+                        }`}
                       />
+                      {!isPhoneEmptyOrComplete(editCaptainPhone) && (
+                        <p className="mt-1 text-[10px] text-rose-600 dark:text-rose-400">{PHONE_HINT}</p>
+                      )}
                     </div>
                   </div>
 
@@ -777,7 +802,9 @@ export const TeamManagerModal: React.FC<TeamManagerModalProps> = ({
                     <button
                       type="button"
                       onClick={handleSaveTeamEdit}
-                      className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white dark:text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 shrink-0 shadow-md transition-all"
+                      disabled={!isPhoneEmptyOrComplete(editCaptainPhone)}
+                      title={isPhoneEmptyOrComplete(editCaptainPhone) ? undefined : PHONE_HINT}
+                      className="disabled:opacity-50 disabled:cursor-not-allowed px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white dark:text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 shrink-0 shadow-md transition-all"
                     >
                       Save Team Info
                     </button>
