@@ -33,8 +33,7 @@ describe('Scheduler priorities', () => {
       { id: 'spacing', mode: 'off' },
       { id: 'madeUp', mode: 'ranked' },
     ]);
-    assert.equal(cleaned[0].id, 'spacing');
-    assert.equal(cleaned[0].mode, 'must');
+    assert.equal(cleaned.find((p) => p.id === 'spacing').mode, 'must', 'the saved setting is kept, not the duplicate');
     assert.equal(cleaned.length, P.DEFAULT_PRIORITIES.length);
     assert.equal(new Set(cleaned.map((p) => p.id)).size, cleaned.length);
   });
@@ -75,6 +74,43 @@ describe('Scheduler priorities', () => {
     // 6 teams filling 6 court-times a night must play the same opponents again within 2 weeks
     const result = await P.optimizeSchedule(baseOptions(6), [{ id: 'spacing', mode: 'must' }, ...ranked().filter((p) => p.id !== 'spacing')], 30);
     assert.deepEqual(result.broken, ['spacing']);
+  });
+
+  test('Balance opponents ranked first spreads official matchups evenly (8 teams, every slot filled)', async () => {
+    const opts = { ...baseOptions(8), endDate: '2026-12-15', assignWorkTeams: false, fillAllTimeslots: true };
+    const { result, scores } = await P.optimizeSchedule(opts, ranked('opponents'), 300);
+    assert.ok(scores.opponents <= 1, 'each team within 1 game across its opponents, got ' + scores.opponents);
+    const meetings = new Map();
+    result.matches.filter((m) => !m.isExhibition).forEach((m) => {
+      const key = [m.homeTeamId, m.awayTeamId].sort().join('|');
+      meetings.set(key, (meetings.get(key) || 0) + 1);
+    });
+    const counts = [...meetings.values()];
+    assert.ok(Math.max(...counts) - Math.min(...counts) <= 1, 'pairs meet ' + Math.min(...counts) + '-' + Math.max(...counts) + ' times');
+  });
+
+  test('opponent swaps keep official game counts equal and never double-book', async () => {
+    const opts = { ...baseOptions(8), endDate: '2026-12-15', fillAllTimeslots: true };
+    const { result } = await P.optimizeSchedule(opts, ranked('opponents'), 30);
+    const official = new Map();
+    const busy = new Set();
+    for (const m of result.matches) {
+      if (!m.isExhibition) [m.homeTeamId, m.awayTeamId].forEach((t) => official.set(t, (official.get(t) || 0) + 1));
+      for (const t of [m.homeTeamId, m.awayTeamId, m.workTeamId].filter(Boolean)) {
+        const key = m.date + '|' + m.startTime + '|' + t;
+        assert.ok(!busy.has(key), 'team busy twice: ' + key);
+        busy.add(key);
+      }
+      assert.notEqual(m.homeTeamId, m.awayTeamId);
+    }
+    assert.equal(new Set(official.values()).size, 1);
+  });
+
+  test('a new rule is added to older saved rankings in its default position', () => {
+    const saved = [{ id: 'weeklyPlay', mode: 'must' }, { id: 'spacing', mode: 'ranked' }, { id: 'equalGames', mode: 'ranked' }];
+    const ids = P.normalizePriorities(saved).map((p) => p.id);
+    assert.equal(ids[0], 'weeklyPlay');
+    assert.equal(ids[1], 'opponents');
   });
 
   test('turning a rule off switches that behaviour off in the engine', () => {

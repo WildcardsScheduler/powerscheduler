@@ -45,6 +45,7 @@ export interface SchedulerWeights {
   timeSlots?: number; // default 10
   courts?: number; // default 5
   rematchSpacing?: number; // default 4 (recent rematch penalty)
+  headToHead?: number; // default 10 (penalty per previous meeting when picking an opponent)
 }
 
 export interface TeamFairnessMetric {
@@ -131,6 +132,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   const timeSlotWeight = weights.timeSlots ?? 10;
   const courtWeight = weights.courts ?? 5;
   const spacingWeight = weights.rematchSpacing ?? 4;
+  const headToHeadWeight = weights.headToHead ?? 10;
 
   // Optional seeded randomness so the optimizer can explore different, repeatable schedules
   const random = seed === undefined ? null : mulberry32(seed);
@@ -240,7 +242,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   };
   // Lower is better: balance head-to-head counts first; a same-night rematch outweighs one extra meeting
   const opponentScore = (a: string, b: string) =>
-    (headToHeadCounts.get(a)?.get(b) || 0) * 10 + recencyPenalty(a, b) * spacingWeight;
+    (headToHeadCounts.get(a)?.get(b) || 0) * headToHeadWeight + recencyPenalty(a, b) * spacingWeight;
   const recordMeeting = (home: string, away: string) => {
     incrementMapCount(headToHeadCounts.get(home)!, away);
     incrementMapCount(headToHeadCounts.get(away)!, home);
