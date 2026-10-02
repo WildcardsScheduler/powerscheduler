@@ -938,7 +938,7 @@ export function slotKey(date: string, startTime: string, courtId: string): strin
 }
 
 // Formats a Date as YYYY-MM-DD using local time (toISOString() would convert to UTC first)
-function toLocalIsoDate(d: Date): string {
+export function toLocalIsoDate(d: Date): string {
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${mm}-${dd}`;

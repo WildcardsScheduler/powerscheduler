@@ -97,25 +97,26 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
   const maxRefs = refCounts.length > 0 ? Math.max(...refCounts) : 0;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl my-6 flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200 transition-colors duration-150">
+    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-stretch sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-[#15171b] border-0 sm:border border-[#e5e7eb] dark:border-[#1c1f24] rounded-none sm:rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl sm:my-6 flex flex-col h-[100dvh] sm:h-auto sm:max-h-[92vh] animate-in fade-in zoom-in-95 duration-200 transition-colors duration-150">
         
         {/* Header */}
-        <div className="p-5 bg-slate-50 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c1f24] text-[#242424] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943]">
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center space-x-3 min-w-0">
+            <div className="hidden sm:block p-2.5 rounded-2xl bg-slate-100 dark:bg-[#1c1f24] text-[#242424] dark:text-[#a0aaba] border border-[#e5e7eb] dark:border-[#333943]">
               <Scale className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h3 className="text-base font-extrabold text-[#242424] dark:text-white">
-                  Schedule Fairness & Equity Audit Report
+                  <span className="sm:hidden">Fairness Report</span>
+                  <span className="hidden sm:inline">Schedule Fairness & Equity Audit Report</span>
                 </h3>
                 <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
                   {isCaptainOrPublic ? 'Public & Team View' : 'Admin Audit Engine'}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">
                 Mathematical balance inspection for game volume, time slot fairness, court equity, and referee duty.
               </p>
             </div>

@@ -4,6 +4,9 @@ import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { Download, X, Sparkles } from 'lucide-react';
 
+const DISMISS_KEY = 'powerschedule_pwa_banner_dismissed_at';
+const DISMISS_DAYS = 30;
+
 interface PWAInstallBarProps {
   onOpenInstallModal: () => void;
 }
@@ -26,20 +29,29 @@ export const PWAInstallBar: React.FC<PWAInstallBarProps> = ({ onOpenInstallModal
     // Check if running as installed standalone app
     setIsStandalone(isRunningStandalone());
 
-    const dismissedSession = sessionStorage.getItem('powerschedule_pwa_banner_dismissed');
-    if (dismissedSession === 'true') {
-      setIsDismissed(true);
+    // Stay hidden for a month after someone closes the banner
+    try {
+      const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0);
+      if (dismissedAt && Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) {
+        setIsDismissed(true);
+      }
+    } catch {
+      // Storage blocked (private browsing): the banner simply shows
     }
   }, []);
 
-  // Do not show if SSR, running in standalone PWA app, or user dismissed for this session
+  // Do not show if SSR, running in standalone PWA app, or recently dismissed
   if (!isMounted || isStandalone || isDismissed) {
     return null;
   }
 
   const handleDismiss = () => {
     setIsDismissed(true);
-    sessionStorage.setItem('powerschedule_pwa_banner_dismissed', 'true');
+    try {
+      localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    } catch {
+      // Storage blocked: hidden for this visit only
+    }
   };
 
   return (
@@ -61,7 +73,8 @@ export const PWAInstallBar: React.FC<PWAInstallBarProps> = ({ onOpenInstallModal
           <div className="min-w-0">
             <div className="flex items-center space-x-2">
               <span className="text-xs sm:text-sm font-extrabold text-[#242424] dark:text-white truncate">
-                Install PowerSchedule App
+                <span className="sm:hidden">Get the app</span>
+                <span className="hidden sm:inline">Install PowerSchedule App</span>
               </span>
               <span className="hidden xs:inline-flex items-center gap-1 bg-slate-200 dark:bg-[#1c1f24] text-slate-800 dark:text-[#a0aaba] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#e5e7eb] dark:border-[#333943]">
                 <Sparkles className="h-2.5 w-2.5" />
@@ -86,8 +99,9 @@ export const PWAInstallBar: React.FC<PWAInstallBarProps> = ({ onOpenInstallModal
           
           <button
             onClick={handleDismiss}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 -m-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
             title="Dismiss banner"
+            aria-label="Dismiss banner"
           >
             <X className="h-4 w-4" />
           </button>

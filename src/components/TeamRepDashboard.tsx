@@ -27,7 +27,12 @@ import {
   X
 } from 'lucide-react';
 import { EXHIBITION_CARD_BORDER, ExhibitionBadge, ExhibitionNotice } from './ExhibitionBadge';
-import { formatTimeRange } from '@/utils/formatUtils';
+import { formatShortDate, formatTimeRange } from '@/utils/formatUtils';
+import { toLocalIsoDate } from '@/utils/schedulerEngine';
+
+/** How many recent results and upcoming games the season list shows before "Show full season" */
+const RECENT_RESULTS_SHOWN = 2;
+const UPCOMING_GAMES_SHOWN = 3;
 import { DEFAULT_LEAGUE_RULES } from '@/data/defaultRules';
 
 interface TeamRepDashboardProps {
@@ -80,6 +85,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
   const [pinError, setPinError] = useState('');
   const [pinSuccess, setPinSuccess] = useState('');
   const [copiedPinQuick, setCopiedPinQuick] = useState(false);
+  const [showFullSeason, setShowFullSeason] = useState(false);
 
   const activeRulesText = leagueRulesContent || DEFAULT_LEAGUE_RULES;
   const activeTeam = teams.find((t) => t.id === selectedTeamId) || teams[0];
@@ -96,11 +102,21 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
 
 
   // Find next upcoming match for this team (as home, away, OR work team!)
-  const teamMatches = matches.filter(
-    (m) => m.homeTeamId === activeTeam.id || m.awayTeamId === activeTeam.id || m.workTeamId === activeTeam.id
-  );
+  const teamMatches = matches
+    .filter((m) => m.homeTeamId === activeTeam.id || m.awayTeamId === activeTeam.id || m.workTeamId === activeTeam.id)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
 
-  const nextMatch = teamMatches.find((m) => m.status === 'Scheduled') || teamMatches[0];
+  const today = toLocalIsoDate(new Date());
+  const upcomingMatches = teamMatches.filter((m) => m.date >= today);
+  const pastMatches = teamMatches.filter((m) => m.date < today);
+
+  // Next game: today's or the next unplayed one; after the season, the last game
+  const nextMatch =
+    upcomingMatches.find((m) => m.status !== 'Completed') || upcomingMatches[0] || teamMatches[teamMatches.length - 1];
+
+  // On the overview the season list starts with the latest results and the next few games
+  const shortList = [...pastMatches.slice(-RECENT_RESULTS_SHOWN), ...upcomingMatches.slice(0, UPCOMING_GAMES_SHOWN)];
+  const visibleMatches = showFullSeason || shortList.length >= teamMatches.length ? teamMatches : shortList;
 
   const isPlayingNext = nextMatch && (nextMatch.homeTeamId === activeTeam.id || nextMatch.awayTeamId === activeTeam.id);
   const isRefDutyNext = nextMatch && nextMatch.workTeamId === activeTeam.id;
@@ -559,7 +575,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                 <div className="space-y-3 bg-slate-50 dark:bg-[#0e1012] p-4 rounded-2xl border border-slate-200 dark:border-[#1c1f24]">
                   <div className="flex items-center space-x-3 text-slate-700 dark:text-[#a0aaba] text-sm">
                     <Calendar className="h-4 w-4 text-slate-500 dark:text-[#8b96aa] shrink-0" />
-                    <span className="font-semibold">{nextMatch.date}</span>
+                    <span className="font-semibold">{formatShortDate(nextMatch.date)}</span>
                   </div>
                   <div className="flex items-center space-x-3 text-slate-700 dark:text-[#a0aaba] text-sm">
                     <Clock className="h-4 w-4 text-slate-500 dark:text-[#8b96aa] shrink-0" />
@@ -634,16 +650,16 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center space-x-2">
                 <Trophy className="h-5 w-5 text-amber-500 dark:text-amber-400" />
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Season Schedule & Score Records</h3>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">{showFullSeason ? 'Full Season Schedule' : 'Recent & Upcoming Games'}</h3>
               </div>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">{teamMatches.length} Matches</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono shrink-0">{teamMatches.length} games</span>
             </div>
 
             <div className="divide-y divide-slate-200 dark:divide-slate-800/60">
               {teamMatches.length === 0 ? (
                 <p className="text-xs text-slate-500 py-4 text-center">No fixtures found.</p>
               ) : (
-                teamMatches.map((m) => {
+                visibleMatches.map((m) => {
                   const isPlaying = m.homeTeamId === activeTeam.id || m.awayTeamId === activeTeam.id;
                   const isRef = m.workTeamId === activeTeam.id;
                   const oppId = isPlaying ? (m.homeTeamId === activeTeam.id ? m.awayTeamId : m.homeTeamId) : undefined;
@@ -659,7 +675,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span className="font-mono text-slate-500 dark:text-slate-400 font-bold">Wk #{m.weekNumber}</span>
                           <span className="text-slate-400 dark:text-slate-500">•</span>
-                          <span className="text-slate-900 dark:text-white font-semibold">{m.date}</span>
+                          <span className="text-slate-900 dark:text-white font-semibold">{formatShortDate(m.date)}</span>
                           <span className="text-slate-500 dark:text-slate-400 font-mono">({formatTimeRange(m.startTime, m.endTime)})</span>
                           {isRef && (
                             <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold">
@@ -736,6 +752,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                           <span className="text-xs text-slate-500 italic">Scheduled</span>
                         )}
 
+                        {(m.date <= today || m.status === 'Completed') && (
                         <button
                           onClick={() => onOpenScorekeeper(m)}
                           className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:text-slate-900 dark:hover:text-white font-bold text-xs border border-amber-500/30 flex items-center space-x-1.5 transition-all shadow-sm"
@@ -743,12 +760,23 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                           <Edit3 className="h-3.5 w-3.5" />
                           <span>{m.status === 'Completed' ? 'Edit Score' : 'Report Score'}</span>
                         </button>
+                        )}
                       </div>
                     </div>
                   );
                 })
               )}
             </div>
+
+            {visibleMatches.length < teamMatches.length || showFullSeason ? (
+              <button
+                type="button"
+                onClick={() => setShowFullSeason(!showFullSeason)}
+                className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-colors"
+              >
+                {showFullSeason ? 'Show recent and upcoming only' : `Show full season (${teamMatches.length} games)`}
+              </button>
+            ) : null}
           </div>
 
           {/* Captain Access & PIN Security Banner Card */}

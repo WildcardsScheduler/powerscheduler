@@ -79,9 +79,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={onOpenRulesModal}
               className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-[#15171b] dark:hover:bg-[#23262d] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#333943] text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-xs"
               title="View Official League Rules"
+              aria-label="League Rules"
             >
-              <BookOpen className="h-3.5 w-3.5 text-slate-600 dark:text-[#a0aaba]" />
-              <span>Rules</span>
+              <BookOpen className="h-4 w-4 sm:h-3.5 sm:w-3.5 text-slate-600 dark:text-[#a0aaba]" />
+              <span className="hidden sm:inline">Rules</span>
             </button>
           )}
 
@@ -105,7 +106,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="px-3 py-1.5 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-[11px] sm:text-xs shadow-xs flex items-center space-x-1 sm:space-x-1.5 transition-all shrink-0 cursor-pointer"
               >
                 <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>Team / Admin Login</span>
+                <span className="sm:hidden">Log In</span>
+                <span className="hidden sm:inline">Team / Admin Login</span>
               </Link>
             </div>
           ) : currentRole === 'team_rep' ? (
@@ -113,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="bg-white dark:bg-[#15171b] border border-slate-200 dark:border-[#333943] text-slate-700 dark:text-[#a0aaba] px-3 py-1 rounded-xl text-xs font-bold flex items-center space-x-1.5">
                 <UserCheck className="h-3.5 w-3.5 text-[#228a56] dark:text-[#34d399]" />
                 <span className="hidden sm:inline">Captain:</span>
-                <strong className="text-slate-900 dark:text-white truncate max-w-[120px]">{activeTeamName || 'Team'}</strong>
+                <strong className="text-slate-900 dark:text-white truncate max-w-[90px] sm:max-w-[120px]">{activeTeamName || 'Team'}</strong>
               </div>
               <button
                 onClick={onLogout}
@@ -127,7 +129,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center space-x-2">
               <div className="bg-white dark:bg-[#15171b] border border-slate-200 dark:border-[#333943] text-slate-700 dark:text-[#a0aaba] px-3 py-1 rounded-xl text-xs font-bold flex items-center space-x-1.5">
                 <ShieldCheck className="h-3.5 w-3.5 text-[#0099ff] dark:text-[#007afc]" />
-                <span>Admin Authorized</span>
+                <span className="sm:hidden">Admin</span>
+                <span className="hidden sm:inline">Admin Authorized</span>
               </div>
               <button
                 onClick={onLogout}

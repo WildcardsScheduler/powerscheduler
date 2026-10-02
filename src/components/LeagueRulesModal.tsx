@@ -202,26 +202,28 @@ export const LeagueRulesModal: React.FC<LeagueRulesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 my-auto max-h-[90vh] flex flex-col transition-colors duration-150">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-stretch sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 border-0 sm:border border-slate-200 dark:border-slate-800 rounded-none sm:rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 sm:my-auto h-[100dvh] sm:h-auto sm:max-h-[90vh] flex flex-col transition-colors duration-150">
         
         {/* Modal Header */}
-        <div className="p-5 sm:p-6 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+        <div className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+            <div className="hidden sm:block p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
               <BookOpen className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                  Official League Rules & Guidelines
+                  <span className="sm:hidden">League Rules</span>
+                  <span className="hidden sm:inline">Official League Rules & Guidelines</span>
                 </h3>
-                <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                <span className="hidden sm:inline bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
                   {league.name}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Official rules, scoring formats, eligibility, and code of conduct
+                <span className="sm:hidden">{league.name}</span>
+                <span className="hidden sm:inline">Official rules, scoring formats, eligibility, and code of conduct</span>
               </p>
             </div>
           </div>
@@ -332,7 +334,7 @@ export const LeagueRulesModal: React.FC<LeagueRulesModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 shrink-0">
+        <div className="mt-auto p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 shrink-0">
           <div className="flex items-center space-x-2">
             <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
             <span>Active for <strong className="text-slate-800 dark:text-slate-200">{league.name}</strong></span>

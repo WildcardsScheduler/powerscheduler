@@ -119,7 +119,8 @@ export const LeagueSelectorBar: React.FC<LeagueSelectorBarProps> = ({
                 isCurrentDefault ? 'fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400 scale-110' : 'text-slate-400'
               }`}
             />
-            <span>
+            <span className="sm:hidden">{justSavedDefault ? 'Saved!' : 'Default'}</span>
+            <span className="hidden sm:inline">
               {justSavedDefault
                 ? 'Saved as Default!'
                 : isCurrentDefault

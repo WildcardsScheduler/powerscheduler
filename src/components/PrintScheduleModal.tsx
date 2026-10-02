@@ -77,7 +77,7 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm animate-in fade-in duration-200 print-modal-container">
+    <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4 bg-slate-950/85 backdrop-blur-sm animate-in fade-in duration-200 print-modal-container">
       {/* CSS Print Overrides */}
       <style jsx global>{`
         @media print {
@@ -167,7 +167,7 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
         }
       `}</style>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] print-modal-content">
+      <div className="bg-white dark:bg-slate-900 border-0 sm:border border-slate-200 dark:border-slate-800 rounded-none sm:rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col h-[100dvh] sm:h-auto sm:max-h-[92vh] print-modal-content">
         
         {/* Header Controls (Screen only) */}
         <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 no-print">
@@ -401,7 +401,7 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
         </div>
 
         {/* Footer (Screen only) */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 no-print">
+        <div className="mt-auto p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 no-print">
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Tip: Select &quot;Save as PDF&quot; in your browser print window to create a PDF file.
           </p>

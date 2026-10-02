@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { toLocalIsoDate } from '@/utils/schedulerEngine';
 import { Match, Team, Location, Division } from '@/types/league';
 import { Calendar, Clock, ShieldAlert, Edit3, CheckCircle2, Building2, Filter, Printer, Lock, Plus, Scale, Wrench } from 'lucide-react';
 import { EXHIBITION_CARD_BORDER, ExhibitionNotice } from './ExhibitionBadge';
@@ -38,7 +39,8 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   currentRole,
   userTeamId,
 }) => {
-  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+  // null = follow the current week; a number = the week the viewer tapped
+  const [chosenWeek, setSelectedWeek] = useState<number | null>(null);
   const [selectedLocationFilter, setSelectedLocationFilter] = useState<string>('ALL');
   const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
 
@@ -53,6 +55,35 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     const subLoc = primaryLoc?.subLocations.find((s) => s.id === subLocId);
     return { primaryLoc, subLoc };
   };
+
+  const availableWeeks = Array.from(
+    new Set(matches.filter((m) => m.divisionId === selectedDivisionId).map((m) => m.weekNumber))
+  ).sort((a, b) => a - b);
+
+  // Map each week number to its earliest and latest match date
+  const weekDateMap = new Map<number, string>();
+  const weekLastDateMap = new Map<number, string>();
+  matches
+    .filter((m) => m.divisionId === selectedDivisionId)
+    .forEach((m) => {
+      const existing = weekDateMap.get(m.weekNumber);
+      if (!existing || m.date < existing) weekDateMap.set(m.weekNumber, m.date);
+      const last = weekLastDateMap.get(m.weekNumber);
+      if (!last || m.date > last) weekLastDateMap.set(m.weekNumber, m.date);
+    });
+
+  // The current week is the first one whose last game night is today or later (or the final week once the season ends)
+  const today = toLocalIsoDate(new Date());
+  const currentWeek =
+    availableWeeks.find((w) => (weekLastDateMap.get(w) || '') >= today) ?? availableWeeks[availableWeeks.length - 1] ?? 1;
+  const selectedWeek = chosenWeek !== null && availableWeeks.includes(chosenWeek) ? chosenWeek : currentWeek;
+
+  // Keep the selected week chip in view in the sideways-scrolling week strip on phones
+  const scrollChipIntoView = useCallback((el: HTMLButtonElement | null) => {
+    const strip = el?.parentElement;
+    if (!el || !strip || strip.scrollWidth <= strip.clientWidth) return;
+    strip.scrollLeft = el.offsetLeft - strip.clientWidth / 2 + el.clientWidth / 2;
+  }, []);
 
   // Filter matches by division, week, and location (sorted by night, then time)
   const filteredMatches = matches.filter((m) => {
@@ -70,27 +101,12 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   // A week can hold more than one league night (e.g. Tuesday + Thursday)
   const selectedWeekHasMultipleNights = new Set(filteredMatches.map((m) => m.date)).size > 1;
 
-  const availableWeeks = Array.from(
-    new Set(matches.filter((m) => m.divisionId === selectedDivisionId).map((m) => m.weekNumber))
-  ).sort((a, b) => a - b);
-
-  // Map each week number to its earliest match date
-  const weekDateMap = new Map<number, string>();
-  matches
-    .filter((m) => m.divisionId === selectedDivisionId)
-    .forEach((m) => {
-      const existing = weekDateMap.get(m.weekNumber);
-      if (!existing || m.date < existing) {
-        weekDateMap.set(m.weekNumber, m.date);
-      }
-    });
-
   return (
     <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-2xl p-4 sm:p-6 shadow-xs space-y-5 transition-colors duration-150">
       
       {/* Filters Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#e5e7eb] dark:border-[#1c1f24]">
-        <div className="flex items-center justify-between w-full md:w-auto gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full md:w-auto gap-3">
           <div className="flex items-center space-x-2">
             <Calendar className="h-5 w-5 text-[#242424] dark:text-[#a0aaba]" />
             <h3 className="text-lg font-bold text-[#242424] dark:text-white tracking-tight">League Match Schedule</h3>
@@ -150,7 +166,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
           {/* Week Selector Tabs */}
           {availableWeeks.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 max-w-full">
+            <div className="relative flex gap-1.5 max-w-full overflow-x-auto sm:flex-wrap sm:overflow-visible pb-1 sm:pb-0 -mx-1 px-1 sm:mx-0 sm:px-0 [scrollbar-width:thin]">
               {availableWeeks.map((week) => {
                 const dateStr = weekDateMap.get(week);
                 const label = dateStr
@@ -162,14 +178,18 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 return (
                   <button
                     key={week}
+                    ref={selectedWeek === week ? scrollChipIntoView : undefined}
                     onClick={() => setSelectedWeek(week)}
-                    className={`flex flex-col items-center px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all leading-tight ${
+                    className={`shrink-0 flex flex-col items-center px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all leading-tight ${
                       selectedWeek === week
                         ? 'bg-[#101010] text-white dark:bg-[#007afc] dark:text-white shadow-xs'
                         : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#1c1f24] text-slate-600 dark:text-[#a0aaba] hover:text-[#242424] dark:hover:text-white dark:hover:bg-[#23262d] border border-[#e5e7eb] dark:border-[#333943]'
                     }`}
                   >
-                    <span>Wk {week}</span>
+                    <span>
+                      Wk {week}
+                      {week === currentWeek && <span className="sr-only"> (current week)</span>}
+                    </span>
                     {label && (
                       <span className={`text-[10px] font-normal mt-0.5 ${
                         selectedWeek === week ? 'text-slate-300 dark:text-slate-200' : 'text-slate-500 dark:text-[#8b96aa]'
@@ -242,7 +262,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                       }
                     >
                       {primaryLoc && subLoc
-                        ? `${primaryLoc.name} — ${subLoc.name}`
+                        ? `${subLoc.name} · ${primaryLoc.name}`
                         : primaryLoc
                         ? primaryLoc.name
                         : subLoc
@@ -319,10 +339,10 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 </div>
 
                 {/* Bottom Row: Work Team Ref & Scorekeeper Button */}
-                <div className={`flex items-center ${work ? 'justify-between' : 'justify-end'} gap-2 text-xs pt-1`}>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs pt-1">
                   {work && (
                     <div
-                      className="flex items-center space-x-1.5 text-amber-700 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-500/20 dark:border-amber-400/20 text-[11px] min-w-0 max-w-[65%]"
+                      className="flex items-center space-x-1.5 text-amber-700 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-500/20 dark:border-amber-400/20 text-[11px] min-w-0 max-w-full"
                       title={`Ref Duty: ${work.name}`}
                     >
                       <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
@@ -344,25 +364,25 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     if (readOnly) {
                       return match.status === 'Completed' ? (
                         match.isExhibition ? (
-                          <span className="flex items-center space-x-1 text-slate-500 dark:text-slate-400 text-[11px] font-bold bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+                          <span className="ml-auto shrink-0 whitespace-nowrap flex items-center space-x-1 text-slate-500 dark:text-slate-400 text-[11px] font-bold bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
                             <CheckCircle2 className="h-3 w-3" />
                             <span>Final</span>
                           </span>
                         ) : (
-                          <span className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                          <span className="ml-auto shrink-0 whitespace-nowrap flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                             <CheckCircle2 className="h-3 w-3" />
                             <span>Official Final</span>
                           </span>
                         )
                       ) : (
-                        <span className="text-slate-500 text-[11px] font-medium">Scheduled</span>
+                        <span className="ml-auto text-slate-500 text-[11px] font-medium">Scheduled</span>
                       );
                     }
 
                     if (!canReportScore) {
                       return (
                         <span
-                          className="flex items-center space-x-1 text-slate-500 text-[11px] font-medium bg-slate-100 dark:bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800"
+                          className="ml-auto shrink-0 whitespace-nowrap flex items-center space-x-1 text-slate-500 text-[11px] font-medium bg-slate-100 dark:bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800"
                           title="Score reporting restricted to team captains playing in or refereeing this match"
                         >
                           <Lock className="h-3 w-3 text-slate-400 dark:text-slate-500" />
@@ -372,12 +392,12 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     }
 
                     return (
-                      <div className="flex items-center space-x-2">
+                      <div className="ml-auto flex items-center space-x-2 shrink-0">
                         {currentRole === 'scheduler' && onEditMatch && (
                           <button
                             type="button"
                             onClick={() => onEditMatch(match)}
-                            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-[#242424] dark:text-[#a0aaba] font-medium text-xs transition-colors border border-[#e5e7eb] dark:border-[#333943] shadow-xs"
+                            className="whitespace-nowrap flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-[#242424] dark:text-[#a0aaba] font-medium text-xs transition-colors border border-[#e5e7eb] dark:border-[#333943] shadow-xs"
                             title="Edit & Reschedule Match Fixture"
                           >
                             <Wrench className="h-3.5 w-3.5 text-[#242424] dark:text-[#a0aaba]" />
@@ -387,7 +407,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
                         <button
                           onClick={() => onOpenScorekeeper(match)}
-                          className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-semibold text-xs transition-colors shadow-xs"
+                          className="whitespace-nowrap flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-semibold text-xs transition-colors shadow-xs"
                         >
                           {match.status === 'Completed' ? (
                             <>

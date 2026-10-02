@@ -55,14 +55,15 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
           {onOpenFairnessReport && (
             <button
               onClick={onOpenFairnessReport}
               className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#333943] font-semibold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5"
             >
               <Scale className="h-4 w-4 text-slate-600 dark:text-[#a0aaba]" />
-              <span>Fairness Report</span>
+              <span className="sm:hidden">Fairness</span>
+              <span className="hidden sm:inline">Fairness Report</span>
             </button>
           )}
 
@@ -72,7 +73,8 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
               className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#333943] font-semibold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5"
             >
               <BookOpen className="h-4 w-4 text-slate-600 dark:text-[#a0aaba]" />
-              <span>Edit League Rules</span>
+              <span className="sm:hidden">Rules</span>
+              <span className="hidden sm:inline">Edit League Rules</span>
             </button>
           )}
 
@@ -91,7 +93,8 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
             className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#333943] font-semibold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5"
           >
             <Settings2 className="h-4 w-4 text-slate-600 dark:text-[#a0aaba]" />
-            <span>League Settings</span>
+            <span className="sm:hidden">Settings</span>
+              <span className="hidden sm:inline">League Settings</span>
           </button>
 
           <button
@@ -99,7 +102,8 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
             className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#333943] font-semibold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5"
           >
             <Users className="h-4 w-4 text-slate-600 dark:text-[#a0aaba]" />
-            <span>Manage Teams & Rosters</span>
+            <span className="sm:hidden">Teams</span>
+              <span className="hidden sm:inline">Manage Teams & Rosters</span>
           </button>
 
           <button
@@ -107,7 +111,8 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
             className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#333943] font-semibold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5"
           >
             <Layers className="h-4 w-4 text-slate-600 dark:text-[#a0aaba]" />
-            <span>Manage Divisions</span>
+            <span className="sm:hidden">Divisions</span>
+              <span className="hidden sm:inline">Manage Divisions</span>
           </button>
 
           <button
@@ -115,12 +120,13 @@ export const SchedulerDashboard: React.FC<SchedulerDashboardProps> = ({
             className="flex-1 lg:flex-none px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-[#1c1f24] dark:hover:bg-[#23262d] text-slate-700 dark:text-[#a0aaba] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#333943] font-semibold text-xs shadow-xs transition-all flex items-center justify-center space-x-1.5"
           >
             <Building2 className="h-4 w-4 text-slate-600 dark:text-[#a0aaba]" />
-            <span>Manage Venues</span>
+            <span className="sm:hidden">Venues</span>
+              <span className="hidden sm:inline">Manage Venues</span>
           </button>
 
           <button
             onClick={onOpenGenerator}
-            className="flex-1 lg:flex-none px-4 py-2.5 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2"
+            className="col-span-2 flex-1 lg:flex-none px-4 py-2.5 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2"
           >
             <Sparkles className="h-4 w-4" />
             <span>Auto-Generate Schedule</span>

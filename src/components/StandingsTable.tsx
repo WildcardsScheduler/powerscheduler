@@ -91,7 +91,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
               <th className="py-3 px-1.5 text-center">MP</th>
               <th className="py-3 px-1.5 text-center">W</th>
               <th className="py-3 px-1.5 text-center">L</th>
-              <th className="py-3 px-2 text-center">Sets (W-L)</th>
+              <th className="py-3 px-2 text-center">Sets<span className="hidden sm:inline"> (W-L)</span></th>
               <th className="py-3 px-2 text-center hidden sm:table-cell">Set Ratio</th>
               <th className="py-3 px-2 text-center hidden md:table-cell">Pt Diff</th>
               <th className="py-3 px-2 text-right font-bold text-[#101010] dark:text-[#007afc]" title="League Points (Earned from match & set outcomes)">LP</th>
@@ -129,13 +129,13 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
                   </td>
 
                   <td className="py-3 px-2">
-                    <div className="flex items-center space-x-2 min-w-0 max-w-[100px] sm:max-w-none">
+                    <div className="flex items-start gap-2 min-w-[6.5rem]">
                       <div
-                        className="h-3.5 w-3.5 rounded-full shrink-0 shadow-sm"
+                        className="h-3.5 w-3.5 mt-0.5 sm:mt-1 rounded-full shrink-0 shadow-sm"
                         style={{ backgroundColor: team.badgeColor }}
                       />
                       <span
-                        className="font-semibold text-[#242424] dark:text-white group-hover:text-[#101010] dark:group-hover:text-white transition-colors truncate text-xs sm:text-sm"
+                        className="font-semibold text-[#242424] dark:text-white group-hover:text-[#101010] dark:group-hover:text-white transition-colors leading-snug break-words text-xs sm:text-sm"
                         title={team.teamName}
                       >
                         {team.teamName}

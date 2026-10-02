@@ -291,12 +291,12 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-900 border-0 sm:border border-slate-200 dark:border-slate-800 rounded-none sm:rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col h-[100dvh] sm:h-auto sm:max-h-[92vh]">
         
         {/* Header with Navigation Tabs */}
-        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center space-x-3">
+        <div className="relative p-4 sm:p-5 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center space-x-3 pr-10 sm:pr-0">
             <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20">
               <Sparkles className="h-5 w-5" />
             </div>
@@ -304,14 +304,14 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
               <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <span>Advanced Auto-Schedule Generator</span>
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Rule Priorities, Capacity Optimization & Fairness Report Engine</p>
+              <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">Rule Priorities, Capacity Optimization & Fairness Report Engine</p>
             </div>
           </div>
 
           <div className="flex items-center space-x-2">
             {/* View Mode Tabs (Shown after generating schedule) */}
             {generatedMatches && (
-              <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 space-x-1">
+              <div className="flex flex-wrap items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 gap-1">
                 <button
                   type="button"
                   onClick={() => setViewMode('config')}
@@ -361,7 +361,8 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Close"
+              className="absolute top-3 right-3 sm:static p-2 sm:p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -1506,7 +1507,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+        <div className="mt-auto p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
           <div>
             {generatedMatches && viewMode !== 'config' && (
               <button

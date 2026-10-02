@@ -218,8 +218,8 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl my-8 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-stretch sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-[#15171b] border-0 sm:border border-[#e5e7eb] dark:border-[#1c1f24] rounded-none sm:rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl sm:my-8 animate-in fade-in zoom-in-95 duration-200 min-h-[100dvh] sm:min-h-0">
         
         {/* Header */}
         <div className="p-5 bg-slate-50 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex items-center justify-between">

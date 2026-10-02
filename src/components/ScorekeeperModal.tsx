@@ -141,8 +141,8 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[#15171b] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-[#15171b] border-0 sm:border border-[#e5e7eb] dark:border-[#1c1f24] rounded-none sm:rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90vh]">
         
         {/* Modal Header */}
         <div className="p-4 sm:p-5 bg-slate-50 dark:bg-[#0e1012] border-b border-[#e5e7eb] dark:border-[#1c1f24] flex items-center justify-between">
@@ -328,7 +328,7 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="p-4 bg-slate-50 dark:bg-[#0e1012] border-t border-[#e5e7eb] dark:border-[#1c1f24] flex items-center space-x-3">
+        <div className="mt-auto p-4 bg-slate-50 dark:bg-[#0e1012] border-t border-[#e5e7eb] dark:border-[#1c1f24] flex items-center space-x-3">
           <button
             onClick={onClose}
             className="flex-1 py-3 rounded-xl border border-[#e5e7eb] dark:border-[#333943] text-[#242424] dark:text-[#a0aaba] font-semibold text-xs hover:bg-slate-100 dark:hover:bg-[#1c1f24] transition-colors"
