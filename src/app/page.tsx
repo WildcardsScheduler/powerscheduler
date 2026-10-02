@@ -1280,6 +1280,8 @@ export default function Home() {
         onSaveExtraGames={(scheduleExtraGames) => updateActiveLeague((prev) => ({ ...prev, scheduleExtraGames }))}
         emptySlot={league.scheduleEmptySlot}
         onSaveEmptySlot={(scheduleEmptySlot) => updateActiveLeague((prev) => ({ ...prev, scheduleEmptySlot }))}
+        blackoutDates={league.scheduleBlackoutDates}
+        onSaveBlackoutDates={(scheduleBlackoutDates) => updateActiveLeague((prev) => ({ ...prev, scheduleBlackoutDates }))}
       />
 
       {/* Locations & Sub-locations Manager Modal */}

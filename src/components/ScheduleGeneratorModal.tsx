@@ -71,6 +71,9 @@ interface ScheduleGeneratorModalProps {
   /** The league's saved choice for which time slot stays empty on nights that aren't full */
   emptySlot?: EmptySlotPreference;
   onSaveEmptySlot?: (preference: EmptySlotPreference) => void;
+  /** The league's saved blackout dates (undefined = never saved, so start from the holiday list) */
+  blackoutDates?: string[];
+  onSaveBlackoutDates?: (dates: string[]) => void;
 }
 
 const ALL_DAYS: DayOfWeek[] = [
@@ -100,6 +103,8 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   onSaveExtraGames,
   emptySlot: savedEmptySlot,
   onSaveEmptySlot,
+  blackoutDates: savedBlackoutDates,
+  onSaveBlackoutDates,
 }) => {
   const [selectedDivisionId, setSelectedDivisionId] = useState(divisions[0]?.id || '');
   // Generated State & View Navigation
@@ -152,11 +157,19 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
     return getCanadianHolidaysForDateRange(startDate, endDate, selectedProvince);
   }, [startDate, endDate, selectedProvince]);
 
-  // Blackout Dates State initialized with Canadian holidays in the league's season window
-  const [blackoutDates, setBlackoutDates] = useState<string[]>(() => {
-    const initialHolidays = getCanadianHolidaysForDateRange(defaultStartDate, defaultEndDate, 'ALL');
-    return initialHolidays.map((h) => h.date);
-  });
+  // Blackout dates are saved with the league. A league that has never saved any starts with
+  // the Canadian holidays in its season window.
+  const [blackoutDates, setBlackoutDatesState] = useState<string[]>(() =>
+    savedBlackoutDates
+      ? [...savedBlackoutDates].sort()
+      : getCanadianHolidaysForDateRange(defaultStartDate, defaultEndDate, 'ALL').map((h) => h.date)
+  );
+  const setBlackoutDates = (dates: string[]) => {
+    setBlackoutDatesState(dates);
+    setGeneratedMatches(null);
+    setGeneratedReport(null);
+    onSaveBlackoutDates?.(dates);
+  };
   const [newBlackoutDate, setNewBlackoutDate] = useState('');
 
   // League nights between the start and end date (inclusive), after blackouts.

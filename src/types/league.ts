@@ -169,6 +169,7 @@ export interface LeagueSeason {
   rulesContent?: string; // Custom pasted league rules and policies (Markdown / Plain Text)
   publicFairnessReport?: boolean; // League option: Allow team captains and public to view Fairness Report
   scheduleExtraGames?: 'exhibition' | 'none'; // Auto-scheduler: keep games beyond an even count as Exhibition, or leave them out
+  scheduleBlackoutDates?: string[]; // Auto-scheduler: saved blackout dates (YYYY-MM-DD)
   scheduleEmptySlot?: string; // Auto-scheduler: which time slot stays empty on nights that aren't full ('latest', 'earliest', 'none' or "HH:MM")
   schedulerPriorities?: { id: string; mode: 'must' | 'ranked' | 'off' }[]; // Auto-scheduler rule ranking (most important first)
   locations: Location[];
