@@ -10,6 +10,7 @@ import { StandingsTable } from '@/components/StandingsTable';
 import { ScheduleGrid } from '@/components/ScheduleGrid';
 import { ScorekeeperModal } from '@/components/ScorekeeperModal';
 import { ScheduleGeneratorModal } from '@/components/ScheduleGeneratorModal';
+import type { SchedulerPriority } from '@/utils/schedulePriorities';
 import { LocationManagerModal } from '@/components/LocationManagerModal';
 import { LeagueManagerModal } from '@/components/LeagueManagerModal';
 import { DivisionManagerModal } from '@/components/DivisionManagerModal';
@@ -1252,6 +1253,8 @@ export default function Home() {
         onApplySchedule={handleApplySchedule}
         defaultStartDate={league.startDate}
         defaultEndDate={league.endDate}
+        priorities={league.schedulerPriorities as SchedulerPriority[] | undefined}
+        onSavePriorities={(schedulerPriorities) => updateActiveLeague((prev) => ({ ...prev, schedulerPriorities }))}
       />
 
       {/* Locations & Sub-locations Manager Modal */}

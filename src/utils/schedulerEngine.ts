@@ -27,6 +27,16 @@ export interface ScheduleGeneratorOptions {
   ensureEqualGames?: boolean;
   fairnessTimeSlots?: boolean;
   fairnessCourts?: boolean;
+
+  // Used by the priority optimizer to try many variations of a schedule
+  seed?: number; // When set, team order, court order and ties are shuffled with this seed (same seed = same schedule)
+  weights?: SchedulerWeights; // How strongly each balancing rule pulls when choosing slots and opponents
+}
+
+export interface SchedulerWeights {
+  timeSlots?: number; // default 10
+  courts?: number; // default 5
+  rematchSpacing?: number; // default 4 (recent rematch penalty)
 }
 
 export interface TeamFairnessMetric {
@@ -104,7 +114,17 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
     ensureEqualGames = true,
     fairnessTimeSlots = true,
     fairnessCourts = true,
+    seed,
+    weights = {},
   } = options;
+
+  const timeSlotWeight = weights.timeSlots ?? 10;
+  const courtWeight = weights.courts ?? 5;
+  const spacingWeight = weights.rematchSpacing ?? 4;
+
+  // Optional seeded randomness so the optimizer can explore different, repeatable schedules
+  const random = seed === undefined ? null : mulberry32(seed);
+  const tieBreak = () => (random ? random() * 0.5 : 0);
 
   const emptyReport: ScheduleFairnessReport = {
     totalSlotsAvailable: 0,
@@ -154,6 +174,8 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
 
   // Berger Tables Round Robin Generator
   const teamIds = teams.map((t) => t.id);
+  if (random) shuffleInPlace(teamIds, random);
+  const orderedCourts = random ? shuffleInPlace([...courts], random) : courts;
   const isOdd = teamIds.length % 2 !== 0;
   const dummyTeam = 'BYE';
   
@@ -208,7 +230,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   };
   // Lower is better: balance head-to-head counts first; a same-night rematch outweighs one extra meeting
   const opponentScore = (a: string, b: string) =>
-    (headToHeadCounts.get(a)?.get(b) || 0) * 10 + recencyPenalty(a, b) * 4;
+    (headToHeadCounts.get(a)?.get(b) || 0) * 10 + recencyPenalty(a, b) * spacingWeight;
   const recordMeeting = (home: string, away: string) => {
     incrementMapCount(headToHeadCounts.get(home)!, away);
     incrementMapCount(headToHeadCounts.get(away)!, home);
@@ -267,7 +289,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
       const slotStart = effectiveTimeSlots[slotIdx];
       const slotEnd = addMinutesToTimeString(slotStart, matchDurationMinutes);
 
-      for (const court of courts) {
+      for (const court of orderedCourts) {
         if (!isCourtFree(dateStr, slotStart, court.id)) continue;
 
         // Find best pairing for this (court, timeSlot) based on fairness scoring
@@ -280,18 +302,18 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
           const p = roundPairings[pIdx];
 
           // Calculate Fairness Score (lower is fairer)
-          let score = 0;
+          let score = tieBreak();
 
           if (fairnessTimeSlots) {
             const hSlotCount = timeSlotUsage.get(p.home)?.get(slotStart) || 0;
             const aSlotCount = timeSlotUsage.get(p.away)?.get(slotStart) || 0;
-            score += (hSlotCount + aSlotCount) * 10;
+            score += (hSlotCount + aSlotCount) * timeSlotWeight;
           }
 
           if (fairnessCourts) {
             const hCourtCount = courtUsage.get(p.home)?.get(court.id) || 0;
             const aCourtCount = courtUsage.get(p.away)?.get(court.id) || 0;
-            score += (hCourtCount + aCourtCount) * 5;
+            score += (hCourtCount + aCourtCount) * courtWeight;
           }
 
           if (score < bestScore) {
@@ -363,7 +385,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
             const slotStart = effectiveTimeSlots[slotIdx];
             const slotEnd = addMinutesToTimeString(slotStart, matchDurationMinutes);
 
-            for (const court of courts) {
+            for (const court of orderedCourts) {
               if (isCourtFree(dateStr, slotStart, court.id)) {
                 const currentNightMatches = matches.filter((m) => m.date === dateStr);
                 const teamsBusyInSlot = new Set<string>();
@@ -457,7 +479,7 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
         const slotStart = effectiveTimeSlots[slotIdx];
         const slotEnd = addMinutesToTimeString(slotStart, matchDurationMinutes);
 
-        for (const court of courts) {
+        for (const court of orderedCourts) {
           // Skip slots already used by this schedule or another division
           if (isCourtFree(dateStr, slotStart, court.id)) {
             const dateMatches = matches.filter((m) => m.date === dateStr);
@@ -938,6 +960,26 @@ export function slotKey(date: string, startTime: string, courtId: string): strin
 }
 
 // Formats a Date as YYYY-MM-DD using local time (toISOString() would convert to UTC first)
+/** Small, fast seeded random number generator (returns 0 <= n < 1). */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffleInPlace<T>(items: T[], random: () => number): T[] {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
 export function toLocalIsoDate(d: Date): string {
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');

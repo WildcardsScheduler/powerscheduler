@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import { Division, SubLocation, Location, Team, Match, DayOfWeek } from '@/types/league';
 import {
-  generateVolleyballSchedule,
   generateValidDates,
   buildWeekNumbers,
   slotKey,
@@ -39,6 +38,16 @@ import {
 import { PrintScheduleModal } from './PrintScheduleModal';
 import { OpponentTimeline } from './OpponentTimeline';
 import { CourtAvailabilityPanel } from './CourtAvailabilityPanel';
+import { PriorityRankingPanel } from './PriorityRankingPanel';
+import {
+  DEFAULT_ATTEMPTS,
+  PRIORITY_RULES,
+  PriorityRuleId,
+  RuleScores,
+  SchedulerPriority,
+  normalizePriorities,
+  optimizeSchedule,
+} from '@/utils/schedulePriorities';
 
 interface ScheduleGeneratorModalProps {
   divisions: Division[];
@@ -51,6 +60,9 @@ interface ScheduleGeneratorModalProps {
   onApplySchedule: (newMatches: Match[], divisionId: string) => void;
   defaultStartDate?: string;
   defaultEndDate?: string;
+  /** The league's saved priority ranking */
+  priorities?: SchedulerPriority[];
+  onSavePriorities?: (priorities: SchedulerPriority[]) => void;
 }
 
 const ALL_DAYS: DayOfWeek[] = [
@@ -74,6 +86,8 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   onApplySchedule,
   defaultStartDate = '2026-09-08',
   defaultEndDate = '2026-11-24',
+  priorities: savedPriorities,
+  onSavePriorities,
 }) => {
   const [selectedDivisionId, setSelectedDivisionId] = useState(divisions[0]?.id || '');
   // Generated State & View Navigation
@@ -144,14 +158,20 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
   // Advanced Rules & Priorities
   const [fillAllTimeslots, setFillAllTimeslots] = useState(true); // Default ON to maximize slot utilization
-  const [guaranteeWeeklyPlay, setGuaranteeWeeklyPlay] = useState(true); // Guarantee every team plays on each league night
   const [enableDoubleHeaders, setEnableDoubleHeaders] = useState(false);
   const [doubleHeaderMode, setDoubleHeaderMode] = useState<'back_to_back' | 'spaced'>('back_to_back');
   const [markDoubleHeadersAsExhibition, setMarkDoubleHeadersAsExhibition] = useState(true); // Default ON: Extra double headers marked as Exhibition
-  const [spaceOutOpponents, setSpaceOutOpponents] = useState(true);
-  const [ensureEqualGames, setEnsureEqualGames] = useState(true);
-  const [fairnessTimeSlots, setFairnessTimeSlots] = useState(true);
-  const [fairnessCourts, setFairnessCourts] = useState(true);
+
+  // Rule ranking (most important first) and which rules are mandatory; saved with the league
+  const [priorities, setPriorities] = useState<SchedulerPriority[]>(() => normalizePriorities(savedPriorities));
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState({ done: 0, total: DEFAULT_ATTEMPTS });
+  const [priorityResult, setPriorityResult] = useState<{
+    scores: RuleScores;
+    broken: PriorityRuleId[];
+    attempts: number;
+    rules: SchedulerPriority[];
+  } | null>(null);
 
   // Head-to-Head Opponent Matrix View Mode
   const [h2hFilter, setH2hFilter] = useState<'breakdown' | 'official' | 'exhibition' | 'all'>('breakdown');
@@ -233,7 +253,24 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
     setBlackoutDates([]);
   };
 
-  const handleGeneratePreview = () => {
+  // Rules that can't apply with the current settings are treated as Off
+  const notApplicable: Partial<Record<PriorityRuleId, string>> = {
+    ...(assignWorkTeams ? {} : { refDuty: 'Not used: referees are not being assigned (self-reffed).' }),
+    ...(activeCourts.length < 2 ? { courts: 'Not used: only one court is selected.' } : {}),
+    ...(timeSlots.length < 2 ? { timeSlots: 'Not used: only one time slot per night.' } : {}),
+  };
+  const effectivePriorities = priorities.map((p) => (notApplicable[p.id] ? { ...p, mode: 'off' as const } : p));
+
+  const handlePrioritiesChange = (next: SchedulerPriority[]) => {
+    setPriorities(next);
+    setGeneratedMatches(null);
+    setGeneratedReport(null);
+    setPriorityResult(null);
+    onSavePriorities?.(next);
+  };
+
+  const handleGeneratePreview = async () => {
+    if (isGenerating) return;
     if (activeCourts.length === 0) {
       setWarnings(['At least 1 court / playing surface must be selected to generate a schedule.']);
       setGeneratedMatches(null);
@@ -241,7 +278,9 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
       return;
     }
 
-    const res = generateVolleyballSchedule({
+    setIsGenerating(true);
+    setProgress({ done: 0, total: DEFAULT_ATTEMPTS });
+    const optimized = await optimizeSchedule({
       divisionId: selectedDivisionId,
       teams: divisionTeams,
       courts: activeCourts,
@@ -260,17 +299,19 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
       enableDoubleHeaders,
       doubleHeaderMode,
       fillAllTimeslots,
-      guaranteeWeeklyPlay,
       markDoubleHeadersAsExhibition,
-      spaceOutOpponents,
-      ensureEqualGames,
-      fairnessTimeSlots,
-      fairnessCourts,
-    });
+    }, effectivePriorities, DEFAULT_ATTEMPTS, (done, total) => setProgress({ done, total }));
+    setIsGenerating(false);
 
+    const res = optimized.result;
+    const mustWarnings = optimized.broken.map(
+      (id) =>
+        `Must-have rule not possible with these settings: "${PRIORITY_RULES[id].label}". Best found: ${PRIORITY_RULES[id].describe(optimized.scores[id]).toLowerCase()}.`
+    );
     setGeneratedMatches(res.matches);
     setGeneratedReport(res.report);
-    setWarnings(res.warnings);
+    setWarnings([...mustWarnings, ...res.warnings]);
+    setPriorityResult({ scores: optimized.scores, broken: optimized.broken, attempts: optimized.attempts, rules: effectivePriorities });
     setViewMode('report');
   };
 
@@ -805,28 +846,6 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   </span>
                 </div>
 
-                {/* GUARANTEE EVERY TEAM PLAYS EACH LEAGUE NIGHT */}
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
-                  <div className="space-y-0.5 pr-2">
-                    <span className="font-extrabold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
-                      <Calendar className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-                      <span>Guarantee Every Team Plays Each League Night</span>
-                      <span className="bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 text-[10px] font-bold px-1.5 py-0.2 rounded">
-                        NO BYE WEEKS
-                      </span>
-                    </span>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                      Ensures every team is scheduled to play at least once on every scheduled week/night (no sit-out weeks). If an odd number of teams or rotation creates a bye, automatically pairs a match so all teams are active every week.
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={guaranteeWeeklyPlay}
-                    onChange={(e) => setGuaranteeWeeklyPlay(e.target.checked)}
-                    className="h-5 w-5 rounded accent-cyan-500 cursor-pointer shrink-0"
-                  />
-                </div>
-
                 {/* 1. CAPACITY BOOSTER: FILL ALL TIMESLOTS */}
                 <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
                   <div className="flex items-center justify-between">
@@ -921,34 +940,6 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   )}
                 </div>
 
-                {/* 3. OPPONENT REMATCH SPACING */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
-                  <div>
-                    <span className="font-bold text-slate-900 dark:text-white block text-xs">Opponent Rotation Spacing</span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Prevent teams from facing the same opponent in consecutive weeks</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={spaceOutOpponents}
-                    onChange={(e) => setSpaceOutOpponents(e.target.checked)}
-                    className="h-4 w-4 rounded accent-emerald-500"
-                  />
-                </div>
-
-                {/* 4. EQUALIZE OFFICIAL GAMES */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
-                  <div>
-                    <span className="font-bold text-slate-900 dark:text-white block text-xs">Equalize Official Games Count</span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Ensure all teams have identical official games (flag extra double-headers as Exhibition)</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={ensureEqualGames}
-                    onChange={(e) => setEnsureEqualGames(e.target.checked)}
-                    className="h-4 w-4 rounded accent-emerald-500"
-                  />
-                </div>
-
                 {/* 5. REF / WORK TEAM DUTY */}
                 <div className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
                   assignWorkTeams ? 'bg-violet-50 dark:bg-violet-500/10 border-violet-300 dark:border-violet-500/30' : 'bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800'
@@ -976,46 +967,29 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                   />
                 </div>
 
-                {/* 6. FAIRNESS MATRIX TOGGLES */}
-                <div className="space-y-2 pt-1">
-                  <span className="font-bold text-amber-700 dark:text-amber-400 text-xs block flex items-center gap-1">
-                    <Scale className="h-3.5 w-3.5" /> Additional Fairness Balancing Toggles
-                  </span>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <label className="flex items-center space-x-2 bg-white dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={fairnessTimeSlots}
-                        onChange={(e) => setFairnessTimeSlots(e.target.checked)}
-                        className="rounded accent-amber-500"
-                      />
-                      <span>Equal Early / Late Time Slots</span>
-                    </label>
-
-                    <label className="flex items-center space-x-2 bg-white dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={fairnessCourts}
-                        onChange={(e) => setFairnessCourts(e.target.checked)}
-                        className="rounded accent-amber-500"
-                      />
-                      <span>Equal Court 1/2 Distribution</span>
-                    </label>
-                  </div>
-                </div>
-
               </div>
+
+              <PriorityRankingPanel
+                priorities={priorities}
+                onChange={handlePrioritiesChange}
+                notApplicable={notApplicable}
+                lastScores={priorityResult?.scores}
+              />
 
               {/* Action Button to Generate Preview */}
               <div>
                 <button
                   type="button"
                   onClick={handleGeneratePreview}
-                  className="w-full py-3.5 bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] font-extrabold text-xs sm:text-sm rounded-2xl shadow-xs transition-all flex items-center justify-center space-x-2 tracking-wide"
+                  disabled={isGenerating}
+                  className="disabled:opacity-70 disabled:cursor-wait w-full py-3.5 bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] font-extrabold text-xs sm:text-sm rounded-2xl shadow-xs transition-all flex items-center justify-center space-x-2 tracking-wide"
                 >
                   <Sparkles className="h-4 w-4" />
-                  <span>Generate Schedule & View Fairness Report</span>
+                  <span>
+                    {isGenerating
+                      ? `Finding the best schedule… ${Math.round((progress.done / progress.total) * 100)}%`
+                      : 'Generate Schedule & View Fairness Report'}
+                  </span>
                 </button>
               </div>
 
@@ -1039,6 +1013,70 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
           {/* VIEW MODE 2: PRE-CONFIRMATION FAIRNESS REPORT */}
           {viewMode === 'report' && generatedReport && (
             <div className="space-y-6 animate-in fade-in duration-150">
+
+              {/* How the chosen schedule does on each ranked rule */}
+              {priorityResult && (
+                <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-emerald-500/30 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>Your Priorities</span>
+                    </h4>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Best of {priorityResult.attempts} schedules tried
+                    </span>
+                  </div>
+                  <ol className="space-y-1.5">
+                    {priorityResult.rules
+                      .filter((r) => r.mode !== 'off')
+                      .map((r, i) => {
+                        const info = PRIORITY_RULES[r.id];
+                        const score = priorityResult.scores[r.id];
+                        const broken = priorityResult.broken.includes(r.id);
+                        return (
+                          <li
+                            key={r.id}
+                            className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-xs ${
+                              broken
+                                ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-300 dark:border-rose-500/40'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                            }`}
+                          >
+                            <span className="h-5 w-5 shrink-0 rounded-full bg-slate-900 dark:bg-slate-200 text-white dark:text-slate-900 text-[10px] font-black flex items-center justify-center">
+                              {i + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-bold text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5">
+                                {info.label}
+                                {r.mode === 'must' && (
+                                  <span
+                                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                      broken
+                                        ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                                        : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                                    }`}
+                                  >
+                                    {broken ? 'MUST: NOT MET' : 'MUST: MET'}
+                                  </span>
+                                )}
+                              </div>
+                              <div className={`text-[11px] ${broken ? 'text-rose-700 dark:text-rose-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                                {info.describe(score)}
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                  </ol>
+                  {priorityResult.broken.length > 0 && (
+                    <p className="text-[11px] text-rose-700 dark:text-rose-300">
+                      No schedule could meet every must-have rule with these teams, nights and courts. This is the closest
+                      one found. Try adding a time slot or court, turning off Fill All Timeslots, or changing a rule from Must
+                      to Ranked.
+                    </p>
+                  )}
+                </div>
+              )}
               
               {/* Header Summary Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1362,56 +1400,6 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
               {/* Opponent Timeline: week-by-week opponents, flags quick rematches before applying */}
               {generatedMatches && <OpponentTimeline teams={divisionTeams} matches={generatedMatches} />}
-
-              {/* Priority Rules Compliance Checklist */}
-              <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-                <h4 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>Rule Priorities Compliance Audit</span>
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center space-x-2">
-                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${fillAllTimeslots ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-600'}`} />
-                    <div>
-                      <span className="font-bold text-slate-900 dark:text-white block">Fill All Timeslots</span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {fillAllTimeslots ? 'ACTIVE — Extra double header matches scheduled' : 'OFF'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center space-x-2">
-                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${spaceOutOpponents ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-600'}`} />
-                    <div>
-                      <span className="font-bold text-slate-900 dark:text-white block">Opponent Rematch Spacing</span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {spaceOutOpponents ? 'ACTIVE — Rematches spaced out across season' : 'OFF'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center space-x-2">
-                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${fairnessTimeSlots ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-600'}`} />
-                    <div>
-                      <span className="font-bold text-slate-900 dark:text-white block">Early vs Late Time Slot Balance</span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {fairnessTimeSlots ? 'ACTIVE — Fairness matrix applied' : 'OFF'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center space-x-2">
-                    <CheckCircle2 className={`h-4 w-4 shrink-0 ${assignWorkTeams ? 'text-violet-600 dark:text-violet-400' : 'text-amber-600 dark:text-amber-400'}`} />
-                    <div>
-                      <span className="font-bold text-slate-900 dark:text-white block">Ref / Work Duty Mode</span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {assignWorkTeams ? 'Work Teams Assigned' : 'Self-Reffed League'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
             </div>
           )}

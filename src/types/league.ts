@@ -168,6 +168,7 @@ export interface LeagueSeason {
   scheduleOptions?: AdvancedScheduleOptions;
   rulesContent?: string; // Custom pasted league rules and policies (Markdown / Plain Text)
   publicFairnessReport?: boolean; // League option: Allow team captains and public to view Fairness Report
+  schedulerPriorities?: { id: string; mode: 'must' | 'ranked' | 'off' }[]; // Auto-scheduler rule ranking (most important first)
   locations: Location[];
   facilities?: Location[]; // Alias
   divisions: Division[];
