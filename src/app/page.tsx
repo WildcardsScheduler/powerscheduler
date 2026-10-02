@@ -1192,6 +1192,7 @@ export default function Home() {
             leagueName={league.name}
             hasMultipleDivisions={league.divisions.length > 1}
             matchRules={league.matchRules}
+            hasExhibitionGames={league.matches.some((m) => m.divisionId === activeDivision.id && m.isExhibition)}
           />
         )}
 

@@ -93,7 +93,7 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
   );
   const [status, setStatus] = useState<Match['status']>(match?.status || 'Scheduled');
   const [conflictError, setConflictError] = useState('');
-  const [isExhibition] = useState<boolean>(match?.isExhibition || false);
+  const [isExhibition, setIsExhibition] = useState<boolean>(match?.isExhibition || false);
   const [notes] = useState<string>(match?.notes || '');
 
   const currentDivTeams = useMemo(() => {
@@ -369,6 +369,29 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
               </select>
             </div>
           </div>
+
+          {/* Exhibition toggle */}
+          <label
+            className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+              isExhibition
+                ? 'bg-amber-500/10 border-dashed border-amber-400 dark:border-amber-500/60'
+                : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={isExhibition}
+              onChange={(e) => setIsExhibition(e.target.checked)}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-amber-500"
+            />
+            <span className="text-xs">
+              <span className="font-bold text-slate-900 dark:text-white block">Exhibition game</span>
+              <span className="text-slate-500 dark:text-slate-400">
+                Shown with an Exhibition label. Its result is not counted in standings
+                {match?.status === 'Completed' ? ' (standings update as soon as you save)' : ''}.
+              </span>
+            </span>
+          </label>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Start Time */}

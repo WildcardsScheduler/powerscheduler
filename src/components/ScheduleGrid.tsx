@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Match, Team, Location, Division } from '@/types/league';
 import { Calendar, Clock, ShieldAlert, Edit3, CheckCircle2, Building2, Filter, Printer, Lock, Plus, Scale, Wrench } from 'lucide-react';
+import { EXHIBITION_CARD_BORDER, ExhibitionNotice } from './ExhibitionBadge';
 import { PrintScheduleModal } from './PrintScheduleModal';
 import { formatTimeRange, formatShortDate } from '@/utils/formatUtils';
 
@@ -204,11 +205,16 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             const away = teamMap.get(match.awayTeamId);
             const work = match.workTeamId ? teamMap.get(match.workTeamId) : undefined;
             const { primaryLoc, subLoc } = getMatchLocation(match);
+            const hasScore = match.status === 'Completed' && match.scores.length > 0;
 
             return (
               <div
                 key={match.id}
-                className="bg-slate-50 dark:bg-[#0e1012] border border-[#e5e7eb] dark:border-[#1c1f24] rounded-2xl p-4 space-y-3 hover:border-slate-300 dark:hover:border-[#333943] transition-all group relative overflow-hidden shadow-xs"
+                className={`@container bg-slate-50 dark:bg-[#0e1012] border rounded-2xl p-4 space-y-3 transition-all group relative overflow-hidden shadow-xs ${
+                  match.isExhibition
+                    ? EXHIBITION_CARD_BORDER
+                    : 'border-[#e5e7eb] dark:border-[#1c1f24] hover:border-slate-300 dark:hover:border-[#333943]'
+                }`}
               >
                 {/* Status & Location Bar Top */}
                 <div className="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-[#a0aaba]">
@@ -246,8 +252,14 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                   </div>
                 </div>
 
-                {/* Match Teams Banner */}
-                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 py-2 px-3 bg-white/80 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                {match.isExhibition && <ExhibitionNotice />}
+
+                {/* Match Teams Banner (on narrow cards a final score drops onto its own line so team names stay readable) */}
+                <div
+                  className={`grid items-center gap-2 py-2 px-3 ${
+                    hasScore ? 'grid-cols-2 @md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]' : 'grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]'
+                  } bg-white/80 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs`}
+                >
                   {/* Home Team */}
                   <div className="flex items-center space-x-2 min-w-0">
                     <span
@@ -267,9 +279,17 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                   </div>
 
                   {/* Score / VS Badge */}
-                  <div className="px-2.5 py-1 bg-slate-100 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 text-center shrink-0">
-                    {match.status === 'Completed' && match.scores.length > 0 ? (
-                      <div className="font-mono font-extrabold text-xs text-amber-600 dark:text-amber-400">
+                  <div
+                    className={`px-2.5 py-1 bg-slate-100 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 text-center shrink-0 ${
+                      hasScore ? 'col-span-2 order-last justify-self-center @md:col-span-1 @md:order-none' : ''
+                    }`}
+                  >
+                    {hasScore ? (
+                      <div
+                        className={`font-mono font-extrabold text-xs ${
+                          match.isExhibition ? 'text-slate-500 dark:text-slate-400' : 'text-amber-600 dark:text-amber-400'
+                        }`}
+                      >
                         {match.scores.map((s) => `${s.homeScore}-${s.awayScore}`).join(' | ')}
                       </div>
                     ) : (
@@ -323,10 +343,17 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
                     if (readOnly) {
                       return match.status === 'Completed' ? (
-                        <span className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                          <CheckCircle2 className="h-3 w-3" />
-                          <span>Official Final</span>
-                        </span>
+                        match.isExhibition ? (
+                          <span className="flex items-center space-x-1 text-slate-500 dark:text-slate-400 text-[11px] font-bold bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span>Final</span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span>Official Final</span>
+                          </span>
+                        )
                       ) : (
                         <span className="text-slate-500 text-[11px] font-medium">Scheduled</span>
                       );

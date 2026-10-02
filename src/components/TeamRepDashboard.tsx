@@ -26,6 +26,7 @@ import {
   EyeOff,Shield,
   X
 } from 'lucide-react';
+import { EXHIBITION_CARD_BORDER, ExhibitionBadge, ExhibitionNotice } from './ExhibitionBadge';
 import { formatTimeRange } from '@/utils/formatUtils';
 import { DEFAULT_LEAGUE_RULES } from '@/data/defaultRules';
 
@@ -524,13 +525,19 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
         <>
           {/* Next Match & Ref Duty Highlight Card */}
           {nextMatch ? (
-            <div className="relative overflow-hidden bg-white dark:bg-[#15171b] border border-slate-200 dark:border-[#1c1f24] rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
+            <div
+              className={`relative overflow-hidden bg-white dark:bg-[#15171b] border rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 ${
+                nextMatch.isExhibition ? EXHIBITION_CARD_BORDER : 'border-slate-200 dark:border-[#1c1f24]'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
                 <span className="bg-slate-100 dark:bg-[#1c1f24] text-slate-800 dark:text-white border border-slate-200 dark:border-[#333943] text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">
                   Next Upcoming Fixture
                 </span>
-                <span className="text-xs text-slate-500 dark:text-[#8b96aa] font-mono">Week #{nextMatch.weekNumber}</span>
+                <span className="text-xs text-slate-500 dark:text-[#8b96aa] font-mono shrink-0">Week #{nextMatch.weekNumber}</span>
               </div>
+
+              {nextMatch.isExhibition && <ExhibitionNotice />}
 
               {/* If Team is assigned to Officiate (Ref Duty) */}
               {isRefDutyNext && (
@@ -648,8 +655,8 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                       key={m.id}
                       className="py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
                     >
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span className="font-mono text-slate-500 dark:text-slate-400 font-bold">Wk #{m.weekNumber}</span>
                           <span className="text-slate-400 dark:text-slate-500">•</span>
                           <span className="text-slate-900 dark:text-white font-semibold">{m.date}</span>
@@ -659,6 +666,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                               Ref Duty
                             </span>
                           )}
+                          {m.isExhibition && <ExhibitionBadge />}
                         </div>
 
                         <div className="text-slate-700 dark:text-slate-300">
@@ -695,8 +703,11 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
 
                           return (
                             <span
+                              title={m.isExhibition ? 'Exhibition result: not counted in standings' : undefined}
                               className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold flex items-center space-x-1.5 border ${
-                                isWin
+                                m.isExhibition
+                                  ? 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700'
+                                  : isWin
                                   ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
                                   : isLoss
                                   ? 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30'
@@ -706,7 +717,9 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                               {isPlaying && (
                                 <span
                                   className={`text-[10px] uppercase font-black px-1.5 py-0.2 rounded ${
-                                    isWin
+                                    m.isExhibition
+                                      ? 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                                      : isWin
                                       ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
                                       : isLoss
                                       ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300'

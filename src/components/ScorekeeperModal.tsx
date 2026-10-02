@@ -153,7 +153,7 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
             <div>
               <h3 className="text-base font-bold text-[#242424] dark:text-white">Court-side Scorekeeper</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Week {match.weekNumber} • {formatTime(match.startTime)} • {division?.name || 'League Match'}
+                Week {match.weekNumber} • {formatTime(match.startTime)} • {match.isExhibition ? 'Exhibition' : division?.name || 'League Match'}
               </p>
             </div>
           </div>
@@ -175,6 +175,12 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
             </div>
           )}
           
+          {match.isExhibition && (
+            <div className="p-3 bg-amber-500/10 border border-dashed border-amber-400 dark:border-amber-500/60 rounded-2xl text-xs text-amber-800 dark:text-amber-300">
+              <span className="font-bold">Exhibition game:</span> the score is recorded but doesn&apos;t affect standings.
+            </div>
+          )}
+
           {/* Active Rules Info Banner */}
           <div className="flex items-center justify-between px-3.5 py-2 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
             <div className="flex items-center space-x-1.5 text-amber-600 dark:text-amber-400 font-semibold">

@@ -11,6 +11,8 @@ interface StandingsTableProps {
   leagueName?: string;
   hasMultipleDivisions?: boolean;
   matchRules?: MatchRules;
+  /** Shows a note that exhibition games are left out of the standings */
+  hasExhibitionGames?: boolean;
 }
 
 export const StandingsTable: React.FC<StandingsTableProps> = ({
@@ -19,6 +21,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
   leagueName,
   hasMultipleDivisions,
   matchRules,
+  hasExhibitionGames = false,
 }) => {
   const setFormatText = formatMatchRulesDescription(division.matchRules || matchRules, division.setFormat);
 
@@ -182,11 +185,18 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
             Tie-breakers: <strong className="text-slate-700 dark:text-slate-300 font-semibold">LP → Wins → Set Ratio → +/- Diff → PF</strong>
           </span>
         </div>
-        {(division.matchRules?.excludeThirdSetPointsFromDiff ?? matchRules?.excludeThirdSetPointsFromDiff ?? true) && (
-          <span className="text-slate-600 dark:text-[#a0aaba] italic font-medium whitespace-nowrap">
-            * Point Diff (+/-) counts regulation sets only
-          </span>
-        )}
+        <div className="flex flex-col sm:items-end gap-0.5">
+          {(division.matchRules?.excludeThirdSetPointsFromDiff ?? matchRules?.excludeThirdSetPointsFromDiff ?? true) && (
+            <span className="text-slate-600 dark:text-[#a0aaba] italic font-medium">
+              * Point Diff (+/-) counts regulation sets only
+            </span>
+          )}
+          {hasExhibitionGames && (
+            <span className="text-amber-700 dark:text-amber-400 italic font-medium">
+              * Exhibition games aren&apos;t included in standings
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
