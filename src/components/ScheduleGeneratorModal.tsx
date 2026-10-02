@@ -1238,7 +1238,9 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                       <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase text-[10px] tracking-wider">
                         <th className="py-2 px-3 font-semibold">Team Name</th>
                         <th className="py-2 px-3 font-semibold text-center text-emerald-600 dark:text-emerald-400">Official Games</th>
-                        <th className="py-2 px-3 font-semibold text-center text-purple-600 dark:text-purple-400">Exhibition</th>
+                        {generatedReport.exhibitionMatchesCount > 0 && (
+                          <th className="py-2 px-3 font-semibold text-center text-purple-600 dark:text-purple-400">Exhibition</th>
+                        )}
                         <th className="py-2 px-3 font-semibold text-center">Double Headers</th>
                         {/* Dynamic Time Slot Columns */}
                         {generatedReport.effectiveTimeSlots.map((slot) => (
@@ -1259,9 +1261,11 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
                           <td className="py-2.5 px-3 text-center font-extrabold text-emerald-600 dark:text-emerald-400">
                             {tm.officialGames ?? tm.totalGames}
                           </td>
-                          <td className="py-2.5 px-3 text-center font-extrabold text-purple-600 dark:text-purple-400">
-                            {tm.exhibitionGames ?? 0}
-                          </td>
+                          {generatedReport.exhibitionMatchesCount > 0 && (
+                            <td className="py-2.5 px-3 text-center font-extrabold text-purple-600 dark:text-purple-400">
+                              {tm.exhibitionGames ?? 0}
+                            </td>
+                          )}
                           <td className="py-2.5 px-3 text-center">
                             {tm.doubleHeaderCount > 0 ? (
                               <span className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold text-[10px]">

@@ -26,6 +26,7 @@ import { BackupModal } from '@/components/BackupModal';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
 import { formatMatchRulesDescription } from '@/utils/formatRules';
 import { generateRandomPin } from '@/utils/pinGenerator';
+import { isGameDay } from '@/utils/gameDay';
 import { Trophy } from 'lucide-react';
 
 export default function Home() {
@@ -400,17 +401,37 @@ export default function Home() {
       }
     };
 
-    // Admins poll quickly so their copy stays fresh (fewer save conflicts with captains);
-    // everyone else mostly checks schedules and final scores, so 30s is plenty.
-    const interval = setInterval(poll, authRole === 'scheduler' ? 6000 : 30000);
+    // Live refreshing only matters on game days (scores coming in). On game days admins poll
+    // quickly so their copy stays fresh (fewer save conflicts with captains) and everyone else
+    // every 30s. On other days viewers refresh only when they open or return to the page, and
+    // admins once a minute.
+    const isAdmin = authRole === 'scheduler';
+    const OFF_DAY_ADMIN_POLL_MS = 60000;
+    let lastTimedPoll = 0;
+    const timedPoll = () => {
+      if (!isGameDay(leaguesRef.current)) {
+        const adminDue = isAdmin && Date.now() - lastTimedPoll >= OFF_DAY_ADMIN_POLL_MS;
+        const retryingSave = isAdmin && hasUnsyncedAdminEdits();
+        if (!adminDue && !retryingSave) return;
+      }
+      lastTimedPoll = Date.now();
+      poll();
+    };
+    const interval = setInterval(timedPoll, isAdmin ? 6000 : 30000);
+    // Returning to the page can fire both "visible" and "focus"; refresh once
+    let lastReturnRefresh = 0;
     const handleVisibilityChange = () => {
-      if (!document.hidden) poll();
+      if (document.hidden || Date.now() - lastReturnRefresh < 2000) return;
+      lastReturnRefresh = Date.now();
+      poll();
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
 
     return () => {
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
     };
   }, [isLoaded, authRole, applyServerData, hasUnsyncedAdminEdits, pushLeaguesToCloud]);
 

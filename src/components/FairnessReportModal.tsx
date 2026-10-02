@@ -86,11 +86,16 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Compute balance statistics
-  const gameCounts = report.teamMetrics.map((m) => m.totalGames);
+  // Compute balance statistics. Game balance is judged on official games (the ones in the
+  // standings); exhibition games are shown separately when the league has any.
+  const gameCounts = report.teamMetrics.map((m) => m.officialGames);
   const minGames = gameCounts.length > 0 ? Math.min(...gameCounts) : 0;
   const maxGames = gameCounts.length > 0 ? Math.max(...gameCounts) : 0;
   const isGamesEqual = minGames === maxGames;
+  const hasExhibitions = report.exhibitionMatchesCount > 0;
+  const exhibitionCounts = report.teamMetrics.map((m) => m.exhibitionGames);
+  const minExhibitions = exhibitionCounts.length > 0 ? Math.min(...exhibitionCounts) : 0;
+  const maxExhibitions = exhibitionCounts.length > 0 ? Math.max(...exhibitionCounts) : 0;
 
   const refCounts = report.teamMetrics.map((m) => m.refDutyCount);
   const minRefs = refCounts.length > 0 ? Math.min(...refCounts) : 0;
@@ -228,7 +233,9 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
             
             {/* Game Count Balance */}
             <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-2xl space-y-1 shadow-xs">
-              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Games per Team</span>
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">
+                {hasExhibitions ? 'Official Games per Team' : 'Games per Team'}
+              </span>
               <div className="flex items-baseline space-x-1.5">
                 <span className="text-lg font-black text-slate-900 dark:text-white">{minGames}</span>
                 {!isGamesEqual && (
@@ -238,6 +245,12 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
               <p className={`text-[10px] font-bold ${isGamesEqual ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {isGamesEqual ? '✓ 100% Equal Games' : `±${maxGames - minGames} Game Variance`}
               </p>
+              {hasExhibitions && (
+                <p className="text-[10px] font-semibold text-purple-600 dark:text-purple-400">
+                  + {minExhibitions === maxExhibitions ? maxExhibitions : `${minExhibitions}–${maxExhibitions}`} exhibition
+                  {maxExhibitions === 1 ? '' : 's'}
+                </p>
+              )}
             </div>
 
             {/* Total Fixtures */}
@@ -289,7 +302,14 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                   <thead className="bg-slate-50 dark:bg-slate-900/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <tr>
                       <th className="py-3 px-4">Team</th>
-                      <th className="py-3 px-3 text-center">Total</th>
+                      {hasExhibitions ? (
+                        <>
+                          <th className="py-3 px-3 text-center text-emerald-600 dark:text-emerald-400">Official</th>
+                          <th className="py-3 px-3 text-center text-purple-600 dark:text-purple-400">Exhibition</th>
+                        </>
+                      ) : (
+                        <th className="py-3 px-3 text-center">Total</th>
+                      )}
                       <th className="py-3 px-3 text-center">H / A</th>
                       <th className="py-3 px-3 text-center">Dbl Hdr</th>
                       
@@ -316,9 +336,20 @@ export const FairnessReportModal: React.FC<FairnessReportModalProps> = ({
                         <td className="py-2.5 px-4 font-sans font-bold text-slate-900 dark:text-white whitespace-nowrap">
                           {metric.teamName}
                         </td>
-                        <td className="py-2.5 px-3 text-center font-bold text-amber-600 dark:text-amber-400">
-                          {metric.totalGames}
-                        </td>
+                        {hasExhibitions ? (
+                          <>
+                            <td className="py-2.5 px-3 text-center font-bold text-emerald-600 dark:text-emerald-400">
+                              {metric.officialGames}
+                            </td>
+                            <td className="py-2.5 px-3 text-center font-bold text-purple-600 dark:text-purple-400">
+                              {metric.exhibitionGames || <span className="text-slate-300 dark:text-slate-600">0</span>}
+                            </td>
+                          </>
+                        ) : (
+                          <td className="py-2.5 px-3 text-center font-bold text-amber-600 dark:text-amber-400">
+                            {metric.totalGames}
+                          </td>
+                        )}
                         <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300 whitespace-nowrap">
                           <span className="text-emerald-600 dark:text-emerald-400 font-bold">{metric.homeGames || 0}H</span>
                           <span className="text-slate-400 dark:text-slate-500"> / </span>
