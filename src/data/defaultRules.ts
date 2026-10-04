@@ -43,7 +43,7 @@ export const DEFAULT_LEAGUE_RULES = `# Rocky Wildcards Volleyball League Rules
   2. Match wins
   3. Set ratio (sets won vs. sets lost)
   4. Point differential (+/-)
-  5. Total points scored
+  5. Total points scored (sets 1 and 2)
 
 ## 7. Facility Rules
 - **No smoking or vaping** on school property, including in front of the school. **No food or drinks** in the school; water is allowed.
