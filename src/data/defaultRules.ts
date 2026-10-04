@@ -3,9 +3,11 @@ export const DEFAULT_LEAGUE_RULES = `# Rocky Wildcards Volleyball League Rules
 ## 1. Match Format & Scoring
 - **Start Times:** Matches start at the times shown on the schedule.
 - **Time Limit:** Each match gets 1 hour total, including warm-up. There is no separate warm-up time, so be ready to go at your start time and finish within the hour so the next match can start on time.
-- **Sets:** Sets 1 and 2 are rally point to 25. Set 3 is rally point to 15. All sets are win by 2, no cap.
+- **Sets:** All sets are rally point to 25, win by 2, no cap. If time won't allow a full set 3, it can be played to a lower score. Captains should agree on what set 3 is played to before it starts.
 - **Third Set:** All three sets are usually played. If one team wins sets 1 and 2, that's a sweep and the third set doesn't change the result. If sets 1 and 2 are split, the third set decides the match.
-- **Serve:** Decide first serve in set 1 with a coin toss or rock-paper-scissors. The other team serves first in set 2. If set 3 decides the match, toss again for serve.
+- **Serve & Side:** Before set 1, play rock-paper-scissors, regardless of what the schedule shows for home and away. The winner chooses either to serve or receive, or which side of the gym to play on. The other team gets the remaining choice.
+- **Set 2:** The team that didn't serve first in set 1 serves first in set 2.
+- **Set 3:** Play rock-paper-scissors again and choose the same way as set 1.
 - **Refereeing:** Matches are refereed on the honour system. Volleyball Canada rules apply. If anything needs clarifying, talk with the other team before the match starts.
 
 ## 2. Lineups & Co-ed Format
@@ -31,7 +33,7 @@ export const DEFAULT_LEAGUE_RULES = `# Rocky Wildcards Volleyball League Rules
 - **Attacking the Serve:** Blocking or attacking a serve while the ball is entirely above the top of the net is illegal.
 
 ## 6. Score Reporting & Standings
-- **Reporting:** The home team captain enters the score in the app after each match. Enter every set as it was played.
+- **Reporting:** The winning team's captain enters the score in the app after each match. Enter every set as it was played.
 - **Standings Points:** Win sets 1 and 2 (sweep): **3 points**. Split sets 1 and 2, win set 3: **2 points**. Split sets 1 and 2, lose set 3: **1 point**. Lose sets 1 and 2: **0 points**.
 - **Point Differential (+/-):** Only points from sets 1 and 2 count. Third-set scores are recorded but don't count toward +/-.
 - **Exhibition Games:** Scores are recorded but don't count in the standings.
