@@ -62,6 +62,6 @@ export const DEFAULT_LEAGUE_RULES = `# Rocky Wildcards Volleyball League Rules
 
 ## 10. Tournament Rules
 - **Format:** Matches are best 2 out of 3 with no 1-hour limit. Scoring is the same as league play.
+- **Eligibility:** To play in the tournament, a player must have played at least 4 league matches with their team (honour system).
 - **Spares:** A team may use up to 1 male and 1 female spare from outside the team per match, **only if it can't field 6 players on its own**. Teams may not sit original players to bring in spares.
-- **Prizes:** Awarded to 1st and 2nd place only.
 `;
