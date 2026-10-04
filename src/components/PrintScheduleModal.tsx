@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Match, Team, Location, Division } from '@/types/league';
-import { Printer, X, User, FileText, Layers } from 'lucide-react';
+import { Printer, X, User, FileText, Layers, KeyRound } from 'lucide-react';
 import { formatTime, formatShortDate } from '@/utils/formatUtils';
+import { CaptainPacketSheet } from './CaptainPacketSheet';
 
 interface PrintScheduleModalProps {
   isOpen: boolean;
@@ -15,6 +16,8 @@ interface PrintScheduleModalProps {
   divisions: Division[];
   selectedDivisionId: string;
   leagueName?: string;
+  /** Admin only: captain packets print every team's login PIN. */
+  canPrintCaptainPackets?: boolean;
 }
 
 export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
@@ -26,8 +29,9 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
   divisions,
   selectedDivisionId,
   leagueName = 'PowerSchedule Volleyball League',
+  canPrintCaptainPackets = false,
 }) => {
-  const [printMode, setPrintMode] = useState<'master' | 'team' | 'all_teams'>('master');
+  const [printMode, setPrintMode] = useState<'master' | 'team' | 'all_teams' | 'captain_quickstart' | 'captain_packets'>('master');
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   const [mounted, setMounted] = useState(false);
 
@@ -47,6 +51,17 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
   const activeTeamId = selectedTeamId || (divisionTeams.length > 0 ? divisionTeams[0].id : '');
 
   const teamMap = new Map<string, Team>(teams.map((t) => [t.id, t]));
+
+  // Captain packets cover every team in the league, grouped by division
+  const divisionOrder = new Map(divisions.map((d, i) => [d.id, i]));
+  const packetTeams = [...teams].sort(
+    (a, b) =>
+      (divisionOrder.get(a.divisionId) ?? 99) - (divisionOrder.get(b.divisionId) ?? 99) ||
+      a.name.localeCompare(b.name)
+  );
+  const teamsMissingPin = packetTeams.filter((t) => !t.accessPin).length;
+  const isCaptainMode = printMode === 'captain_quickstart' || printMode === 'captain_packets';
+  const packetIncludesSchedule = printMode === 'captain_packets';
 
   // Helper to dynamically resolve Location and Court
   const getMatchLocationName = (match: Match) => {
@@ -246,7 +261,47 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
               <Layers className="h-3.5 w-3.5" />
               <span>All Teams Batch Packet ({divisionTeams.length})</span>
             </button>
+
+            {canPrintCaptainPackets && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setPrintMode('captain_quickstart')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    printMode === 'captain_quickstart'
+                      ? 'bg-emerald-600 text-white font-bold shadow'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <KeyRound className="h-3.5 w-3.5" />
+                  <span>Captain Quick Starts ({packetTeams.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrintMode('captain_packets')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    printMode === 'captain_packets'
+                      ? 'bg-emerald-600 text-white font-bold shadow'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <KeyRound className="h-3.5 w-3.5" />
+                  <span>Quick Starts + Schedules ({packetTeams.length})</span>
+                </button>
+              </>
+            )}
           </div>
+
+          {/* Captain packet notice (admin only) */}
+          {isCaptainMode && (
+            <div className="flex flex-wrap items-center gap-3">
+              {teamsMissingPin > 0 && (
+                <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                  {teamsMissingPin} team{teamsMissingPin === 1 ? ' has' : 's have'} no PIN (boxes left blank)
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Team Dropdown Selector (Active when 'team' mode is selected) */}
           {printMode === 'team' && (
@@ -400,6 +455,37 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
                     />
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* MODE 4/5: CAPTAIN QUICK STARTS (team name + PIN), optionally followed by each team's schedule */}
+            {isCaptainMode && canPrintCaptainPackets && (
+              <div className="space-y-12">
+                {packetTeams.map((team, idx) => {
+                  const teamDivision = divisions.find((d) => d.id === team.divisionId);
+                  const isLast = idx === packetTeams.length - 1;
+                  const pageGap = 'page-break-after pb-8 border-b-2 border-dashed border-slate-200 dark:border-slate-800 print:border-slate-400';
+                  return (
+                    <React.Fragment key={team.id}>
+                      <div className={isLast && !packetIncludesSchedule ? '' : pageGap}>
+                        <CaptainPacketSheet team={team} divisionName={teamDivision?.name} />
+                      </div>
+                      {packetIncludesSchedule && (
+                        <div className={isLast ? '' : pageGap}>
+                          <TeamPrintSheet
+                            teamId={team.id}
+                            matches={matches.filter((m) => m.divisionId === team.divisionId)}
+                            teams={teams}
+                            locations={locations}
+                            currentDivisionName={teamDivision?.name}
+                            leagueName={leagueName}
+                            getMatchLocationName={getMatchLocationName}
+                          />
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </div>
             )}
 

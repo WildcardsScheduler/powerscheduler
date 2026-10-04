@@ -440,6 +440,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         locations={locations}
         divisions={divisions}
         selectedDivisionId={selectedDivisionId}
+        canPrintCaptainPackets={currentRole === 'scheduler'}
       />
     </div>
   );
