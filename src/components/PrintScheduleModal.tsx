@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Match, Team, Location, Division } from '@/types/league';
 import { Printer, X, User, FileText, Layers } from 'lucide-react';
-import { formatTime, formatTimeRange } from '@/utils/formatUtils';
+import { formatTime, formatShortDate } from '@/utils/formatUtils';
 
 interface PrintScheduleModalProps {
   isOpen: boolean;
@@ -147,7 +147,13 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
           }
 
           /* Prevent individual table rows and week headers from splitting in half across page margins */
-          tr, .print-week-block {
+          /* Keep subtle fills (zebra weeks, role pills) on team sheets */
+          .team-print-sheet, .team-print-sheet * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          tr, .print-week-block, .team-print-sheet tbody {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
@@ -455,151 +461,182 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
     return <div className="text-slate-500 dark:text-slate-400 p-4">Select a team to view schedule.</div>;
   }
 
-  // Filter matches involving this team (as Home, Away, or Work Team)
+  const teamName = (id: string) => teamMap.get(id)?.name || id;
+
+  // Matches involving this team (as Home, Away, or Work Team)
   const teamMatches = matches
     .filter((m) => m.homeTeamId === teamId || m.awayTeamId === teamId || m.workTeamId === teamId)
     .sort((a, b) => a.weekNumber - b.weekNumber || a.startTime.localeCompare(b.startTime));
 
-  const totalPlayingGames = teamMatches.filter((m) => m.homeTeamId === teamId || m.awayTeamId === teamId).length;
-  const totalRefDuties = teamMatches.filter((m) => m.workTeamId === teamId).length;
+  const playing = teamMatches.filter((m) => m.homeTeamId === teamId || m.awayTeamId === teamId);
+  const homeCount = playing.filter((m) => m.homeTeamId === teamId).length;
+  const awayCount = playing.length - homeCount;
+  const refCount = teamMatches.length - playing.length;
+
+  // Every week the division plays, so weeks without a game for this team show as byes
+  const divisionWeekDates = new Map<number, string>();
+  matches.forEach((m) => {
+    if (!divisionWeekDates.has(m.weekNumber)) divisionWeekDates.set(m.weekNumber, m.date);
+  });
+  const allWeeks = Array.from(divisionWeekDates.keys()).sort((a, b) => a - b);
+  const teamMatchesByWeek = new Map<number, Match[]>();
+  teamMatches.forEach((m) => {
+    const list = teamMatchesByWeek.get(m.weekNumber) || [];
+    list.push(m);
+    teamMatchesByWeek.set(m.weekNumber, list);
+  });
+  const byeCount = allWeeks.filter((w) => !teamMatchesByWeek.has(w)).length;
+
+  const firstDate = divisionWeekDates.get(allWeeks[0]);
+  const lastDate = divisionWeekDates.get(allWeeks[allWeeks.length - 1]);
+  const showNotes = teamMatches.some((m) => m.notes || m.isExhibition);
+
+  const stats: { label: string; value: number }[] = [
+    { label: 'Games', value: playing.length },
+    { label: 'Home', value: homeCount },
+    { label: 'Away', value: awayCount },
+    ...(refCount > 0 ? [{ label: 'Ref Duties', value: refCount }] : []),
+    ...(byeCount > 0 ? [{ label: 'Byes', value: byeCount }] : []),
+  ];
+
+  const pill = 'inline-block whitespace-nowrap rounded px-1.5 py-px text-[10px] font-extrabold tracking-wider border';
 
   return (
-    <div className="space-y-6 print:space-y-3 bg-white dark:bg-slate-950 print:bg-white p-4 sm:p-6 print:p-0 rounded-2xl border border-slate-200 dark:border-slate-800 print:border-none shadow-sm">
-      
-      {/* Team Header Banner */}
-      <div className="border-b-2 border-amber-500 pb-4 flex items-center justify-between">
-        <div>
-          <span className="text-[11px] font-extrabold uppercase tracking-widest text-amber-600 dark:text-amber-400 print:text-slate-800 block">
-            {leagueName} • {currentDivisionName || 'Main Division'}
-          </span>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white print:text-black mt-0.5">
-            Team Schedule: <span className="text-amber-600 dark:text-amber-400 print:text-black underline decoration-amber-500">{targetTeam.name}</span>
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 print:text-slate-600 mt-1">
-            Season Summary: <strong className="text-slate-900 dark:text-white print:text-black">{totalPlayingGames} Matches</strong> Scheduled
-            {totalRefDuties > 0 && <span> • <strong>{totalRefDuties} Referee Duties</strong></span>}
+    <div className="team-print-sheet bg-white dark:bg-slate-950 print:bg-white text-slate-900 dark:text-slate-100 print:text-slate-900">
+      {/* Header */}
+      <div className="flex items-end justify-between gap-4 pb-3 border-b-[3px] border-slate-900 dark:border-slate-200 print:border-slate-900">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 print:text-slate-600">
+            {leagueName} · {currentDivisionName || 'Main Division'}
+          </p>
+          <h1 className="mt-1 text-3xl font-black leading-tight tracking-tight">{targetTeam.name}</h1>
+          <p className="mt-0.5 text-xs font-semibold text-slate-600 dark:text-slate-300 print:text-slate-700">
+            Team Schedule
+            {firstDate && lastDate && (
+              <span className="font-normal"> · {formatShortDate(firstDate)} – {formatShortDate(lastDate)}</span>
+            )}
           </p>
         </div>
 
-        <div className="text-right shrink-0">
-          <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-500/30 print:border-slate-800 print:bg-slate-100 text-center">
-            <span className="block text-xs font-bold text-amber-700 dark:text-amber-400 print:text-black">TEAM SCHEDULE</span>
-            <span className="block text-[10px] text-slate-500 dark:text-slate-400 print:text-slate-600 font-mono">HIGHLIGHTED</span>
-          </div>
+        <div className="flex shrink-0 divide-x divide-slate-200 dark:divide-slate-700 print:divide-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 print:border-slate-300">
+          {stats.map((s) => (
+            <div key={s.label} className="px-3 py-1.5 text-center">
+              <div className="text-lg font-black leading-none">{s.value}</div>
+              <div className="mt-1 text-[9px] font-bold uppercase tracking-wider whitespace-nowrap text-slate-500 dark:text-slate-400 print:text-slate-600">
+                {s.label}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Team Matches Table */}
+      {/* Schedule Table */}
       {teamMatches.length === 0 ? (
         <div className="text-center py-8 text-slate-500 dark:text-slate-400">No scheduled matches found for team {targetTeam.name}.</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+        <div className="overflow-x-auto print:overflow-visible">
+          <table className="mt-3 w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b-2 border-slate-200 dark:border-slate-800 print:border-slate-400 text-slate-500 dark:text-slate-400 print:text-slate-800 uppercase text-[10px] tracking-wider">
-                <th className="py-2.5 px-3 font-bold">Week / Date</th>
-                <th className="py-2.5 px-3 font-bold">Time</th>
-                <th className="py-2.5 px-3 font-bold">Court / Location</th>
-                <th className="py-2.5 px-3 font-bold">Fixture Matchup</th>
-                <th className="py-2.5 px-3 font-bold text-center">Role / Duty</th>
-                <th className="py-2.5 px-3 font-bold text-right">Notes</th>
+              <tr className="text-[9px] uppercase tracking-wider text-slate-500 dark:text-slate-400 print:text-slate-600 border-b border-slate-300 dark:border-slate-700 print:border-slate-400">
+                <th className="py-1.5 px-2 font-bold w-10">Wk</th>
+                <th className="py-1.5 px-2 font-bold">Date</th>
+                <th className="py-1.5 px-2 font-bold">Time</th>
+                <th className="py-1.5 px-2 font-bold">Opponent</th>
+                <th className="py-1.5 px-2 font-bold text-center">Role</th>
+                <th className="py-1.5 px-2 font-bold">Court</th>
+                {showNotes && <th className="py-1.5 px-2 font-bold">Notes</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80 print:divide-slate-300">
-              {teamMatches.map((m) => {
-                const isHome = m.homeTeamId === teamId;
-                const isAway = m.awayTeamId === teamId;
-                const isRef = m.workTeamId === teamId;
 
-                const locationLabel = getMatchLocationName(m);
+            {allWeeks.map((week, weekIdx) => {
+              const weekMatches = teamMatchesByWeek.get(week) || [];
+              const zebra = weekIdx % 2 === 1 ? 'bg-slate-50 dark:bg-slate-900/50 print:bg-slate-50' : '';
+              const weekCells = (rowSpan: number, date: string) => (
+                <>
+                  <td rowSpan={rowSpan} className="py-2 px-2 align-top leading-5 font-black text-sm tabular-nums">
+                    {week}
+                  </td>
+                  <td rowSpan={rowSpan} className="py-2 px-2 align-top leading-5 whitespace-nowrap font-semibold">
+                    {formatShortDate(date)}
+                  </td>
+                </>
+              );
 
+              if (weekMatches.length === 0) {
                 return (
-                  <tr
-                    key={m.id}
-                    className={`transition-colors ${
-                      isRef
-                        ? 'bg-violet-50/70 dark:bg-violet-500/10 print:bg-slate-100'
-                        : 'bg-slate-50/60 dark:bg-slate-900/40 print:bg-white'
-                    }`}
-                  >
-                    {/* Date */}
-                    <td className="py-3 px-3 font-bold text-slate-900 dark:text-white print:text-black">
-                      <span className="text-amber-600 dark:text-amber-400 print:text-black mr-1">W{m.weekNumber}</span>
-                      <span className="font-mono text-slate-600 dark:text-slate-300 print:text-slate-800">• {m.date}</span>
-                    </td>
-
-                    {/* Time */}
-                    <td className="py-3 px-3 font-mono font-bold text-amber-600 dark:text-amber-300 print:text-black">
-                      {formatTimeRange(m.startTime, m.endTime)}
-                    </td>
-
-                    {/* Location */}
-                    <td className="py-3 px-3 text-slate-700 dark:text-slate-300 print:text-slate-800 font-medium">
-                      {locationLabel}
-                    </td>
-
-                    {/* Fixture Matchup with Target Team HIGHLIGHTED */}
-                    <td className="py-3 px-3 text-sm font-bold">
-                      {isRef ? (
-                        <span className="text-violet-700 dark:text-violet-300 print:text-slate-800">
-                          Ref Officiating: {teamMap.get(m.homeTeamId)?.name} vs {teamMap.get(m.awayTeamId)?.name}
-                        </span>
-                      ) : (
-                        <div className="flex items-center space-x-2">
-                          <span
-                            className={`px-2 py-0.5 rounded-lg border font-black ${
-                              isHome
-                                ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-sm print:bg-amber-200 print:border-black print:text-black'
-                                : 'text-slate-700 dark:text-slate-300 print:text-slate-700 border-slate-300 dark:border-slate-700'
-                            }`}
-                          >
-                            {teamMap.get(m.homeTeamId)?.name}
-                            {isHome && ' (Home)'}
-                          </span>
-                          <span className="text-slate-400 dark:text-slate-500 text-xs">vs</span>
-                          <span
-                            className={`px-2 py-0.5 rounded-lg border font-black ${
-                              isAway
-                                ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-sm print:bg-amber-200 print:border-black print:text-black'
-                                : 'text-slate-700 dark:text-slate-300 print:text-slate-700 border-slate-300 dark:border-slate-700'
-                            }`}
-                          >
-                            {teamMap.get(m.awayTeamId)?.name}
-                            {isAway && ' (Away)'}
-                          </span>
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Role / Duty */}
-                    <td className="py-3 px-3 text-center">
-                      {isRef ? (
-                        <span className="bg-violet-100 dark:bg-violet-500/20 text-violet-800 dark:text-violet-300 border border-violet-300 dark:border-violet-500/30 print:border-slate-800 print:text-slate-950 px-2 py-0.5 rounded-md font-extrabold text-[11px]">
-                          🏐 REFEREE
-                        </span>
-                      ) : isHome ? (
-                        <span className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 print:border-slate-800 print:text-slate-950 px-2 py-0.5 rounded-md font-bold text-[11px]">
-                          HOME TEAM
-                        </span>
-                      ) : (
-                        <span className="bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-500/30 print:border-slate-800 print:text-slate-950 px-2 py-0.5 rounded-md font-bold text-[11px]">
-                          AWAY TEAM
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Notes */}
-                    <td className="py-3 px-3 text-right font-medium text-[11px] text-slate-500 dark:text-slate-400 print:text-slate-700">
-                      {m.isExhibition && <span className="text-amber-600 dark:text-amber-400 print:text-black font-bold">[Exhibition] </span>}
-                      {m.notes || '-'}
-                    </td>
-                  </tr>
+                  <tbody key={week} className={`border-b border-slate-200 dark:border-slate-800 print:border-slate-300 ${zebra}`}>
+                    <tr className="text-slate-400 dark:text-slate-500 print:text-slate-500">
+                      {weekCells(1, divisionWeekDates.get(week) || '')}
+                      <td colSpan={showNotes ? 5 : 4} className="py-2 px-2 align-top leading-5 italic">
+                        Bye — no game this week
+                      </td>
+                    </tr>
+                  </tbody>
                 );
-              })}
-            </tbody>
+              }
+
+              return (
+                <tbody key={week} className={`border-b border-slate-200 dark:border-slate-800 print:border-slate-300 ${zebra}`}>
+                  {weekMatches.map((m, i) => {
+                    const isHome = m.homeTeamId === teamId;
+                    const isRef = !isHome && m.awayTeamId !== teamId;
+                    const opponent = isHome ? teamName(m.awayTeamId) : teamName(m.homeTeamId);
+
+                    return (
+                      <tr key={m.id} className={isRef ? 'text-slate-600 dark:text-slate-400 print:text-slate-600' : ''}>
+                        {i === 0 && weekCells(weekMatches.length, m.date)}
+                        <td className="py-2 px-2 align-top leading-5 whitespace-nowrap font-bold tabular-nums">{formatTime(m.startTime)}</td>
+                        <td className="py-2 px-2 align-top leading-5">
+                          {isRef ? (
+                            <span className="italic">
+                              {teamName(m.homeTeamId)} vs {teamName(m.awayTeamId)}
+                            </span>
+                          ) : (
+                            <span className="text-[13px] font-bold">
+                              <span className="font-medium text-slate-400 dark:text-slate-500 print:text-slate-500 mr-1">
+                                {isHome ? 'vs' : '@'}
+                              </span>
+                              {opponent}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 px-2 align-top leading-5 text-center">
+                          {isRef ? (
+                            <span className={`${pill} bg-violet-50 text-violet-700 border-violet-300 dark:bg-violet-500/15 dark:text-violet-300 dark:border-violet-500/40`}>
+                              REF
+                            </span>
+                          ) : isHome ? (
+                            <span className={`${pill} bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/40`}>
+                              HOME
+                            </span>
+                          ) : (
+                            <span className={`${pill} bg-sky-50 text-sky-700 border-sky-300 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/40`}>
+                              AWAY
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 px-2 align-top leading-5 whitespace-nowrap text-slate-600 dark:text-slate-300 print:text-slate-700">{getMatchLocationName(m)}</td>
+                        {showNotes && (
+                          <td className="py-2 px-2 align-top leading-5 text-[10px] text-slate-500 dark:text-slate-400 print:text-slate-600">
+                            {m.isExhibition && <span className="font-bold text-amber-700 dark:text-amber-400">Exhibition </span>}
+                            {m.notes}
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              );
+            })}
           </table>
         </div>
       )}
+
+      {/* Footer */}
+      <div className="mt-4 flex items-center justify-between gap-4 text-[9px] text-slate-400 dark:text-slate-500 print:text-slate-500">
+        <span>vs = home game · @ = away game</span>
+        <span>Generated {new Date().toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })} · PowerSchedule</span>
+      </div>
     </div>
   );
 };
