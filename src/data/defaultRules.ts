@@ -27,10 +27,11 @@ export const DEFAULT_LEAGUE_RULES = `# Rocky Wildcards Volleyball League Rules
 - **Net Height:** For co-ed play, the net goes in the 2nd hole from the top.
 
 ## 5. Common Calls
-- **Net Contact:** Touching the net between the antennae while playing the ball is a fault.
-- **Centre Line:** Your foot or hand may cross the centre line as long as part of it stays on or above the line and you don't interfere with the other team.
-- **First Contact:** A double contact on a team's first touch is allowed if it happens in one motion.
-- **Attacking the Serve:** Blocking or attacking a serve while the ball is entirely above the top of the net is illegal.
+- **Net Contact:** Touching the net between the antennae while playing the ball is a fault. That includes jumping, hitting and landing. Touching the net outside the antennae is fine if it doesn't interfere with play.
+- **Centre Line:** Your foot may cross the centre line as long as part of it stays on or above the line. Hands and other body parts may touch the other court. Either way, you can't interfere with the other team.
+- **Double Contact:** A double contact on a team's first touch is allowed if it happens in one action. An overhand set that double contacts is also allowed if it's one action and the ball stays on your side. A double contact on a ball going over the net is a fault.
+- **Serve:** You can't block a serve, or attack it from the front row while the ball is entirely above the top of the net.
+- **Ceiling:** The ceiling above the court is live on your own side. If your team's 1st or 2nd hit touches the ceiling, rafters or raised basketball hoops above the court and comes down on your side, keep playing. It's a fault if the ball hits the ceiling and goes over to the other side, or hits the ceiling outside the court area.
 
 ## 6. Score Reporting & Standings
 - **Reporting:** The winning team's captain enters the score in the app after each match. Enter every set as it was played.
