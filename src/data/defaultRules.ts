@@ -57,7 +57,7 @@ export const DEFAULT_LEAGUE_RULES = `# Rocky Wildcards Volleyball League Rules
 
 ## 9. Sportsmanship
 - Respect opponents, teammates and facility staff.
-- Unsportsmanlike conduct, vulgar language or aggressive behaviour can result in point penalties, set forfeits or suspension from the league.
+- Unsportsmanlike conduct, vulgar language or aggressive behaviour can result in suspension from the league.
 - Clean up water bottles and personal items from the bench area after your match.
 
 ## 10. Tournament Rules
