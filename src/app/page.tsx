@@ -23,6 +23,7 @@ import { LeagueSelectorBar } from '@/components/LeagueSelectorBar';
 import { MatchEditorModal } from '@/components/MatchEditorModal';
 import { FairnessReportModal } from '@/components/FairnessReportModal';
 import { BackupModal } from '@/components/BackupModal';
+import { AdminPackageModal } from '@/components/AdminPackageModal';
 import { createBlankLeague, createSampleLeague } from '@/utils/leagueGenerator';
 import { formatMatchRulesDescription } from '@/utils/formatRules';
 import { generateRandomPin } from '@/utils/pinGenerator';
@@ -463,6 +464,7 @@ export default function Home() {
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [isFairnessReportOpen, setIsFairnessReportOpen] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
+  const [isAdminPackageOpen, setIsAdminPackageOpen] = useState(false);
 
   // Derive effective role strictly for the current active league view
   const currentRole: UserRole =
@@ -1150,6 +1152,7 @@ export default function Home() {
             onOpenRulesModal={() => setIsRulesModalOpen(true)}
             onOpenFairnessReport={() => setIsFairnessReportOpen(true)}
             onOpenBackups={() => setIsBackupOpen(true)}
+            onOpenAdminPackage={() => setIsAdminPackageOpen(true)}
             selectedDivisionId={effectiveDivisionId}
             onSelectDivision={setSelectedDivisionId}
           />
@@ -1401,6 +1404,11 @@ export default function Home() {
           activeLeagueId={activeLeagueId}
           onRestore={handleRestoreBackup}
         />
+      )}
+
+      {/* Admin package: per-team schedules, captain quick starts, rules and calendars (admin only) */}
+      {currentRole === 'scheduler' && isAdminPackageOpen && (
+        <AdminPackageModal league={league} onClose={() => setIsAdminPackageOpen(false)} />
       )}
 
       {/* Schedule Equity & Fairness Audit Report Modal */}

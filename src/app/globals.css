@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Dark mode, except inside .force-light (used when rendering printable sheets to PDF) */
+@custom-variant dark (&:where(.dark, .dark *):not(:where(.force-light, .force-light *)));
 
 :root {
   /* Cal.md Light Theme: Paper background #f4f4f4, Graphite text #242424 */

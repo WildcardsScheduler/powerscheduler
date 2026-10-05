@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -54,13 +54,12 @@ const themeInitScript = `
 (function() {
   try {
     var stored = localStorage.getItem('powerschedule_theme_preference');
-    var isDark = true;
-    if (stored === 'light') {
-      isDark = false;
+    // Light by default; dark only when someone has chosen it (or chose to follow their device)
+    var isDark = false;
+    if (stored === 'dark') {
+      isDark = true;
     } else if (stored === 'system') {
       isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    } else {
-      isDark = true;
     }
     if (isDark) {
       document.documentElement.classList.add('dark');
@@ -82,7 +81,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased light`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

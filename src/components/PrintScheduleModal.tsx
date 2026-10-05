@@ -522,7 +522,12 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
 };
 
 // Reusable Printable Sheet Component for a single team with highlighted styling
-interface TeamPrintSheetProps {
+// Labels the auto-scheduler adds for its own bookkeeping; team sheets show only the admin's own notes
+const SCHEDULER_NOTE_LABELS =
+  /Double Header \(Slot Fill\)|Weekly Play Guarantee \(Double Header\)|Exhibition Match \(Non-Standings\)|\(Exhibition\)/g;
+const printableNote = (m: Match) => (m.notes || '').replace(SCHEDULER_NOTE_LABELS, '').replace(/\s+/g, ' ').trim();
+
+export interface TeamPrintSheetProps {
   teamId: string;
   matches: Match[];
   teams: Team[];
@@ -532,7 +537,7 @@ interface TeamPrintSheetProps {
   getMatchLocationName: (match: Match) => string;
 }
 
-const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
+export const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
   teamId,
   matches,
   teams,
@@ -575,7 +580,7 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
 
   const firstDate = divisionWeekDates.get(allWeeks[0]);
   const lastDate = divisionWeekDates.get(allWeeks[allWeeks.length - 1]);
-  const showNotes = teamMatches.some((m) => m.notes || m.isExhibition);
+  const showNotes = teamMatches.some((m) => printableNote(m) || m.isExhibition);
 
   const stats: { label: string; value: number }[] = [
     { label: 'Games', value: playing.length },
@@ -705,7 +710,7 @@ const TeamPrintSheet: React.FC<TeamPrintSheetProps> = ({
                         {showNotes && (
                           <td className="py-2 px-2 align-top leading-5 text-[10px] text-slate-500 dark:text-slate-400 print:text-slate-600">
                             {m.isExhibition && <span className="font-bold text-amber-700 dark:text-amber-400">Exhibition </span>}
-                            {m.notes}
+                            {printableNote(m)}
                           </td>
                         )}
                       </tr>

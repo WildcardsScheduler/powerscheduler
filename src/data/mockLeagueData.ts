@@ -18,9 +18,8 @@ export const initialLeagueData: LeagueSeason = {
   locations: [
     {
       id: 'loc-pioneer',
-      name: 'Pioneer Gym',
-      address: '750 Schoolhouse Road',
-      parkingInfo: 'Park in Main Gymnasium lot',
+      name: 'Pioneer School',
+      address: '5516 54 St, Rocky Mountain House, AB T4T 1S7',
       subLocations: [
         { id: 'sub-pioneer-c1', locationId: 'loc-pioneer', name: 'Court 1', surface: 'Hardwood' },
         { id: 'sub-pioneer-c2', locationId: 'loc-pioneer', name: 'Court 2', surface: 'Hardwood' },

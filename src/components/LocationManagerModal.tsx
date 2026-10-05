@@ -169,7 +169,7 @@ export const LocationManagerModal: React.FC<LocationManagerModalProps> = ({
                 />
                 <input
                   type="text"
-                  placeholder="Street Address (e.g. 750 Schoolhouse Road)"
+                  placeholder="Street Address (e.g. 5516 54 St, Rocky Mountain House, AB)"
                   value={newLocAddress}
                   onChange={(e) => setNewLocAddress(e.target.value)}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-sm"

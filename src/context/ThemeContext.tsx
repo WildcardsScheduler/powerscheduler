@@ -16,8 +16,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_STORAGE_KEY = 'powerschedule_theme_preference';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>('dark');
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
+  const [theme, setThemeState] = useState<Theme>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = useState(false);
 
   // Initialize theme from localStorage or system preference
@@ -29,10 +29,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setThemeState(stored);
       } else {
-        setThemeState('dark'); // Default to dark for existing consistency
+        setThemeState('light'); // Light by default
       }
     } catch {
-      setThemeState('dark');
+      setThemeState('light');
     }
     setMounted(true);
   }, []);
@@ -102,8 +102,8 @@ export const useTheme = (): ThemeContextType => {
   if (!context) {
     // Graceful fallback for components rendered outside of ThemeProvider
     return {
-      theme: 'dark',
-      resolvedTheme: 'dark',
+      theme: 'light',
+      resolvedTheme: 'light',
       setTheme: () => {},
       toggleTheme: () => {},
     };
