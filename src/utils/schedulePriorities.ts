@@ -18,6 +18,7 @@ export type PriorityRuleId =
   | 'sameNight'
   | 'weeklyPlay'
   | 'equalGames'
+  | 'exhibitions'
   | 'opponents'
   | 'spacing'
   | 'timeSlots'
@@ -50,6 +51,14 @@ export const PRIORITY_RULES: Record<PriorityRuleId, PriorityRuleInfo> = {
     mustMeans: 'All teams have exactly the same number of official games',
     mustLimit: 0,
     describe: (n) => (n === 0 ? 'Every team has the same number of official games' : `Official games differ by up to ${n} between teams`),
+  },
+  exhibitions: {
+    label: 'Even out exhibition games',
+    description: 'Teams get about the same number of extra (exhibition) games.',
+    mustMeans: 'Exhibition games differ by at most 1 between teams',
+    mustLimit: 1,
+    describe: (n) =>
+      n <= 1 ? 'Exhibition games evenly shared' : `Exhibition games differ by up to ${n} between teams`,
   },
   weeklyPlay: {
     label: 'Every team plays every night',
@@ -115,6 +124,7 @@ export const PRIORITY_RULES: Record<PriorityRuleId, PriorityRuleInfo> = {
 export const DEFAULT_PRIORITIES: SchedulerPriority[] = [
   { id: 'sameNight', mode: 'must' },
   { id: 'equalGames', mode: 'ranked' },
+  { id: 'exhibitions', mode: 'ranked' },
   { id: 'weeklyPlay', mode: 'ranked' },
   { id: 'opponents', mode: 'ranked' },
   { id: 'spacing', mode: 'ranked' },
@@ -174,6 +184,7 @@ const spread = (values: number[]) => (values.length ? Math.max(...values) - Math
 
 export function scoreSchedule(matches: Match[], teamIds: string[], timeSlots: string[], courtIds: string[]): RuleScores {
   const official = new Map<string, number>(teamIds.map((id) => [id, 0]));
+  const exhibition = new Map<string, number>(teamIds.map((id) => [id, 0]));
   const home = new Map<string, number>(teamIds.map((id) => [id, 0]));
   const away = new Map<string, number>(teamIds.map((id) => [id, 0]));
   const refs = new Map<string, number>(teamIds.map((id) => [id, 0]));
@@ -185,7 +196,8 @@ export function scoreSchedule(matches: Match[], teamIds: string[], timeSlots: st
   matches.forEach((m) => {
     [m.homeTeamId, m.awayTeamId].forEach((t) => {
       if (!official.has(t)) return;
-      if (!m.isExhibition) bump(official, t);
+      if (m.isExhibition) bump(exhibition, t);
+      else bump(official, t);
       bump(slotCounts.get(t)!, m.startTime);
       bump(courtCounts.get(t)!, m.subLocationId || m.courtId || '');
       if (!playedOn.has(m.date)) playedOn.set(m.date, new Set());
@@ -259,12 +271,14 @@ export function scoreSchedule(matches: Match[], teamIds: string[], timeSlots: st
     timeSlots: perTeam(slotCounts, timeSlots),
     courts: perTeam(courtCounts, courtIds),
     homeAway: teamIds.reduce((sum, t) => sum + (home.get(t)! - away.get(t)!) ** 2, 0),
+    exhibitions: unevenness(teamIds.map((t) => exhibition.get(t)!)),
   };
 
   return {
     fine,
     equalGames: spread(teamIds.map((t) => official.get(t)!)),
     weeklyPlay: sitOuts,
+    exhibitions: spread(teamIds.map((t) => exhibition.get(t)!)),
     sameNight: sameNightRematches,
     opponents: opponentSpread,
     spacing: rematches,
@@ -333,6 +347,7 @@ function weightsFor(priorities: SchedulerPriority[], jitter: () => number): Sche
     courts: 5 * strength('courts'),
     rematchSpacing: 4 * strength('spacing'),
     headToHead: 10 * Math.max(strength('opponents'), 0.5),
+    gameBalance: 6 * strength('exhibitions'),
   };
 }
 

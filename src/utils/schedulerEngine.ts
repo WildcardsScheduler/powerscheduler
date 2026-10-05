@@ -47,6 +47,7 @@ export interface SchedulerWeights {
   courts?: number; // default 5
   rematchSpacing?: number; // default 4 (recent rematch penalty)
   headToHead?: number; // default 10 (penalty per previous meeting when picking an opponent)
+  gameBalance?: number; // default 0: penalty per game a team already has when picking teams for extra games
 }
 
 export interface TeamFairnessMetric {
@@ -135,6 +136,9 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
   const courtWeight = weights.courts ?? 5;
   const spacingWeight = weights.rematchSpacing ?? 4;
   const headToHeadWeight = weights.headToHead ?? 10;
+  // Extra games (slot fills, weekly-play top-ups) lean towards teams with fewer games so far,
+  // which keeps exhibition counts even
+  const gameBalanceWeight = weights.gameBalance ?? 0;
 
   // Optional seeded randomness so the optimizer can explore different, repeatable schedules
   const random = seed === undefined ? null : mulberry32(seed);
@@ -446,8 +450,10 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
 
                   if (eligibleOpponents.length > 0) {
                     // Pick the opponent faced least (and least recently)
+                    const extraGameScore = (cand: string) =>
+                      opponentScore(uTeam, cand) + gameBalanceWeight * (teamGameCounts.get(cand) || 0);
                     opponentId = eligibleOpponents.reduce((best, cand) =>
-                      opponentScore(uTeam, cand) < opponentScore(uTeam, best) ? cand : best
+                      extraGameScore(cand) < extraGameScore(best) ? cand : best
                     );
                   }
                 }
@@ -540,8 +546,8 @@ export function generateVolleyballSchedule(options: ScheduleGeneratorOptions): G
                   const c2 = eligibleCandidates[j];
                   if (sameNightBlocked(dateStr, c1, c2)) continue;
 
-                  const pairScore = opponentScore(c1, c2);
                   const gamesSum = (teamGameCounts.get(c1) || 0) + (teamGameCounts.get(c2) || 0);
+                  const pairScore = opponentScore(c1, c2) + gameBalanceWeight * gamesSum;
 
                   if (pairScore < bestPairScore || (pairScore === bestPairScore && gamesSum < minGamesSum)) {
                     bestPairScore = pairScore;

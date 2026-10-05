@@ -39,7 +39,7 @@ describe('Scheduler priorities', () => {
   });
 
   test('a higher-ranked rule always outweighs lower-ranked ones', () => {
-    const base = { sameNight: 0, equalGames: 0, weeklyPlay: 0, opponents: 0, spacing: 0, timeSlots: 0, courts: 0, homeAway: 0, refDuty: 0 };
+    const base = { sameNight: 0, equalGames: 0, exhibitions: 0, weeklyPlay: 0, opponents: 0, spacing: 0, timeSlots: 0, courts: 0, homeAway: 0, refDuty: 0 };
     const betterSpacing = { ...base, spacing: 1, timeSlots: 9 };
     const betterSlots = { ...base, spacing: 2, timeSlots: 0 };
     assert.ok(P.compareSchedules(betterSpacing, betterSlots, ranked('spacing', 'timeSlots')) < 0);
@@ -47,7 +47,7 @@ describe('Scheduler priorities', () => {
   });
 
   test('a schedule that meets every must-rule beats one that does not, whatever the ranking', () => {
-    const base = { sameNight: 0, equalGames: 0, weeklyPlay: 0, opponents: 0, spacing: 0, timeSlots: 0, courts: 0, homeAway: 0, refDuty: 0 };
+    const base = { sameNight: 0, equalGames: 0, exhibitions: 0, weeklyPlay: 0, opponents: 0, spacing: 0, timeSlots: 0, courts: 0, homeAway: 0, refDuty: 0 };
     const priorities = [{ id: 'timeSlots', mode: 'ranked' }, { id: 'homeAway', mode: 'must' }, ...ranked().slice(2)];
     const meetsMust = { ...base, timeSlots: 5, homeAway: 1 };
     const breaksMust = { ...base, timeSlots: 0, homeAway: 3 };
@@ -133,6 +133,31 @@ describe('Scheduler priorities', () => {
     const withRule = generateVolleyballSchedule(opts).matches.length;
     const withoutRule = generateVolleyballSchedule({ ...opts, noSameNightRematches: false }).matches.length;
     assert.ok(withoutRule >= withRule);
+  });
+
+  test('exhibition games are shared out evenly while official games stay exactly equal', async () => {
+    for (const [teamCount, courtCount] of [[7, 2], [11, 3]]) {
+      const opts = {
+        ...baseOptions(teamCount),
+        courts: Array.from({ length: courtCount }, (_, i) => ({ id: 'c' + (i + 1), locationId: 'L', name: 'Court ' + (i + 1) })),
+        endDate: '2026-12-15',
+        assignWorkTeams: false,
+        fillAllTimeslots: true,
+      };
+      const { result, scores } = await P.optimizeSchedule(opts, P.DEFAULT_PRIORITIES, 100);
+      const official = new Map();
+      const exhibition = new Map(opts.teams.map((t) => [t.id, 0]));
+      result.matches.forEach((m) =>
+        [m.homeTeamId, m.awayTeamId].forEach((t) => {
+          const counts = m.isExhibition ? exhibition : official;
+          counts.set(t, (counts.get(t) || 0) + 1);
+        })
+      );
+      assert.equal(new Set(official.values()).size, 1, teamCount + ' teams: official games equal');
+      const ex = [...exhibition.values()];
+      assert.ok(Math.max(...ex) - Math.min(...ex) <= 2, teamCount + ' teams: exhibitions ' + Math.min(...ex) + '-' + Math.max(...ex));
+      assert.equal(scores.exhibitions, Math.max(...ex) - Math.min(...ex));
+    }
   });
 
   test('turning a rule off switches that behaviour off in the engine', () => {

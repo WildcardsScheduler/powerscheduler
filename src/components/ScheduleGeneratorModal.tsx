@@ -283,7 +283,12 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
 
   // Rules that can't apply with the current settings are treated as Off
   const notApplicable: Partial<Record<PriorityRuleId, string>> = {
-    ...(extraGames === 'none' ? { equalGames: 'Always met: extra games are not scheduled, so every team plays the same number.' } : {}),
+    ...(extraGames === 'none'
+      ? {
+          equalGames: 'Always met: extra games are not scheduled, so every team plays the same number.',
+          exhibitions: 'Not used: extra games are not scheduled, so there are no exhibition games.',
+        }
+      : {}),
     ...(assignWorkTeams ? {} : { refDuty: 'Not used: referees are not being assigned (self-reffed).' }),
     ...(activeCourts.length < 2 ? { courts: 'Not used: only one court is selected.' } : {}),
     ...(timeSlots.length < 2 ? { timeSlots: 'Not used: only one time slot per night.' } : {}),
