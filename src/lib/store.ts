@@ -18,6 +18,10 @@ declare global {
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 const TEMP_FILE_PATH = path.join(os.tmpdir(), '.powerschedule_cloud_data.json');
+const STORE_KEY = 'powerschedule_league_store';
+// The store's version number, kept in its own tiny key so a refresh can check
+// "has anything changed?" without downloading all the league data
+const VERSION_KEY = 'powerschedule_league_store_version';
 
 export const isCloudStoreConfigured = Boolean(UPSTASH_URL && UPSTASH_TOKEN);
 
@@ -60,12 +64,46 @@ export async function upstash(command: string, body?: string): Promise<unknown> 
   return json?.result;
 }
 
+/** Runs one Redis command given as an argument list (e.g. ["MSET", key1, value1, key2, value2]). */
+async function upstashCommand(args: string[]): Promise<unknown> {
+  const res = await fetch(`${UPSTASH_URL}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error(`Upstash ${args[0]} failed with HTTP ${res.status}`);
+  const json = await res.json();
+  if (json?.error) throw new Error(`Upstash error: ${json.error}`);
+  return json?.result;
+}
+
+/**
+ * The current store version, read from its small key (one cheap Redis read), or null if it
+ * hasn't been recorded yet. Used to answer "unchanged" without loading the whole store.
+ */
+export async function getStoreVersion(): Promise<number | null> {
+  if (isCloudStoreConfigured) {
+    const result = await upstash(`get/${VERSION_KEY}`);
+    const version = Number(result);
+    return result === null || result === undefined || !Number.isFinite(version) ? null : version;
+  }
+  return globalThis.__POWER_SCHEDULE_STORE__?.version ?? null;
+}
+
+/** Records the version key when it is missing or out of step with the store (e.g. right after this feature first deploys). */
+export async function syncStoreVersion(storeVersion: number): Promise<void> {
+  if (!isCloudStoreConfigured) return;
+  const recorded = await getStoreVersion();
+  if (recorded !== storeVersion) await upstash(`set/${VERSION_KEY}`, String(storeVersion));
+}
+
 export async function getStoreData(): Promise<LeagueStoreData> {
   // 1. Cloud database is the single source of truth when configured.
   //    If it is unreachable we throw rather than falling back to stale local copies:
   //    a later write based on stale data would overwrite the real league data.
   if (isCloudStoreConfigured) {
-    const result = await upstash('get/powerschedule_league_store');
+    const result = await upstash(`get/${STORE_KEY}`);
     if (result) {
       const parsed = typeof result === 'string' ? JSON.parse(result) : result;
       if (isValidStore(parsed)) return normalize(parsed);
@@ -107,7 +145,8 @@ export async function setStoreData(data: LeagueStoreData) {
   data.updatedAt = Date.now();
 
   if (isCloudStoreConfigured) {
-    await upstash('set/powerschedule_league_store', JSON.stringify(data));
+    // Store and version are written together in one command, so they can't get out of step
+    await upstashCommand(['MSET', STORE_KEY, JSON.stringify(data), VERSION_KEY, String(data.version)]);
     return;
   }
 

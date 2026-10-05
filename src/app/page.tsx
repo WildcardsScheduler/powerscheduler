@@ -45,6 +45,9 @@ export default function Home() {
   // --- Cloud sync bookkeeping (refs so async callbacks always see current values) ---
   // Store version of the data we last received from / saved to the server.
   const versionRef = useRef<number>(0);
+  // When set, the next timed refresh downloads everything instead of asking "has anything changed?".
+  // Used after saves where the server's copy may differ from ours (captain saves, adjusted admin saves).
+  const forceFullRefreshRef = useRef(true);
   // JSON of the leagues tree + activeId as the server last knew them. Local state that
   // differs from this has unsaved admin edits ("dirty").
   const lastSyncedLeaguesRef = useRef<string>('');
@@ -119,6 +122,7 @@ export default function Home() {
       lastSyncedLeaguesRef.current = json;
       leaguesRef.current = repaired;
       if (typeof data.version === 'number') versionRef.current = data.version;
+      forceFullRefreshRef.current = false;
       setLeagues((current) => (JSON.stringify(current) === json ? current : repaired));
       try {
         localStorage.setItem('powerschedule_leagues', json);
@@ -301,6 +305,8 @@ export default function Home() {
 
         if (res.ok) {
           if (typeof data.version === 'number') versionRef.current = data.version;
+          // The server filled something in (e.g. a missing PIN): fetch its copy on the next refresh
+          if (data.adjusted) forceFullRefreshRef.current = true;
           lastSyncedLeaguesRef.current = leaguesJson;
           lastSyncedActiveIdRef.current = activeIdSnapshot;
           syncFailureAlertedRef.current = false;
@@ -355,6 +361,9 @@ export default function Home() {
         const data = await res.json().catch(() => ({}));
         if (res.ok) {
           if (typeof data.version === 'number') versionRef.current = Math.max(versionRef.current, data.version);
+          // Other changes may have landed alongside this one, and the server may have filled in details
+          // (like the winner), so the next refresh downloads everything
+          forceFullRefreshRef.current = true;
           ok = true;
         } else {
           window.alert(`${failureMessage}: ${data.error || `HTTP ${res.status}`}`);
@@ -390,9 +399,12 @@ export default function Home() {
       if (document.hidden) return;
       if (isBusy()) return;
       try {
-        const res = await fetch('/api/leagues', { cache: 'no-store' });
+        // Ask only for changes: the server answers "unchanged" (a few bytes) when our version is current
+        const since = versionRef.current > 0 && !forceFullRefreshRef.current ? `?since=${versionRef.current}` : '';
+        const res = await fetch(`/api/leagues${since}`, { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
+        if (data?.unchanged) return;
         // Local state may have changed while this request was in flight
         if (isBusy()) return;
         if (typeof data?.version === 'number' && data.version < versionRef.current) return;

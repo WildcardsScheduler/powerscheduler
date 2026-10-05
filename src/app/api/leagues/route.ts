@@ -1,13 +1,32 @@
 import { NextResponse } from 'next/server';
 import { LeagueSeason, Team } from '@/types/league';
 import { initialLeaguesList } from '@/data/mockLeagueData';
-import { getStoreData, setStoreData, LeagueStoreData } from '@/lib/store';
+import { getStoreData, getStoreVersion, setStoreData, syncStoreVersion, LeagueStoreData } from '@/lib/store';
 import { getSession } from '@/lib/auth';
 import { generateRandomPin } from '@/utils/pinGenerator';
 
-export async function GET() {
-  const store = await getStoreData();
+export async function GET(request: Request) {
   const session = await getSession();
+  const sessionInfo = session
+    ? { role: session.role, teamId: session.teamId, leagueId: session.leagueId }
+    : { role: 'public' };
+
+  // "Has anything changed?" — a page that already has version N can pass ?since=N.
+  // If the store is still on N, reply with a few bytes instead of all the league data.
+  const sinceParam = new URL(request.url).searchParams.get('since');
+  const since = sinceParam === null ? NaN : Number(sinceParam);
+  if (Number.isFinite(since)) {
+    const current = await getStoreVersion();
+    if (current !== null && current === since) {
+      return NextResponse.json({ unchanged: true, version: current, session: sessionInfo });
+    }
+  }
+
+  const store = await getStoreData();
+  // Full loads keep the small version key in step with the store
+  if (!Number.isFinite(since) && typeof store.version === 'number') {
+    await syncStoreVersion(store.version).catch((err) => console.error('Could not record store version:', err));
+  }
 
   const isScheduler = session?.role === 'scheduler';
   const isCaptain = session?.role === 'team_rep';
@@ -46,9 +65,7 @@ export async function GET() {
     activeId: store.activeId,
     version: store.version,
     updatedAt: store.updatedAt,
-    session: session
-      ? { role: session.role, teamId: session.teamId, leagueId: session.leagueId }
-      : { role: 'public' },
+    session: sessionInfo,
   });
 }
 
@@ -141,6 +158,9 @@ export async function POST(request: Request) {
       success: true,
       leaguesCount: preservedLeagues.length,
       version: updatedStore.version,
+      // True when the server filled in a team PIN the admin's page doesn't have yet,
+      // so the page knows to download the server's copy
+      adjusted: leagues.some((l) => l.teams.some((t: Team) => !t.accessPin)),
     });
   } catch (err) {
     console.error('Failed to update cloud storage API', err);
