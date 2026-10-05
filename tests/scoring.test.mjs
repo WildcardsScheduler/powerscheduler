@@ -204,6 +204,25 @@ describe('Standings filtering and ranking', () => {
     assert.ok(standings.every((s) => s.played === 0 && s.points === 0));
   });
 
+  test('clearing a score takes the game back out of the standings', () => {
+    const played = { id: 'm1', divisionId: 'div', weekNumber: 1, date: '2026-09-08', startTime: '18:30', endTime: '', subLocationId: 'c',
+      status: 'Completed', homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-a', scores: sets([25, 20], [25, 18]) };
+    const before = calculateStandings(TEAMS, [played], 'div', rules('fivb_3pt'));
+    assert.equal(before.find((s) => s.teamId === 'team-a').points, 3, 'the win counts while the score is recorded');
+
+    // What the scorekeeper's Clear score (and the match editor's unplayed statuses) save
+    const cleared = { ...played, status: 'Scheduled', scores: [], winnerId: undefined };
+    const after = calculateStandings(TEAMS, [cleared], 'div', rules('fivb_3pt'));
+    assert.ok(after.every((s) => s.played === 0 && s.wins === 0 && s.losses === 0 && s.points === 0 && s.setsWon === 0 && s.pointsFor === 0));
+  });
+
+  test('cancelled and forfeit games with a leftover score are not counted', () => {
+    const base = { divisionId: 'div', weekNumber: 1, date: '2026-09-08', startTime: '18:30', endTime: '', subLocationId: 'c',
+      homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-a', scores: sets([25, 20], [25, 18]) };
+    const standings = calculateStandings(TEAMS, [{ ...base, id: 'c1', status: 'Cancelled' }, { ...base, id: 'f1', status: 'Forfeit' }], 'div', rules('fivb_3pt'));
+    assert.ok(standings.every((s) => s.played === 0 && s.points === 0));
+  });
+
   test('ranks by points first', () => {
     const m = { id: 'm1', divisionId: 'div', weekNumber: 1, date: '2026-09-08', startTime: '18:30', endTime: '', subLocationId: 'c',
       status: 'Completed', homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-b', scores: sets([19, 25], [21, 25]) };

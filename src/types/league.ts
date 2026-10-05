@@ -99,7 +99,7 @@ export interface SetScore {
   awayScore: number;
 }
 
-export type MatchStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Postponed';
+export type MatchStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Postponed' | 'Forfeit' | 'Cancelled';
 
 export interface Match {
   id: string;

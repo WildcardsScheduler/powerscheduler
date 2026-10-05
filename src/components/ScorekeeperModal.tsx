@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Match, Team, Division, SetScore, MatchRules, DEFAULT_MATCH_RULES } from '@/types/league';
-import { X, CheckCircle, Plus, Minus, Trophy, ShieldAlert, Info, Lock } from 'lucide-react';
+import { X, CheckCircle, Plus, Minus, Trophy, ShieldAlert, Info, Lock, RotateCcw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatTime } from '@/utils/formatUtils';
 
@@ -16,6 +16,8 @@ interface ScorekeeperModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveScore: (matchId: string, scores: SetScore[], winnerId: string) => void;
+  /** Admin only: remove the recorded score and set the game back to Scheduled */
+  onClearScore?: (matchId: string) => void;
   currentRole?: 'public' | 'team_rep' | 'scheduler';
   userTeamId?: string;
 }
@@ -30,6 +32,7 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
   isOpen,
   onClose,
   onSaveScore,
+  onClearScore,
   currentRole,
   userTeamId,
 }) => {
@@ -126,6 +129,23 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
 
   const calculatedWinnerId =
     homeSetsWon > awaySetsWon ? homeTeam.id : awaySetsWon > homeSetsWon ? awayTeam.id : undefined;
+
+  const hasRecordedScore = (match.scores?.length ?? 0) > 0 || Boolean(match.winnerId) || match.status === 'Completed';
+  const canClear = currentRole === 'scheduler' && Boolean(onClearScore) && hasRecordedScore;
+
+  const handleClear = () => {
+    if (!onClearScore) return;
+    const scoreText = (match.scores || []).map((s) => `${s.homeScore}-${s.awayScore}`).join(', ');
+    if (
+      !window.confirm(
+        `Clear the recorded score${scoreText ? ` (${scoreText})` : ''} for ${homeTeam.name} vs ${awayTeam.name}? ` +
+          'The game goes back to Scheduled and is removed from the standings.'
+      )
+    )
+      return;
+    onClearScore(match.id);
+    onClose();
+  };
 
   const handleSave = () => {
     if (!calculatedWinnerId) return;
@@ -329,6 +349,17 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
 
         {/* Modal Footer Actions */}
         <div className="mt-auto p-4 bg-slate-50 dark:bg-[#0e1012] border-t border-[#e5e7eb] dark:border-[#1c1f24] flex items-center space-x-3">
+          {canClear && (
+            <button
+              type="button"
+              onClick={handleClear}
+              title="Remove the score and set the game back to Scheduled"
+              className="py-3 px-3 rounded-xl border border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 font-semibold text-xs hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors flex items-center gap-1.5 shrink-0"
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span>Clear score</span>
+            </button>
+          )}
           <button
             onClick={onClose}
             className="flex-1 py-3 rounded-xl border border-[#e5e7eb] dark:border-[#333943] text-[#242424] dark:text-[#a0aaba] font-semibold text-xs hover:bg-slate-100 dark:hover:bg-[#1c1f24] transition-colors"

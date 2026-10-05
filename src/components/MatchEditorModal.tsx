@@ -56,6 +56,9 @@ function resolveScoresForTeams(
   return { scores: [], winnerId: undefined };
 }
 
+/** Statuses that mean the game hasn't been played, so it can't keep a score or winner. */
+const UNPLAYED_STATUSES: Match['status'][] = ['Scheduled', 'Postponed', 'Cancelled'];
+
 export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
   isOpen,
   onClose,
@@ -128,6 +131,11 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
     }
   };
 
+  // Setting a played game back to Scheduled / Postponed / Cancelled removes its score and winner
+  const hasRecordedScore = Boolean(match && ((match.scores?.length ?? 0) > 0 || match.winnerId));
+  const clearsScore = hasRecordedScore && UNPLAYED_STATUSES.includes(status);
+  const recordedScoreText = (match?.scores || []).map((s) => `${s.homeScore}-${s.awayScore}`).join(', ');
+
   // Construct draft match object
   const draftMatch: Match = {
     id: match?.id || newMatchId,
@@ -143,7 +151,7 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
     awayTeamId,
     workTeamId: workTeamId || undefined,
     status,
-    ...resolveScoresForTeams(match, homeTeamId, awayTeamId),
+    ...(clearsScore ? { scores: [], winnerId: undefined } : resolveScoresForTeams(match, homeTeamId, awayTeamId)),
     isExhibition,
     notes,
   };
@@ -367,6 +375,11 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
                 <option value="Forfeit">Forfeit</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
+              {clearsScore && (
+                <p className="mt-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                  Saving will clear the recorded score{recordedScoreText ? ` (${recordedScoreText})` : ''}.
+                </p>
+              )}
             </div>
           </div>
 

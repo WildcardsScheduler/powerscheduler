@@ -49,7 +49,7 @@ export const scoreSubmissionSchema = z.object({
 // Match Management Schemas
 // ==========================================
 
-export const matchStatusSchema = z.enum(['Scheduled', 'In Progress', 'Completed', 'Postponed']);
+export const matchStatusSchema = z.enum(['Scheduled', 'In Progress', 'Completed', 'Postponed', 'Forfeit', 'Cancelled']);
 
 export const matchPayloadSchema = z.object({
   id: z.string().max(100).optional(),

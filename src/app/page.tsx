@@ -1009,6 +1009,17 @@ export default function Home() {
     );
   };
 
+  // Admin only: remove a recorded score and put the game back to Scheduled (saved by the admin sync effect)
+  const handleClearMatchScore = (matchId: string) => {
+    if (authRole !== 'scheduler') return;
+    updateActiveLeague((prev) => ({
+      ...prev,
+      matches: prev.matches.map((m) =>
+        m.id === matchId ? { ...m, scores: [], winnerId: undefined, status: 'Scheduled' as const } : m
+      ),
+    }));
+  };
+
   // Manual Match Edit & Reschedule Handlers (admin only; saved by the admin sync effect)
   const handleEditMatch = (match: Match) => {
     setEditingMatch(match);
@@ -1273,6 +1284,7 @@ export default function Home() {
             setActiveScoreMatch(null);
           }}
           onSaveScore={handleSaveMatchScore}
+          onClearScore={handleClearMatchScore}
         />
       )}
 
