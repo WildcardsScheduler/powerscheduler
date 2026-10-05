@@ -358,7 +358,7 @@ export const ScheduleGeneratorModal: React.FC<ScheduleGeneratorModalProps> = ({
   const handleConfirmAndApply = () => {
     if (generatedMatches) {
       const divisionMatches = existingMatches.filter((m) => m.divisionId === selectedDivisionId);
-      const scoredCount = divisionMatches.filter((m) => m.status === 'Completed' || m.scores?.length > 0).length;
+      const scoredCount = divisionMatches.filter((m) => m.status === 'Completed' || m.status === 'Forfeit' || m.scores?.length > 0).length;
       if (divisionMatches.length > 0) {
         const message =
           `This will REPLACE all ${divisionMatches.length} existing match(es) in this division` +

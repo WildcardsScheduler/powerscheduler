@@ -216,11 +216,30 @@ describe('Standings filtering and ranking', () => {
     assert.ok(after.every((s) => s.played === 0 && s.wins === 0 && s.losses === 0 && s.points === 0 && s.setsWon === 0 && s.pointsFor === 0));
   });
 
-  test('cancelled and forfeit games with a leftover score are not counted', () => {
+  test('a cancelled game with a leftover score is not counted', () => {
     const base = { divisionId: 'div', weekNumber: 1, date: '2026-09-08', startTime: '18:30', endTime: '', subLocationId: 'c',
       homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-a', scores: sets([25, 20], [25, 18]) };
-    const standings = calculateStandings(TEAMS, [{ ...base, id: 'c1', status: 'Cancelled' }, { ...base, id: 'f1', status: 'Forfeit' }], 'div', rules('fivb_3pt'));
+    const standings = calculateStandings(TEAMS, [{ ...base, id: 'c1', status: 'Cancelled' }], 'div', rules('fivb_3pt'));
     assert.ok(standings.every((s) => s.played === 0 && s.points === 0));
+  });
+
+  test('a forfeit counts as a 25-0, 25-0 sweep for the team that showed up', () => {
+    const { forfeitScores } = loadTs('src/utils/matchStatus.ts');
+    const forfeit = { id: 'f1', divisionId: 'div', weekNumber: 1, date: '2026-09-08', startTime: '18:30', endTime: '', subLocationId: 'c',
+      status: 'Forfeit', homeTeamId: 'team-a', awayTeamId: 'team-b', winnerId: 'team-b', scores: forfeitScores(false) };
+    assert.deepEqual(forfeit.scores, sets([0, 25], [0, 25]));
+    for (const thirdSetRule of ['play_if_tied', 'guaranteed_all']) {
+      const standings = calculateStandings(TEAMS, [forfeit], 'div', rules('fivb_3pt', { thirdSetRule }));
+      const winner = standings.find((s) => s.teamId === 'team-b');
+      const loser = standings.find((s) => s.teamId === 'team-a');
+      assert.equal(winner.points, 3, thirdSetRule + ': the sweep is worth 3 points');
+      assert.equal(winner.wins, 1);
+      assert.equal(winner.setsWon, 2);
+      assert.equal(winner.pointDiff, 50);
+      assert.equal(loser.points, 0);
+      assert.equal(loser.losses, 1);
+      assert.equal(loser.played, 1);
+    }
   });
 
   test('ranks by points first', () => {

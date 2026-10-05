@@ -5,6 +5,7 @@ import { Match, Team, Location, Division, SubLocation } from '@/types/league';
 import { X, Calendar, Clock, MapPin, Building2, ShieldAlert, ArrowLeftRight, Trash2, AlertTriangle, Scale, Check } from 'lucide-react';
 import { calculateScheduleFairnessReport } from '@/utils/schedulerEngine';
 import { formatTime, formatTimeRange, timeRangesOverlap } from '@/utils/formatUtils';
+import { forfeitScores } from '@/utils/matchStatus';
 
 // Today's date as YYYY-MM-DD in the user's local time zone (toISOString() uses UTC,
 // which is already tomorrow during Canadian evenings).
@@ -96,6 +97,14 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
   );
   const [status, setStatus] = useState<Match['status']>(match?.status || 'Scheduled');
   const [conflictError, setConflictError] = useState('');
+  // For a Forfeit: the team that didn't show (the other team wins the league-standard forfeit score)
+  const [forfeitedTeamId, setForfeitedTeamId] = useState<string>(() =>
+    match?.status === 'Forfeit' && match.winnerId
+      ? match.winnerId === match.homeTeamId
+        ? match.awayTeamId
+        : match.homeTeamId
+      : ''
+  );
   const [isExhibition, setIsExhibition] = useState<boolean>(match?.isExhibition || false);
   const [notes] = useState<string>(match?.notes || '');
 
@@ -136,6 +145,15 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
   const clearsScore = hasRecordedScore && UNPLAYED_STATUSES.includes(status);
   const recordedScoreText = (match?.scores || []).map((s) => `${s.homeScore}-${s.awayScore}`).join(', ');
 
+  const forfeitPoints = divisions.find((d) => d.id === divisionId)?.matchRules?.pointsPerSet || 25;
+  const forfeitingTeam = status === 'Forfeit' && (forfeitedTeamId === homeTeamId || forfeitedTeamId === awayTeamId) ? forfeitedTeamId : '';
+  const forfeitResult = forfeitingTeam
+    ? {
+        scores: forfeitScores(forfeitingTeam === awayTeamId, forfeitPoints),
+        winnerId: forfeitingTeam === awayTeamId ? homeTeamId : awayTeamId,
+      }
+    : null;
+
   // Construct draft match object
   const draftMatch: Match = {
     id: match?.id || newMatchId,
@@ -151,7 +169,11 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
     awayTeamId,
     workTeamId: workTeamId || undefined,
     status,
-    ...(clearsScore ? { scores: [], winnerId: undefined } : resolveScoresForTeams(match, homeTeamId, awayTeamId)),
+    ...(forfeitResult
+      ? forfeitResult
+      : clearsScore
+        ? { scores: [], winnerId: undefined }
+        : resolveScoresForTeams(match, homeTeamId, awayTeamId)),
     isExhibition,
     notes,
   };
@@ -204,6 +226,11 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
 
     if (!homeTeamId || !awayTeamId || homeTeamId === awayTeamId) {
       setConflictError('Home team and Away team must be different teams.');
+      return;
+    }
+
+    if (status === 'Forfeit' && !forfeitingTeam) {
+      setConflictError('Choose which team forfeited.');
       return;
     }
 
@@ -375,6 +402,28 @@ export const MatchEditorModal: React.FC<MatchEditorModalProps> = ({
                 <option value="Forfeit">Forfeit</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
+              {status === 'Forfeit' && (
+                <div className="mt-2">
+                  <label className="text-[11px] font-bold text-rose-600 dark:text-rose-400 block mb-1">Forfeited by</label>
+                  <select
+                    value={forfeitingTeam}
+                    onChange={(e) => setForfeitedTeamId(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-950 border border-rose-300 dark:border-rose-500/40 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none shadow-sm"
+                  >
+                    <option value="">Choose the team that forfeited…</option>
+                    {[homeTeamId, awayTeamId].map((id) => (
+                      <option key={id} value={id}>
+                        {teams.find((t) => t.id === id)?.name || 'Team'}
+                      </option>
+                    ))}
+                  </select>
+                  {forfeitResult && (
+                    <p className="mt-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                      {teams.find((t) => t.id === forfeitResult.winnerId)?.name} wins {forfeitPoints}–0, {forfeitPoints}–0 (a sweep).
+                    </p>
+                  )}
+                </div>
+              )}
               {clearsScore && (
                 <p className="mt-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
                   Saving will clear the recorded score{recordedScoreText ? ` (${recordedScoreText})` : ''}.

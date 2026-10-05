@@ -29,6 +29,7 @@ import {
 import { EXHIBITION_CARD_BORDER, ExhibitionBadge, ExhibitionNotice } from './ExhibitionBadge';
 import { formatShortDate, formatTimeRange } from '@/utils/formatUtils';
 import { toLocalIsoDate } from '@/utils/schedulerEngine';
+import { isPlayedMatch } from '@/utils/matchStatus';
 
 /** How many recent results and upcoming games the season list shows before "Show full season" */
 const RECENT_RESULTS_SHOWN = 2;
@@ -112,7 +113,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
 
   // Next game: today's or the next unplayed one; after the season, the last game
   const nextMatch =
-    upcomingMatches.find((m) => m.status !== 'Completed') || upcomingMatches[0] || teamMatches[teamMatches.length - 1];
+    upcomingMatches.find((m) => !isPlayedMatch(m)) || upcomingMatches[0] || teamMatches[teamMatches.length - 1];
 
   // On the overview the season list starts with the latest results and the next few games
   const shortList = [...pastMatches.slice(-RECENT_RESULTS_SHOWN), ...upcomingMatches.slice(0, UPCOMING_GAMES_SHOWN)];
@@ -630,7 +631,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                       className="w-full py-2.5 px-4 rounded-xl bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-bold text-xs shadow-xs flex items-center justify-center space-x-2 transition-all"
                     >
                       <Edit3 className="h-4 w-4" />
-                      <span>{nextMatch.status === 'Completed' ? 'View / Edit Score' : 'Open Scorekeeper'}</span>
+                      <span>{isPlayedMatch(nextMatch) ? 'View / Edit Score' : 'Open Scorekeeper'}</span>
                     </button>
                   </div>
                 </div>
@@ -704,7 +705,7 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                       </div>
 
                       <div className="flex items-center space-x-3 self-end sm:self-center">
-                        {m.status === 'Completed' && m.scores.length > 0 ? (() => {
+                        {isPlayedMatch(m) && m.scores.length > 0 ? (() => {
                           const isHome = m.homeTeamId === activeTeam.id;
                           let myWonSets = 0;
                           let oppWonSets = 0;
@@ -746,19 +747,22 @@ export const TeamRepDashboard: React.FC<TeamRepDashboardProps> = ({
                                 </span>
                               )}
                               <span>{m.scores.map((s) => `${s.homeScore}-${s.awayScore}`).join(' | ')}</span>
+                              {m.status === 'Forfeit' && (
+                                <span className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">Forfeit</span>
+                              )}
                             </span>
                           );
                         })() : (
                           <span className="text-xs text-slate-500 italic">Scheduled</span>
                         )}
 
-                        {(m.date <= today || m.status === 'Completed') && (
+                        {(m.date <= today || isPlayedMatch(m)) && (
                         <button
                           onClick={() => onOpenScorekeeper(m)}
                           className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:text-slate-900 dark:hover:text-white font-bold text-xs border border-amber-500/30 flex items-center space-x-1.5 transition-all shadow-sm"
                         >
                           <Edit3 className="h-3.5 w-3.5" />
-                          <span>{m.status === 'Completed' ? 'Edit Score' : 'Report Score'}</span>
+                          <span>{isPlayedMatch(m) ? 'Edit Score' : 'Report Score'}</span>
                         </button>
                         )}
                       </div>

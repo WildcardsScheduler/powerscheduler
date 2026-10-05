@@ -991,20 +991,19 @@ export default function Home() {
   };
 
   // Handle Score Save
-  const handleSaveMatchScore = async (matchId: string, scores: SetScore[], winnerId: string) => {
+  const handleSaveMatchScore = async (matchId: string, scores: SetScore[], winnerId: string, forfeit = false) => {
     // Optimistic UI update
+    const status = forfeit ? ('Forfeit' as const) : ('Completed' as const);
     updateActiveLeague((prev) => ({
       ...prev,
-      matches: prev.matches.map((m) =>
-        m.id === matchId ? { ...m, scores, winnerId, status: 'Completed' as const } : m
-      ),
+      matches: prev.matches.map((m) => (m.id === matchId ? { ...m, scores, winnerId, status } : m)),
     }));
 
     if (authRole === 'scheduler') return; // saved by the admin sync effect
     await sendTargetedWrite(
       `/api/matches/${encodeURIComponent(matchId)}/score`,
       'POST',
-      { scores, winnerId },
+      { scores, winnerId, ...(forfeit ? { forfeit: true } : {}) },
       'The match score was NOT saved'
     );
   };

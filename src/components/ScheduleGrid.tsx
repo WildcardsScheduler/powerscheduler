@@ -7,6 +7,7 @@ import { Calendar, Clock, ShieldAlert, Edit3, CheckCircle2, Building2, Filter, P
 import { EXHIBITION_CARD_BORDER, ExhibitionNotice } from './ExhibitionBadge';
 import { PrintScheduleModal } from './PrintScheduleModal';
 import { formatTimeRange, formatShortDate } from '@/utils/formatUtils';
+import { isPlayedMatch } from '@/utils/matchStatus';
 
 interface ScheduleGridProps {
   matches: Match[];
@@ -225,7 +226,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             const away = teamMap.get(match.awayTeamId);
             const work = match.workTeamId ? teamMap.get(match.workTeamId) : undefined;
             const { primaryLoc, subLoc } = getMatchLocation(match);
-            const hasScore = match.status === 'Completed' && match.scores.length > 0;
+            const hasScore = isPlayedMatch(match) && match.scores.length > 0;
 
             return (
               <div
@@ -311,6 +312,9 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         }`}
                       >
                         {match.scores.map((s) => `${s.homeScore}-${s.awayScore}`).join(' | ')}
+                        {match.status === 'Forfeit' && (
+                          <div className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 mt-0.5">Forfeit</div>
+                        )}
                       </div>
                     ) : (
                       <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 tracking-widest">
@@ -362,7 +366,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                       (currentRole === 'team_rep' && isTeamInvolved);
 
                     if (readOnly) {
-                      return match.status === 'Completed' ? (
+                      return isPlayedMatch(match) ? (
                         match.isExhibition ? (
                           <span className="ml-auto shrink-0 whitespace-nowrap flex items-center space-x-1 text-slate-500 dark:text-slate-400 text-[11px] font-bold bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
                             <CheckCircle2 className="h-3 w-3" />
@@ -409,7 +413,7 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                           onClick={() => onOpenScorekeeper(match)}
                           className="whitespace-nowrap flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-[#101010] hover:bg-[#242424] text-white dark:bg-[#007afc] dark:hover:bg-[#0062ca] dark:text-white font-semibold text-xs transition-colors shadow-xs"
                         >
-                          {match.status === 'Completed' ? (
+                          {isPlayedMatch(match) ? (
                             <>
                               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                               <span>Edit Score</span>

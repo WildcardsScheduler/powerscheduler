@@ -5,6 +5,7 @@ import { Match, Team, Division, SetScore, MatchRules, DEFAULT_MATCH_RULES } from
 import { X, CheckCircle, Plus, Minus, Trophy, ShieldAlert, Info, Lock, RotateCcw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatTime } from '@/utils/formatUtils';
+import { forfeitScores, isPlayedMatch } from '@/utils/matchStatus';
 
 interface ScorekeeperModalProps {
   match: Match;
@@ -15,7 +16,7 @@ interface ScorekeeperModalProps {
   leagueRules?: MatchRules;
   isOpen: boolean;
   onClose: () => void;
-  onSaveScore: (matchId: string, scores: SetScore[], winnerId: string) => void;
+  onSaveScore: (matchId: string, scores: SetScore[], winnerId: string, forfeit?: boolean) => void;
   /** Admin only: remove the recorded score and set the game back to Scheduled */
   onClearScore?: (matchId: string) => void;
   currentRole?: 'public' | 'team_rep' | 'scheduler';
@@ -63,9 +64,22 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
     return result;
   };
 
-  const [sets, setSets] = useState<SetScore[]>(() => {
+  const [sets, setSetsState] = useState<SetScore[]>(() => {
     return ensureThreeSets(match.scores, totalSets);
   });
+  // Team id that won by forfeit (set by the forfeit buttons; typing a score clears it)
+  const [forfeitWinnerId, setForfeitWinnerId] = useState<string | null>(
+    match.status === 'Forfeit' && match.winnerId ? match.winnerId : null
+  );
+  const setSets = (next: SetScore[]) => {
+    setSetsState(next);
+    setForfeitWinnerId(null);
+  };
+  const forfeitPoints = activeRules.pointsPerSet || 25;
+  const recordForfeit = (winnerIsHome: boolean, winnerId: string) => {
+    setSetsState(ensureThreeSets(forfeitScores(winnerIsHome, forfeitPoints), totalSets));
+    setForfeitWinnerId(winnerId);
+  };
 
   if (!isOpen || !homeTeam || !awayTeam) return null;
 
@@ -130,7 +144,7 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
   const calculatedWinnerId =
     homeSetsWon > awaySetsWon ? homeTeam.id : awaySetsWon > homeSetsWon ? awayTeam.id : undefined;
 
-  const hasRecordedScore = (match.scores?.length ?? 0) > 0 || Boolean(match.winnerId) || match.status === 'Completed';
+  const hasRecordedScore = (match.scores?.length ?? 0) > 0 || Boolean(match.winnerId) || isPlayedMatch(match);
   const canClear = currentRole === 'scheduler' && Boolean(onClearScore) && hasRecordedScore;
 
   const handleClear = () => {
@@ -156,6 +170,11 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
       origin: { y: 0.6 },
     });
 
+    if (forfeitWinnerId) {
+      onSaveScore(match.id, forfeitScores(forfeitWinnerId === homeTeam.id, forfeitPoints), forfeitWinnerId, true);
+      onClose();
+      return;
+    }
     onSaveScore(match.id, activeSetsToEvaluate, calculatedWinnerId);
     onClose();
   };
@@ -335,10 +354,40 @@ export const ScorekeeperModal: React.FC<ScorekeeperModalProps> = ({
             })}
           </div>
 
+          {/* Forfeit: the team that showed up wins by the league-standard forfeit score */}
+          {canEdit && (
+            <div className="p-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 space-y-2">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                Record a forfeit (counts as {forfeitPoints}–0, {forfeitPoints}–0 for the other team)
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { loser: homeTeam, winner: awayTeam, winnerIsHome: false },
+                  { loser: awayTeam, winner: homeTeam, winnerIsHome: true },
+                ].map(({ loser, winner, winnerIsHome }) => (
+                  <button
+                    key={loser.id}
+                    type="button"
+                    onClick={() => recordForfeit(winnerIsHome, winner.id)}
+                    aria-pressed={forfeitWinnerId === winner.id}
+                    className={`px-2 py-2 rounded-lg text-xs font-bold border transition-colors ${
+                      forfeitWinnerId === winner.id
+                        ? 'bg-rose-500/10 border-rose-400 text-rose-700 dark:text-rose-300'
+                        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <span className="block truncate">{loser.name}</span>
+                    <span className="block text-[10px] font-semibold opacity-75">forfeited</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Match Outcome Summary */}
           {calculatedWinnerId && (
             <div className="p-3 bg-slate-100 dark:bg-[#1c1f24] border border-[#e5e7eb] dark:border-[#333943] rounded-xl text-center">
-              <span className="text-xs text-slate-600 dark:text-[#a0aaba]">Projected Match Winner: </span>
+              <span className="text-xs text-slate-600 dark:text-[#a0aaba]">{forfeitWinnerId ? 'Wins by forfeit: ' : 'Projected Match Winner: '}</span>
               <span className="text-sm font-bold text-[#101010] dark:text-[#007afc] ml-1">
                 {calculatedWinnerId === homeTeam.id ? homeTeam.name : awayTeam.name} ({homeSetsWon}-{awaySetsWon})
               </span>

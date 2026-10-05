@@ -43,6 +43,8 @@ export const scoreSubmissionSchema = z.object({
   scores: z.array(setScoreSchema).min(1, 'At least one set score is required').max(10, 'Too many sets'),
   winnerId: z.string().max(100).optional().nullable().transform((v) => v ?? undefined),
   version: z.number().int().optional(),
+  // A forfeit win for winnerId: the server records the league-standard forfeit score itself
+  forfeit: z.boolean().optional(),
 });
 
 // ==========================================

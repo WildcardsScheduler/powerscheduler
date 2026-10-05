@@ -38,7 +38,7 @@ function parseBackup(data: unknown): BackupFile | null {
 function summarize(file: BackupFile): string {
   const teams = file.leagues.reduce((n, l) => n + l.teams.length, 0);
   const matches = file.leagues.reduce((n, l) => n + l.matches.length, 0);
-  const scored = file.leagues.reduce((n, l) => n + l.matches.filter((m) => m.status === 'Completed').length, 0);
+  const scored = file.leagues.reduce((n, l) => n + l.matches.filter((m) => m.status === 'Completed' || m.status === 'Forfeit').length, 0);
   return `${file.leagues.length} league(s), ${teams} teams, ${matches} matches (${scored} with results)`;
 }
 

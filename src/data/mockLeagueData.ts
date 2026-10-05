@@ -1,4 +1,5 @@
 import { LeagueSeason, TeamStanding, Match, Team, MatchRules } from '@/types/league';
+import { isPlayedMatch } from '@/utils/matchStatus';
 
 export const initialLeagueData: LeagueSeason = {
   id: 'league-fall-2026',
@@ -54,7 +55,7 @@ export function calculateStandings(
 ): TeamStanding[] {
   const divTeams = teams.filter((t) => t.divisionId === divisionId);
   const divMatches = matches.filter(
-    (m) => m.divisionId === divisionId && m.status === 'Completed' && !m.isExhibition
+    (m) => m.divisionId === divisionId && isPlayedMatch(m) && !m.isExhibition
   );
 
   const excludeThirdSet = matchRules?.excludeThirdSetPointsFromDiff ?? true;

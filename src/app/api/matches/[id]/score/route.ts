@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { getStoreData, setStoreData } from '@/lib/store';
 import { scoreSubmissionSchema } from '@/lib/validations/leagueSchemas';
-import { Match } from '@/types/league';
+import { LeagueSeason, Match } from '@/types/league';
+import { forfeitScores } from '@/utils/matchStatus';
 
 export async function POST(
   request: Request,
@@ -31,18 +32,20 @@ export async function POST(
       );
     }
 
-    const { scores, winnerId } = parseResult.data;
+    const { scores, winnerId, forfeit } = parseResult.data;
 
     const store = await getStoreData();
 
     let foundMatch: Match | undefined;
     let parentLeagueId: string | undefined;
+    let parentLeague: LeagueSeason | undefined;
 
     for (const league of store.leagues) {
       const m = league.matches.find((item) => item.id === matchId);
       if (m) {
         foundMatch = m;
         parentLeagueId = league.id;
+        parentLeague = league;
         break;
       }
     }
@@ -65,6 +68,20 @@ export async function POST(
           { status: 403 }
         );
       }
+    }
+
+    // Forfeit: the named winner gets the league-standard forfeit score (25-0, 25-0)
+    if (forfeit) {
+      if (winnerId !== foundMatch.homeTeamId && winnerId !== foundMatch.awayTeamId) {
+        return NextResponse.json({ error: 'Choose which team won by forfeit.' }, { status: 400 });
+      }
+      const division = parentLeague?.divisions.find((d) => d.id === foundMatch.divisionId);
+      const pointsPerSet = division?.matchRules?.pointsPerSet ?? parentLeague?.matchRules?.pointsPerSet ?? 25;
+      foundMatch.scores = forfeitScores(winnerId === foundMatch.homeTeamId, pointsPerSet);
+      foundMatch.winnerId = winnerId;
+      foundMatch.status = 'Forfeit';
+      await setStoreData(store);
+      return NextResponse.json({ success: true, message: 'Forfeit recorded.', match: foundMatch, version: store.version });
     }
 
     // The winner must be the team that won more of the submitted sets, so a
